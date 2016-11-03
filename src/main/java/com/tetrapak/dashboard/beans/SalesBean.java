@@ -6,11 +6,15 @@
 package com.tetrapak.dashboard.beans;
 
 import com.tetrapak.dashboard.model.Invoice;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.ejb.Stateless;
+import javax.faces.bean.RequestScoped;
+
 import javax.inject.Named;
-import javax.enterprise.context.RequestScoped;
+import javax.faces.bean.SessionScoped;
 
 /**
  * This bean makes the sales logic.
@@ -18,10 +22,14 @@ import javax.enterprise.context.RequestScoped;
  * @author SEPALMM
  */
 @Named(value = "salesBean")
+@Stateless
+//@SessionScoped
 @RequestScoped
-public class SalesBean {
+public class SalesBean implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private List<Invoice> salesList;
+    private double totalSales = 0d;
 
     /**
      * Creates a new instance of salesBean
@@ -32,14 +40,20 @@ public class SalesBean {
     @PostConstruct
     public void init() {
         this.salesList = makeSales();
+        this.totalSales = sumSales();
     }
 
     private List<Invoice> makeSales() {
         List<Invoice> list = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 1; i < 11; i++) {
             list.add(new Invoice("mat_" + i, 100d * i));
         }
         return list;
+    }
+
+    private double sumSales() {
+        double s = this.salesList.stream().mapToDouble(Invoice::getSales).sum();
+        return s;
     }
 
     public List<Invoice> getSalesList() {
@@ -48,6 +62,14 @@ public class SalesBean {
 
     public void setSalesList(List<Invoice> salesList) {
         this.salesList = salesList;
+    }
+
+    public double getTotalSales() {
+        return totalSales;
+    }
+
+    public void setTotalSales(double totalSales) {
+        this.totalSales = totalSales;
     }
 
 }

@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions">
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+        <h:outputStylesheet library="css" name="default.css" />
+        <title>Dashboard Index</title>
+    </h:head>
+    <h:body>
+        <h1>Market Selections</h1>
+        <h3>Select Cluster, Market group, and Market</h3>
+        <h2>Data table</h2>
+
+        <f:view>
+            <h2>
+                <p:outputLabel value="Sales"></p:outputLabel>
+            </h2>
+            <p:dataTable value="#{salesBean.salesList}" var="data"
+                         paginator="true" rows="50" scrollable="true" scrollHeight="300"
+                         draggableColumns="true" liveResize="true">
+                <p:column>
+                    <f:facet name="header">
+                        <h:outputText value="MAT"></h:outputText>
+                    </f:facet>
+                    <h:outputText value="#{data.materialNumber}"></h:outputText>
+                    <f:facet name="footer">				
+                        In total there are #{fn:length(salesBean.salesList)} materials.
+                    </f:facet>
+                </p:column>
+                <p:column>
+                    <f:facet name="header">
+                        <h:outputText value="Sales"></h:outputText>
+                    </f:facet>
+                    <h:outputText value="#{data.sales}"></h:outputText>
+                    <f:facet name="footer"> Total:
+                        <h:outputText value="#{salesBean.totalSales}"></h:outputText>
+                        Euro.
+                    </f:facet>
+                </p:column>
+            </p:dataTable>    
+        </f:view>
+    </h:body>
+</html>
+
