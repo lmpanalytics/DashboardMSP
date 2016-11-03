@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
-import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 
 import javax.inject.Named;
 import org.primefaces.model.chart.Axis;
@@ -26,8 +26,7 @@ import org.primefaces.model.chart.ChartSeries;
  */
 @Named(value = "salesBean")
 @Stateless
-//@SessionScoped
-@RequestScoped
+@SessionScoped
 public class SalesBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -48,28 +47,28 @@ public class SalesBean implements Serializable {
         this.totalSales = sumSales();
 
         model = new BarChartModel();
-        ChartSeries boys = new ChartSeries();
-        boys.setLabel("Boys");
-        boys.set("2004", 120);
-        boys.set("2005", 100);
-        boys.set("2006", 44);
-        boys.set("2007", 150);
-        boys.set("2008", 25);
-        ChartSeries girls = new ChartSeries();
-        girls.setLabel("Girls");
-        girls.set("2004", 52);
-        girls.set("2005", 60);
-        girls.set("2006", 110);
-        girls.set("2007", 135);
-        girls.set("2008", 120);
-        model.addSeries(boys);
-        model.addSeries(girls);
+        ChartSeries catA = new ChartSeries();
+        catA.setLabel("Category A");
+        catA.set("2011", 120);
+        catA.set("2012", 100);
+        catA.set("2013", 44);
+        catA.set("2014", 150);
+        catA.set("2015", 25);
+        ChartSeries catB = new ChartSeries();
+        catB.setLabel("Category B");
+        catB.set("2011", 52);
+        catB.set("2012", 60);
+        catB.set("2013", 110);
+        catB.set("2014", 135);
+        catB.set("2015", 120);
+        model.addSeries(catA);
+        model.addSeries(catB);
         model.setTitle("Bar Chart");
         model.setLegendPosition("ne");
         Axis xAxis = model.getAxis(AxisType.X);
-        xAxis.setLabel("Gender");
+        xAxis.setLabel("Categories");
         Axis yAxis = model.getAxis(AxisType.Y);
-        yAxis.setLabel("Births");
+        yAxis.setLabel("Sales kEUR");
         yAxis.setMin(0);
         yAxis.setMax(200);
     }
