@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions">
+    <h:head>
+        <h:head>
+            <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+            <title>Dashboard</title>
+            <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css"/>
+        </h:head>
+    </h:head>
+    <h:body>
+        <header class="w3-container w3-indigo">
+            <h1>Spare Parts</h1>
+        </header>
+        <div class="w3-row">
+            <div class="w3-third w3-container w3-border">
+                <h2>Global R12 Chart</h2>
+                <p:chart type="line" model="#{dashboardBean.model}" />
+            </div>
+            <div class="w3-third w3-container w3-border">
+                <h2>Global Margin chart</h2>
+
+            </div>
+            <div class="w3-third w3-container">
+                <h2>Speedometers</h2>
+                <h5>Sales, Growth, Margin</h5>
+
+            </div>
+        </div>
+
+        <br></br>
+
+        <div class="w3-row">
+            <div class="w3-third w3-container w3-border">
+                <h2>Top-10 Market table</h2> 
+                <h5>Category, Sales, Growth, Margin, Potential</h5>
+            </div>
+            <div class="w3-third w3-container">
+                <h2>Top-5 Market Sales Chart</h2>
+
+            </div>
+            <div class="w3-third w3-container">
+                <h2>Top-5 Market Margin Chart</h2>
+
+            </div>
+        </div>
+
+        <footer class="w3-container w3-light-grey">
+            <h5>Footer</h5>
+        </footer>
+        <h:form>
+            <p></p>
+            <h:commandButton id="dashboard" value="Return to Dashboard"
+                             action="dashboard">
+            </h:commandButton>
+        </h:form>
+
+    </h:body>
+</html>
+
