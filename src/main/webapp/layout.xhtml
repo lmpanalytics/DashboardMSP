@@ -19,20 +19,21 @@
         </header>
         <div class="w3-row">
             <div class="w3-third w3-container w3-border">
-                <h2>Global R12 Chart</h2>
-                <p:chart type="line" model="#{dashboardBean.r12SalesModel}" />
+                <h2>Global Growth Meter Gauge Chart</h2>
+                <p:chart type="metergauge" model="#{dashboardBean.r12GrowthModel}" />
+                <p>Target: 7.5%</p>
             </div>
             <div class="w3-third w3-container w3-border">
-                <h2>Global Margin chart</h2>
-                <p:chart type="line" model="#{dashboardBean.r12MarginModel}" />
+                <h2>Global R12 Sales Chart</h2>
+                <p:chart type="line" model="#{dashboardBean.r12SalesModel}" />
+                <p>Target: 269 MEUR</p>
             </div>
-            <div class="w3-third w3-container">
-                <h2>Speedometers</h2>
-                <h5>Sales, Growth, Margin</h5>
-
+            <div class="w3-third w3-container w3-border">
+                <h2>Global Margin Chart</h2>
+                <p:chart type="line" model="#{dashboardBean.r12MarginModel}" />
+                <p>Target: 60%</p>
             </div>
         </div>
-
         <br></br>
 
         <div class="w3-row">

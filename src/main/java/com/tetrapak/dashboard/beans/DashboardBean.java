@@ -9,7 +9,9 @@ import com.tetrapak.dashboard.model.DashboardSalesData;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -26,6 +28,7 @@ import org.primefaces.model.chart.AxisType;
 import org.primefaces.model.chart.ChartSeries;
 import org.primefaces.model.chart.DateAxis;
 import org.primefaces.model.chart.LineChartModel;
+import org.primefaces.model.chart.MeterGaugeChartModel;
 
 /**
  * This bean models the dashboard
@@ -46,6 +49,7 @@ public class DashboardBean implements Serializable {
     private Map<LocalDate, DashboardSalesData> salesMap;
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarginModel;
+    private MeterGaugeChartModel r12GrowthModel;
 
     public DashboardBean() {
 
@@ -75,6 +79,9 @@ public class DashboardBean implements Serializable {
 
         //        Populate the Margin Line Chart with Rolling 12 data
         populateR12MarginLineChart();
+
+//        Populate the R12GrowthMeterGauge with Rolling 12 data
+        populateR12GrowthMeterGauge();
     }
 
     @PreDestroy
@@ -233,6 +240,73 @@ public class DashboardBean implements Serializable {
         r12MarginModel.getAxes().put(AxisType.X, axis);
     }
 
+    /**
+     * Populate the R12GrowthMeterGauge with data
+     */
+    private void populateR12GrowthMeterGauge() {
+        System.out.println("I'm in the 'populateR12GrowthMeterGauge()' method.");
+//        Map<LocalDate, Double> tMap = new HashMap<>();
+
+//        Initiate r12GrowthModel
+        r12GrowthModel = new MeterGaugeChartModel();
+
+        double r12t0 = 0d /* Current R12 sales */;
+        double r12h12 = 0d /* R12 sales 12 months ago */;
+        double growthRate = 0d;
+
+//        Count number of key-value mappings in sales map
+        int length = salesMap.size();
+        LocalDate startDate = utility.Utility.calcStartDate();
+
+//        R12 algorithm
+        int rollingPeriod = 12;
+        for (int i = 0; i < (length - rollingPeriod); i++) {
+            int innerLoopCounter = 1;
+            double accR12Sales = 0d;
+            for (int j = i; j < (rollingPeriod + i); j++) {
+
+                LocalDate key = startDate.plusMonths(j);
+                Double sales = salesMap.get(key).getNetSales();
+                if (innerLoopCounter <= rollingPeriod) {
+                    accR12Sales = accR12Sales + sales;
+
+                }
+                /* if (innerLoopCounter == rollingPeriod) {
+//                    Use to create a R12 growth chart
+                    tMap.put(key, accR12Sales);
+                }*/
+                innerLoopCounter++;
+            }
+//            Current R12 sales        
+            if (i == length - rollingPeriod) {
+                r12t0 = accR12Sales;
+            }
+//            R12 sales 12 months ago
+            if (i == length - 2 * rollingPeriod) {
+                r12h12 = accR12Sales;
+            }
+
+//            Calculate the growth
+            if (r12h12 != 0d) {
+                growthRate = ((r12t0 / r12h12) - 1) * 100d;
+            }
+        }
+//        System.out.println("Growth = ((" + r12t0 + " / " + r12h12 + ")-1)*100 = " + growth);
+
+//        Set gauge segments
+        List<Number> intervals = new ArrayList<Number>() {
+            {
+                add(5.0);
+                add(7.5) /* Target */;
+                add(15.0);
+            }
+        };
+        r12GrowthModel = new MeterGaugeChartModel(growthRate, intervals);
+        r12GrowthModel.setTitle("Growth of Spare Parts");
+        r12GrowthModel.setGaugeLabel("%");
+        r12GrowthModel.setSeriesColors("cc6666,E7E658,66cc66");
+    }
+
     public LineChartModel getR12SalesModel() {
         return r12SalesModel;
     }
@@ -241,4 +315,7 @@ public class DashboardBean implements Serializable {
         return r12MarginModel;
     }
 
+    public MeterGaugeChartModel getR12GrowthModel() {
+        return r12GrowthModel;
+    }
 }
