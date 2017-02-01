@@ -16,10 +16,23 @@ public class DashboardSalesData {
 
     private LocalDate date;
     private Double netSales;
+    private Double directCost;
+    private Double quantity;
 
-    public DashboardSalesData(LocalDate date, Double netSales) {
+    /**
+     * Constructor for the Dashboard sales data
+     *
+     * @param date the transaction date from the Special Ledger report in BO
+     * @param netSales of sold materials
+     * @param directCost of sold materials
+     * @param quantity of sold materials
+     */
+    public DashboardSalesData(LocalDate date, Double netSales, Double directCost,
+            Double quantity) {
         this.date = date;
         this.netSales = netSales;
+        this.directCost = directCost;
+        this.quantity = quantity;
     }
 
     public LocalDate getDate() {
@@ -36,6 +49,22 @@ public class DashboardSalesData {
 
     public void setNetSales(Double netSales) {
         this.netSales = netSales;
+    }
+
+    public Double getDirectCost() {
+        return directCost;
+    }
+
+    public void setDirectCost(Double directCost) {
+        this.directCost = directCost;
+    }
+
+    public Double getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Double quantity) {
+        this.quantity = quantity;
     }
 
 }

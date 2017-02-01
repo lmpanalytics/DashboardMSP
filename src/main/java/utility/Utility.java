@@ -44,8 +44,8 @@ public class Utility {
      * Makes a date using the final day of the Month based on the supplied Year
      * and Month values.
      *
-     * @param year
-     * @param month
+     * @param year the year of the date to be made
+     * @param month the month of the date to be made
      * @return the date
      */
     public static LocalDate makeDate(int year, int month) {
@@ -54,5 +54,21 @@ public class Utility {
             d = LocalDate.of(year, month, 1);
         }
         return d.with(TemporalAdjusters.lastDayOfMonth());
+    }
+
+    /**
+     * Calculate the percentage margin
+     *
+     * @param sales the sales amount (positive)
+     * @param cost the cost amount (negative)
+     * @return the margin in percent
+     */
+    public static double calcMargin(double sales, double cost) {
+        double margin = 0d;
+//        Handle divison by zero exception
+        if (sales != 0d) {
+            margin = ((sales + cost) / sales) * 100.0;
+        }
+        return margin;
     }
 }

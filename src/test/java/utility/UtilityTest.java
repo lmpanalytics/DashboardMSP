@@ -77,4 +77,22 @@ public class UtilityTest {
         assertEquals(LocalDate.of(2016, 2, 29), Utility.makeDate(2016, 2));
     }
 
+    /**
+     * Test of calcMargin method, of class Utility.
+     */
+    @Test
+    public void testCalcMargin() {
+        System.out.println("calcMargin");
+//        double result = Utility.calcMargin(sales, cost);
+        assertEquals(20d, Utility.calcMargin(100d, -80d), 0.0);
+        assertEquals(23.954372623574148, Utility.calcMargin(105.2, -80), 0.0);
+        assertEquals(0, Utility.calcMargin(0d, -80d), 0.0);
+        assertEquals(100, Utility.calcMargin(200d, 0d), 0.0);
+        assertEquals(180, Utility.calcMargin(100d, 80d), 0.0);
+        assertEquals(20, Utility.calcMargin(-100d, 80d), 0.0);
+        assertEquals(1000100, Utility.calcMargin(0.01, 100d), 0.0);
+        assertEquals(99.999, Utility.calcMargin(100d, -0.001), 0.0);
+
+    }
+
 }
