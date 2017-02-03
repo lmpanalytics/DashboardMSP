@@ -6,6 +6,7 @@
 package com.tetrapak.dashboard.beans;
 
 import com.tetrapak.dashboard.model.DashboardSalesData;
+import com.tetrapak.dashboard.model.MarketSalesData;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -47,9 +48,11 @@ public class DashboardBean implements Serializable {
 
     // ADD CLASS SPECIFIC MAPS AND FIELDS HERE
     private Map<LocalDate, DashboardSalesData> salesMap;
+    private Map<LocalDate, MarketSalesData> marketSalesMap;
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarginModel;
     private MeterGaugeChartModel r12GrowthModel;
+    private List<MarketSalesData> marketSalesList;
 
     public DashboardBean() {
 
@@ -82,6 +85,12 @@ public class DashboardBean implements Serializable {
 
 //        Populate the R12GrowthMeterGauge with Rolling 12 data
         populateR12GrowthMeterGauge();
+
+//        Initialize the marketSalesMap
+        marketSalesMap = new LinkedHashMap<>();
+
+//        Populate Market List with data from database
+        populateMarketSalesMap();
     }
 
     @PreDestroy
@@ -127,9 +136,9 @@ public class DashboardBean implements Serializable {
             }
 
         } catch (ClientException e) {
-            System.err.println("Exception in 'querySales()':" + e);
+            System.err.println("Exception in 'populateSalesMap()':" + e);
         } finally {
-            neo4jBean.closeNeo4jDriver();
+//            neo4jBean.closeNeo4jDriver();
 
         }
     }
@@ -305,6 +314,59 @@ public class DashboardBean implements Serializable {
         r12GrowthModel.setTitle("Growth of Spare Parts");
         r12GrowthModel.setGaugeLabel("%");
         r12GrowthModel.setSeriesColors("cc6666,E7E658,66cc66");
+    }
+
+    /**
+     * Populate Market Map with data from database. The data is limited to the
+     * Top-10 Markets based on NetSales in the last 12-Month period.
+     */
+    private void populateMarketSalesMap() {
+        System.out.println(" I'm in the populateMarketSalesMap()' method.");
+        String startDateLast12MonthSales = LocalDate.now().minusMonths(13).
+                toString().replaceAll("-", "");
+
+        // code query here
+        try (Session session = neo4jBean.getDriver().session()) {
+
+            String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)"
+                    + " MATCH (m)-[:CATEGORY]->(s:ServiceCategory)"
+                    + " WHERE s.name = {name} AND (d.year + \"\" + d.month + \"01\") >= {date} "
+                    + " WITH r.marketNumber AS MarketNumber, SUM(r.netSales) AS TNetSales"
+                    + " ORDER BY TNetSales DESC LIMIT 10"
+                    + " WITH collect(MarketNumber) AS MarketNumbers"
+                    + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[:SOLD_IN]->(mkt:Market)"
+                    + " MATCH (m)-[:CATEGORY]->(s:ServiceCategory)"
+                    + " WHERE r.marketNumber IN MarketNumbers AND r.marketNumber = mkt.id AND s.name = {name}"
+                    + " RETURN d.year AS Year, d.month AS Month, mkt.name AS Market, SUM(r.netSales) AS NetSales, SUM(r.directCost) AS DirectCost, SUM(r.quantity) AS Quantity"
+                    + " ORDER BY Year, Month";
+
+            StatementResult result = session.run(tx, Values.parameters(
+                    "name", "Parts", "date", startDateLast12MonthSales));
+
+            while (result.hasNext()) {
+                Record r = result.next();
+
+                int year = r.get("Year").asInt();
+                int month = r.get("Month").asInt();
+                String market = r.get("Market").asString();
+                double netSales = r.get("NetSales").asDouble();
+                double directCost = r.get("DirectCost").asDouble();
+                double quantity = r.get("Quantity").asDouble();
+
+//                Make date
+                LocalDate d = utility.Utility.makeDate(year, month);
+
+//            Add results to Map
+                marketSalesMap.put(d, new MarketSalesData(d, market, netSales,
+                        directCost, quantity));
+            }
+
+        } catch (ClientException e) {
+            System.err.println("Exception in 'populateMarketSalesMap()':" + e);
+        } finally {
+            neo4jBean.closeNeo4jDriver();
+
+        }
     }
 
     public LineChartModel getR12SalesModel() {
