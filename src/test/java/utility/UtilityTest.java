@@ -7,6 +7,7 @@ package utility;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -93,6 +94,41 @@ public class UtilityTest {
         assertEquals(20, Utility.calcMargin(-100d, 80d), 0.0);
         assertEquals(1000100, Utility.calcMargin(0.01, 100d), 0.0);
         assertEquals(99.999, Utility.calcMargin(100d, -0.001), 0.0);
+
+    }
+
+    /**
+     * Test of calcMonthsFromStart method, of class Utility.
+     */
+//    @Ignore
+    @Test
+    public void testCalcMonthsFromStart() {
+        System.out.println("calcMonthsFromStart");
+        long expResult = 24L;
+        long result = Utility.calcMonthsFromStart();
+        assertEquals(expResult, result);
+    }
+
+    /**
+     * Test of isWithinRange method, of class Utility.
+     */
+    @Test
+    public void testIsWithinRange() {
+        System.out.println("isWithinRange");
+        assertTrue(Utility.isWithinRange(
+                LocalDate.of(2017, 1, 31), LocalDate.of(2017, 5, 31)));
+        assertFalse(Utility.isWithinRange(
+                LocalDate.of(2017, 1, 31), LocalDate.of(2018, 5, 31)));
+        assertTrue(Utility.isWithinRange(
+                LocalDate.of(2017, 2, 04), LocalDate.of(2017, 2, 04)));
+        assertTrue(Utility.isWithinRange(
+                LocalDate.of(2014, 12, 31), LocalDate.of(2015, 11, 30)));
+        assertFalse(Utility.isWithinRange(
+                LocalDate.of(2014, 12, 31), LocalDate.of(2015, 12, 31)));
+        assertFalse(Utility.isWithinRange(
+                LocalDate.of(2015, 03, 31), LocalDate.of(2015, 02, 28)));
+        assertTrue(Utility.isWithinRange(
+                LocalDate.of(2015, 3, 1), LocalDate.of(2016, 2, 29)));
 
     }
 

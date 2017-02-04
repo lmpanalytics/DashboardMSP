@@ -6,8 +6,11 @@
 package utility;
 
 import java.time.LocalDate;
+import java.time.Month;
 import static java.time.temporal.ChronoUnit.MONTHS;
 import java.time.temporal.TemporalAdjusters;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * This class contains utility methods
@@ -34,7 +37,8 @@ public class Utility {
      * Calculate the number of months from the start of the Rolling 12 period
      * until the current month minus 1, which is the end of the R12 plot range.
      *
-     * @return number of months
+     * @return the number of months between Start Date (Inclusive) and Today
+     * (Exclusive)
      */
     public static long calcMonthsFromStart() {
         return MONTHS.between(calcStartDate(), LocalDate.now());
@@ -54,6 +58,28 @@ public class Utility {
             d = LocalDate.of(year, month, 1);
         }
         return d.with(TemporalAdjusters.lastDayOfMonth());
+    }
+
+    /**
+     * Test if the test date is within a 12 month range from a start date
+     *
+     * @param startDate the start date
+     * @param testDate the date to be tested
+     * @return true if within rage, else false
+     */
+    public static boolean isWithinRange(LocalDate startDate, LocalDate testDate) {
+        LocalDate endDate = startDate.plusMonths(12).with(TemporalAdjusters.
+                lastDayOfMonth());
+
+        boolean inRange = false;
+        if (testDate.isBefore(endDate) && testDate.isAfter(startDate) || testDate.
+                equals(startDate)) {
+            inRange = true;
+        } else {
+            inRange = false;
+        }
+//        System.out.printf("Is %s within the range of %s and %s? Results %s\n",testDate, startDate, endDate, inRange);
+        return inRange;
     }
 
     /**

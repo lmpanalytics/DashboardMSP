@@ -10,10 +10,13 @@ import com.tetrapak.dashboard.model.MarketSalesData;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
@@ -30,6 +33,7 @@ import org.primefaces.model.chart.ChartSeries;
 import org.primefaces.model.chart.DateAxis;
 import org.primefaces.model.chart.LineChartModel;
 import org.primefaces.model.chart.MeterGaugeChartModel;
+import utility.Utility;
 
 /**
  * This bean models the dashboard
@@ -48,11 +52,14 @@ public class DashboardBean implements Serializable {
 
     // ADD CLASS SPECIFIC MAPS AND FIELDS HERE
     private Map<LocalDate, DashboardSalesData> salesMap;
-    private Map<LocalDate, MarketSalesData> marketSalesMap;
+    private Map<String, MarketSalesData> marketSalesMap;
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarginModel;
+    private LineChartModel r12MarketSalesModel;
+    private LineChartModel r12MarketMarginModel;
     private MeterGaugeChartModel r12GrowthModel;
     private List<MarketSalesData> marketSalesList;
+    private int marketCounter;
 
     public DashboardBean() {
 
@@ -67,9 +74,9 @@ public class DashboardBean implements Serializable {
         salesMap = new LinkedHashMap<>();
 
 //        Pre-Populate the sales map with dates and zeros
-        long deltaMonths = utility.Utility.calcMonthsFromStart();
+        long deltaMonths = Utility.calcMonthsFromStart();
         for (int i = 0; i <= deltaMonths; i++) {
-            LocalDate d = utility.Utility.calcStartDate();
+            LocalDate d = Utility.calcStartDate();
             salesMap.put(d.plusMonths(i),
                     new DashboardSalesData(d.plusMonths(i), 0d, 0d, 0d));
         }
@@ -80,7 +87,7 @@ public class DashboardBean implements Serializable {
 //        Populate the Sales Line Chart with Rolling 12 data
         populateR12SalesLineChart();
 
-        //        Populate the Margin Line Chart with Rolling 12 data
+//        Populate the Margin Line Chart with Rolling 12 data
         populateR12MarginLineChart();
 
 //        Populate the R12GrowthMeterGauge with Rolling 12 data
@@ -91,6 +98,9 @@ public class DashboardBean implements Serializable {
 
 //        Populate Market List with data from database
         populateMarketSalesMap();
+
+//        Populate the Market Sales & Margin Line Charts with Rolling 12 data
+        populateR12MarketLineCharts();
     }
 
     @PreDestroy
@@ -127,7 +137,7 @@ public class DashboardBean implements Serializable {
                 double quantity = r.get("Quantity").asDouble();
 
 //                Make date
-                LocalDate d = utility.Utility.makeDate(year, month);
+                LocalDate d = Utility.makeDate(year, month);
 
 //            Add results to Map
                 salesMap.put(d, new DashboardSalesData(
@@ -154,7 +164,7 @@ public class DashboardBean implements Serializable {
 
 //        Count number of key-value mappings in sales map
         int length = salesMap.size();
-        LocalDate startDate = utility.Utility.calcStartDate();
+        LocalDate startDate = Utility.calcStartDate();
 
 //        R12 algorithm
         int rollingPeriod = 12;
@@ -205,7 +215,7 @@ public class DashboardBean implements Serializable {
 
 //        Count number of key-value mappings in sales map
         int length = salesMap.size();
-        LocalDate startDate = utility.Utility.calcStartDate();
+        LocalDate startDate = Utility.calcStartDate();
 
 //        R12 algorithm
         int rollingPeriod = 12;
@@ -225,7 +235,7 @@ public class DashboardBean implements Serializable {
                 }
                 if (innerLoopCounter == rollingPeriod) {
                     String date = key.format(DateTimeFormatter.ISO_DATE);
-                    double margin = utility.Utility.calcMargin(accR12Sales,
+                    double margin = Utility.calcMargin(accR12Sales,
                             accR12Cost);
                     r12Margin.set(date, margin);
                 }
@@ -265,7 +275,7 @@ public class DashboardBean implements Serializable {
 
 //        Count number of key-value mappings in sales map
         int length = salesMap.size();
-        LocalDate startDate = utility.Utility.calcStartDate();
+        LocalDate startDate = Utility.calcStartDate();
 
 //        R12 algorithm
         int rollingPeriod = 12;
@@ -317,23 +327,25 @@ public class DashboardBean implements Serializable {
     }
 
     /**
+     * ============================ MARKET CONTROLS ===========================
      * Populate Market Map with data from database. The data is limited to the
      * Top-10 Markets based on NetSales in the last 12-Month period.
      */
     private void populateMarketSalesMap() {
-        System.out.println(" I'm in the populateMarketSalesMap()' method.");
-        String startDateLast12MonthSales = LocalDate.now().minusMonths(13).
-                toString().replaceAll("-", "");
-
+        System.out.println(" I'm in the 'populateMarketSalesMap()' method.");
+//        Accumulate sales from this date to determine the largest markets
+        String startDateLast12MonthSales
+                = LocalDate.now().minusMonths(12).with(TemporalAdjusters.
+                        lastDayOfMonth()).toString().replaceAll("-", "");
         // code query here
         try (Session session = neo4jBean.getDriver().session()) {
-
+//  Query the ten biggest markets in terms of net sales over the last 12 months
             String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)"
                     + " MATCH (m)-[:CATEGORY]->(s:ServiceCategory)"
                     + " WHERE s.name = {name} AND (d.year + \"\" + d.month + \"01\") >= {date} "
                     + " WITH r.marketNumber AS MarketNumber, SUM(r.netSales) AS TNetSales"
-                    + " ORDER BY TNetSales DESC LIMIT 10"
-                    + " WITH collect(MarketNumber) AS MarketNumbers"
+                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                    + " WITH collect(MarketNumber) AS MarketNumbers" /* Collect the markets in a list */
                     + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[:SOLD_IN]->(mkt:Market)"
                     + " MATCH (m)-[:CATEGORY]->(s:ServiceCategory)"
                     + " WHERE r.marketNumber IN MarketNumbers AND r.marketNumber = mkt.id AND s.name = {name}"
@@ -354,10 +366,12 @@ public class DashboardBean implements Serializable {
                 double quantity = r.get("Quantity").asDouble();
 
 //                Make date
-                LocalDate d = utility.Utility.makeDate(year, month);
+                LocalDate d = Utility.makeDate(year, month);
+//                Make composite key
+                String key = d + market;
 
 //            Add results to Map
-                marketSalesMap.put(d, new MarketSalesData(d, market, netSales,
+                marketSalesMap.put(key, new MarketSalesData(d, market, netSales,
                         directCost, quantity));
             }
 
@@ -367,6 +381,106 @@ public class DashboardBean implements Serializable {
             neo4jBean.closeNeo4jDriver();
 
         }
+    }
+
+    /**
+     * Populate the Market Sales & Margin Line Charts with Rolling 12 data.
+     */
+    private void populateR12MarketLineCharts() {
+        System.out.println("I'm in the 'populateR12MarketLineCharts()' method.");
+
+        //        Initiate r12SalesModel
+        r12MarketSalesModel = new LineChartModel();
+
+//        Initiate r12MarginModel
+        r12MarketMarginModel = new LineChartModel();
+
+//       R12 algorithm based on dates
+//        Create set of markets contained in the map
+        Set<String> marketSet = marketSalesMap.values().stream().map(
+                MarketSalesData::getMarket).collect(Collectors.toSet());
+
+//        Accumulate sales and cost for each market over rolling 12 periods
+        int rollingPeriod = 12;
+        marketCounter = 0;
+
+        for (String mkt : marketSet) {
+//        Limit number of markets in the chart
+            if (marketCounter < 5) {
+//                Initiate chart series 
+                ChartSeries r12Sales = new ChartSeries(mkt);
+                ChartSeries r12Margin = new ChartSeries(mkt);
+
+                for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
+                    LocalDate date = Utility.calcStartDate().plusMonths(i).with(
+                            TemporalAdjusters.lastDayOfMonth());
+
+//                Collect and sum sales
+                    Double netSalesR12 = marketSalesMap.values().stream().
+                            filter(
+                                    m -> m.getMarket().equals(mkt)
+                                    && Utility.isWithinRange(date, m.getDate())).
+                            collect(
+                                    Collectors.summingDouble(
+                                            MarketSalesData::getNetSales));
+
+//                Collect and sum cost
+                    Double costR12 = marketSalesMap.values().stream().filter(
+                            m -> m.getMarket().equals(mkt)
+                            && Utility.isWithinRange(date, m.getDate())).
+                            collect(
+                                    Collectors.summingDouble(
+                                            MarketSalesData::getDirectCost));
+
+//                System.out.printf("%s -> %s, %s, %s", date, date.plusMonths(11).with(TemporalAdjusters.lastDayOfMonth()), mkt, netSalesR12);
+                    String chartDate = date.plusMonths(11).with(
+                            TemporalAdjusters.
+                                    lastDayOfMonth()).format(
+                                    DateTimeFormatter.ISO_DATE);
+
+                    //        Add data to r12Sales series        
+                    r12Sales.set(chartDate, netSalesR12);
+
+                    //        Add data to r12Margin series   
+                    double margin = Utility.calcMargin(netSalesR12,
+                            costR12);
+                    r12Margin.set(chartDate, margin);
+                }
+
+                //        Populate r12MarketSalesModel             
+                r12MarketSalesModel.addSeries(r12Sales);
+                r12Sales.setLabel(mkt);
+
+                //        Populate r12MarketMarginModel             
+                r12MarketMarginModel.addSeries(r12Margin);
+                r12Margin.setLabel(mkt);
+                marketCounter++;
+            }
+        }
+
+//        Set chart parameters for the sales chart
+        r12MarketSalesModel.setTitle("Sales of Spare Parts");
+        r12MarketSalesModel.setLegendPosition("e");
+        r12MarketSalesModel.setShowPointLabels(true);
+        r12MarketSalesModel.setZoom(true);
+        r12MarketSalesModel.getAxis(AxisType.Y).setLabel("EUR");
+        DateAxis axis = new DateAxis("Dates");
+        axis.setTickAngle(-50);
+        axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+        axis.setTickFormat("%y-%b-%#d");
+        r12MarketSalesModel.getAxes().put(AxisType.X, axis);
+
+//        Set chart parameters for the margin chart
+        r12MarketMarginModel.setTitle("NetMargin of Spare Parts");
+        r12MarketMarginModel.setLegendPosition("e");
+        r12MarketMarginModel.setShowPointLabels(true);
+        r12MarketMarginModel.setZoom(true);
+        r12MarketMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
+        DateAxis axis1 = new DateAxis("Dates");
+        axis1.setTickAngle(-50);
+        axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+        axis1.setTickFormat("%y-%b-%#d");
+        r12MarketMarginModel.getAxes().put(AxisType.X, axis1);
     }
 
     public LineChartModel getR12SalesModel() {
@@ -379,5 +493,13 @@ public class DashboardBean implements Serializable {
 
     public MeterGaugeChartModel getR12GrowthModel() {
         return r12GrowthModel;
+    }
+
+    public LineChartModel getR12MarketSalesModel() {
+        return r12MarketSalesModel;
+    }
+
+    public LineChartModel getR12MarketMarginModel() {
+        return r12MarketMarginModel;
     }
 }
