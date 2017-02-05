@@ -74,24 +74,26 @@ public class DashboardBean implements Serializable {
         salesMap = new LinkedHashMap<>();
 
 //        Pre-Populate the sales map with dates and zeros
-        long deltaMonths = Utility.calcMonthsFromStart();
+        /*  long deltaMonths = Utility.calcMonthsFromStart();
         for (int i = 0; i <= deltaMonths; i++) {
             LocalDate d = Utility.calcStartDate();
             salesMap.put(d.plusMonths(i),
                     new DashboardSalesData(d.plusMonths(i), 0d, 0d, 0d));
-        }
-
+        }*/
 //        Populate sales map with data from database
         populateSalesMap();
 
 //        Populate the Sales Line Chart with Rolling 12 data
-        populateR12SalesLineChart();
+        populateR12LineCharts();
+        
+//        Populate the Sales Line Chart with Rolling 12 data
+//        populateR12SalesLineChart();
 
 //        Populate the Margin Line Chart with Rolling 12 data
-        populateR12MarginLineChart();
+//        populateR12MarginLineChart();
 
 //        Populate the R12GrowthMeterGauge with Rolling 12 data
-        populateR12GrowthMeterGauge();
+//        populateR12GrowthMeterGauge();
 
 //        Initialize the marketSalesMap
         marketSalesMap = new LinkedHashMap<>();
@@ -154,9 +156,92 @@ public class DashboardBean implements Serializable {
     }
 
     /**
+     * Populate the Global Sales & Margin Line Charts with Rolling 12 data.
+     */
+    private void populateR12LineCharts() {
+        System.out.println("I'm in the 'populateR12LineCharts()' method.");
+
+//        Initiate r12SalesModel
+        r12SalesModel = new LineChartModel();
+
+//        Initiate r12MarginModel
+        r12MarginModel = new LineChartModel();
+
+//       R12 algorithm based on dates
+//        Accumulate sales and cost over rolling 12 periods
+        int rollingPeriod = 12;
+
+//                Initiate chart series 
+        ChartSeries r12Sales = new ChartSeries();
+        ChartSeries r12Margin = new ChartSeries();
+
+        for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
+            LocalDate date = Utility.calcStartDate().plusMonths(i).with(
+                    TemporalAdjusters.lastDayOfMonth());
+
+//                Collect and sum sales
+            Double netSalesR12 = salesMap.values().stream().filter(
+                    m -> Utility.isWithinRange(date, m.getDate())).
+                    collect(Collectors.summingDouble(
+                            DashboardSalesData::getNetSales));
+
+//                Collect and sum cost
+            Double costR12 = salesMap.values().stream().filter(
+                    m -> Utility.isWithinRange(date, m.getDate())).
+                    collect(Collectors.summingDouble(
+                            DashboardSalesData::getDirectCost));
+
+//                System.out.printf("%s -> %s, %s", date, date.plusMonths(11).with(TemporalAdjusters.lastDayOfMonth()), netSalesR12);
+            String chartDate = date.plusMonths(11).with(
+                    TemporalAdjusters.lastDayOfMonth()).format(
+                    DateTimeFormatter.ISO_DATE);
+
+            //        Add data to r12Sales series        
+            r12Sales.set(chartDate, netSalesR12);
+
+            //        Add data to r12Margin series   
+            double margin = Utility.calcMargin(netSalesR12,
+                    costR12);
+            r12Margin.set(chartDate, margin);
+        }
+
+        //        Populate r12SalesModel             
+        r12SalesModel.addSeries(r12Sales);
+        r12Sales.setLabel("Net Sales");
+
+        //        Populate r12MarginModel             
+        r12MarginModel.addSeries(r12Margin);
+        r12Margin.setLabel("Net Margin");
+
+//        Set chart parameters for the sales chart
+        r12SalesModel.setTitle("Sales of Spare Parts");
+        r12SalesModel.setLegendPosition("e");
+        r12SalesModel.setShowPointLabels(true);
+        r12SalesModel.setZoom(true);
+        r12SalesModel.getAxis(AxisType.Y).setLabel("EUR");
+        DateAxis axis = new DateAxis("Dates");
+        axis.setTickAngle(-50);
+        axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+        axis.setTickFormat("%y-%b-%#d");
+        r12SalesModel.getAxes().put(AxisType.X, axis);
+
+//        Set chart parameters for the margin chart
+        r12MarginModel.setTitle("NetMargin of Spare Parts");
+        r12MarginModel.setLegendPosition("e");
+        r12MarginModel.setShowPointLabels(true);
+        r12MarginModel.setZoom(true);
+        r12MarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
+        DateAxis axis1 = new DateAxis("Dates");
+        axis1.setTickAngle(-50);
+        axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+        axis1.setTickFormat("%y-%b-%#d");
+        r12MarginModel.getAxes().put(AxisType.X, axis1);
+    }
+
+    /**
      * Populate the Sales Line Chart with Rolling 12 data
      */
-    private void populateR12SalesLineChart() {
+   /* private void populateR12SalesLineChart() {
         System.out.println("I'm in the 'populateR12SalesLineChart()' method.");
         //        Initiate r12SalesModel
         r12SalesModel = new LineChartModel();
@@ -202,12 +287,12 @@ public class DashboardBean implements Serializable {
         axis.setTickFormat("%y-%b-%#d");
 
         r12SalesModel.getAxes().put(AxisType.X, axis);
-    }
+    } */
 
     /**
      * Populate the Margin Line Chart with Rolling 12 data
      */
-    private void populateR12MarginLineChart() {
+   /* private void populateR12MarginLineChart() {
         System.out.println("I'm in the 'populateR12MarginLineChart()' method.");
         //        Initiate r12MarginModel
         r12MarginModel = new LineChartModel();
@@ -257,7 +342,7 @@ public class DashboardBean implements Serializable {
         axis.setTickFormat("%y-%b-%#d");
 
         r12MarginModel.getAxes().put(AxisType.X, axis);
-    }
+    } */
 
     /**
      * Populate the R12GrowthMeterGauge with data
