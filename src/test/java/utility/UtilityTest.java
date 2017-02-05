@@ -132,4 +132,21 @@ public class UtilityTest {
 
     }
 
+    /**
+     * Test of calcGrowthRate method, of class Utility.
+     */
+    @Test
+    public void testCalcGrowthRate() {
+        System.out.println("calcGrowthRate");
+//      Utility.calcGrowthRate(currentValue, pastValue);
+        assertEquals(20d, Utility.calcGrowthRate(12d, 10d), 0.001);
+        assertEquals(0d, Utility.calcGrowthRate(12, 0), 0.001);
+        assertEquals(-100d, Utility.calcGrowthRate(0, 10), 0.001);
+        assertEquals(0d, Utility.calcGrowthRate(0, 0), 0.001);
+        assertEquals(-220d, Utility.calcGrowthRate(12, -10), 0.001);
+        assertEquals(-220d, Utility.calcGrowthRate(-12, 10), 0.001);
+        assertEquals(20d, Utility.calcGrowthRate(-12, -10), 0.001);
+
+    }
+
 }

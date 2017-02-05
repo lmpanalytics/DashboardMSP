@@ -97,4 +97,20 @@ public class Utility {
         }
         return margin;
     }
+
+    /**
+     * Calculate the growth rate in percent
+     *
+     * @param currentValue
+     * @param pastValue
+     * @return growth rate
+     */
+    public static double calcGrowthRate(double currentValue, double pastValue) {
+        //            Calculate the growth
+        double rate = 0d;
+        if (pastValue != 0d) {
+            rate = ((currentValue / pastValue) - 1) * 100d;
+        }
+        return rate;
+    }
 }
