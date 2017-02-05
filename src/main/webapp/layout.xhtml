@@ -39,7 +39,49 @@
         <div class="w3-row">
             <div class="w3-third w3-container w3-border">
                 <h2>Top-10 Market table</h2> 
-                <h5>Category, Sales, Growth, Margin, Potential</h5>
+                <f:view>
+                    <h2>
+                        <p:outputLabel value="Sales"></p:outputLabel>
+                    </h2>
+                    <p:dataTable value="#{dashboardBean.categoryTableList}" var="data"
+                                 paginator="true" rows="50" scrollable="true" scrollHeight="300"
+                                 draggableColumns="true" liveResize="true">
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Market"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.category}"></h:outputText>
+                            <f:facet name="footer">				
+                                In total there are #{fn:length(dashboardBean.categoryTableList)} markets.
+                            </f:facet>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Sales"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.sales}"></h:outputText>
+                            <!-- INSERT SAVED CODE SNIPPET IN .TXT FILE -->
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Growth"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.growth}"></h:outputText>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Margin (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.margin}"></h:outputText>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Potential"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.potential}"></h:outputText>
+                        </p:column>
+                    </p:dataTable>    
+                </f:view>
             </div>
             <div class="w3-third w3-container">
                 <h2>Top-5 Market Sales Chart</h2>

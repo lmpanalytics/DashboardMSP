@@ -5,6 +5,7 @@
  */
 package com.tetrapak.dashboard.beans;
 
+import com.tetrapak.dashboard.model.CategoryTableData;
 import com.tetrapak.dashboard.model.DashboardSalesData;
 import com.tetrapak.dashboard.model.MarketSalesData;
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,7 +60,7 @@ public class DashboardBean implements Serializable {
     private LineChartModel r12MarketSalesModel;
     private LineChartModel r12MarketMarginModel;
     private MeterGaugeChartModel r12GrowthModel;
-    private List<MarketSalesData> marketSalesList;
+    private List<CategoryTableData> categoryTableList;
     private int marketCounter;
 
     public DashboardBean() {
@@ -71,15 +73,20 @@ public class DashboardBean implements Serializable {
 
 // INITIALIZE CLASS SPECIFIC MAPS AND FIELDS HERE
         // Initialize the Sales map
-        salesMap = new LinkedHashMap<>();
+        this.salesMap = new LinkedHashMap<>();
+
+//        Initialize the marketSalesMap
+        this.marketSalesMap = new LinkedHashMap<>();
+
+//        Initialize the Category Table List
+        this.categoryTableList = new LinkedList<>();
+
 //        Populate sales map with data from database
         populateSalesMap();
 
 //        Populate the Global Sales & Margin Line Charts with Rolling 12 data
         populateR12LineCharts();
 
-//        Initialize the marketSalesMap
-        marketSalesMap = new LinkedHashMap<>();
 //        Populate Market Map
         populateMarketSalesMap();
 
@@ -198,13 +205,13 @@ public class DashboardBean implements Serializable {
             r12Margin.set(chartDate, margin);
         }
 
-//                Collect and sum sales two years ago for growth calculation
+//                Collect and sum sales from two years ago for growth calculation
         Double r12h12 = salesMap.values().stream().filter(
                 m -> Utility.isWithinRange(dateH12, m.getDate())).
                 collect(Collectors.summingDouble(
                         DashboardSalesData::getNetSales));
 
-//                Collect and sum sales one year ago for growth calculation
+//                Collect and sum sales from one year ago for growth calculation
         Double r12t0 = salesMap.values().stream().filter(
                 m -> Utility.isWithinRange(dateT0, m.getDate())).
                 collect(Collectors.summingDouble(
@@ -329,6 +336,14 @@ public class DashboardBean implements Serializable {
 //        Initiate r12MarginModel
         r12MarketMarginModel = new LineChartModel();
 
+        //        Calculate historical sales start dates to use in Growth calculation
+        LocalDate dateT0 = Utility.makeDate(LocalDate.now().minusYears(1).
+                getYear(), LocalDate.now().getMonthValue()
+        );
+        LocalDate dateH12 = Utility.makeDate(LocalDate.now().minusYears(2).
+                getYear(), LocalDate.now().getMonthValue()
+        );
+
 //       R12 algorithm based on dates
 //        Create set of markets contained in the map
         Set<String> marketSet = marketSalesMap.values().stream().map(
@@ -339,48 +354,76 @@ public class DashboardBean implements Serializable {
         marketCounter = 0;
 
         for (String mkt : marketSet) {
-//        Limit number of markets in the chart
-            if (marketCounter < 5) {
 //                Initiate chart series 
-                ChartSeries r12Sales = new ChartSeries(mkt);
-                ChartSeries r12Margin = new ChartSeries(mkt);
+            ChartSeries r12Sales = new ChartSeries(mkt);
+            ChartSeries r12Margin = new ChartSeries(mkt);
 
-                for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
-                    LocalDate date = Utility.calcStartDate().plusMonths(i).with(
-                            TemporalAdjusters.lastDayOfMonth());
+            for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
+                LocalDate date = Utility.calcStartDate().plusMonths(i).with(
+                        TemporalAdjusters.lastDayOfMonth());
 
 //                Collect and sum sales
-                    Double netSalesR12 = marketSalesMap.values().stream().
-                            filter(
-                                    m -> m.getMarket().equals(mkt)
-                                    && Utility.isWithinRange(date, m.getDate())).
-                            collect(
-                                    Collectors.summingDouble(
-                                            MarketSalesData::getNetSales));
+                Double netSalesR12 = marketSalesMap.values().stream().
+                        filter(
+                                m -> m.getMarket().equals(mkt)
+                                && Utility.isWithinRange(date, m.getDate())).
+                        collect(
+                                Collectors.summingDouble(
+                                        MarketSalesData::getNetSales));
 
 //                Collect and sum cost
-                    Double costR12 = marketSalesMap.values().stream().filter(
-                            m -> m.getMarket().equals(mkt)
-                            && Utility.isWithinRange(date, m.getDate())).
-                            collect(
-                                    Collectors.summingDouble(
-                                            MarketSalesData::getDirectCost));
+                Double costR12 = marketSalesMap.values().stream().filter(
+                        m -> m.getMarket().equals(mkt)
+                        && Utility.isWithinRange(date, m.getDate())).
+                        collect(
+                                Collectors.summingDouble(
+                                        MarketSalesData::getDirectCost));
 
-//                System.out.printf("%s -> %s, %s, %s", date, date.plusMonths(11).with(TemporalAdjusters.lastDayOfMonth()), mkt, netSalesR12);
-                    String chartDate = date.plusMonths(11).with(
-                            TemporalAdjusters.
-                                    lastDayOfMonth()).format(
-                                    DateTimeFormatter.ISO_DATE);
+                String chartDate = date.plusMonths(11).with(
+                        TemporalAdjusters.
+                                lastDayOfMonth()).format(
+                                DateTimeFormatter.ISO_DATE);
 
-                    //        Add data to r12Sales series        
-                    r12Sales.set(chartDate, netSalesR12);
+                //        Add data to r12Sales series        
+                r12Sales.set(chartDate, netSalesR12);
 
-                    //        Add data to r12Margin series   
-                    double margin = Utility.calcMargin(netSalesR12,
-                            costR12);
-                    r12Margin.set(chartDate, margin);
-                }
+                //        Add data to r12Margin series   
+                double margin = Utility.calcMargin(netSalesR12,
+                        costR12);
+                r12Margin.set(chartDate, margin);
+            }
 
+//                Collect and sum sales from two years ago for growth calculation
+            Double r12SalesH12 = marketSalesMap.values().stream().filter(
+                    m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
+                    dateH12, m.getDate())).collect(Collectors.summingDouble(
+                            MarketSalesData::getNetSales));
+
+//                Collect and sum sales from one year ago for growth calculation
+            Double r12SalesT0 = marketSalesMap.values().stream().filter(
+                    m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
+                    dateT0, m.getDate())).collect(Collectors.summingDouble(
+                            MarketSalesData::getNetSales));
+
+//            Calculate the growth
+            double growthRate = Utility.calcGrowthRate(r12SalesT0, r12SalesH12);
+
+//                Collect and sum cost from one year ago for margin calculation
+            Double r12CostT0 = marketSalesMap.values().stream().filter(
+                    m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
+                    dateT0, m.getDate())).collect(Collectors.summingDouble(
+                            MarketSalesData::getDirectCost));
+
+//            Calculate the margin
+            double margin = Utility.calcMargin(r12SalesT0,
+                    r12CostT0);
+
+//            Populate the Category Table List
+            categoryTableList.add(new CategoryTableData(mkt, r12SalesT0,
+                    growthRate, margin, 0d));
+
+            //        Limit number of markets in the chart
+            if (marketCounter < 5) {
                 //        Populate r12MarketSalesModel             
                 r12MarketSalesModel.addSeries(r12Sales);
                 r12Sales.setLabel(mkt);
@@ -435,5 +478,13 @@ public class DashboardBean implements Serializable {
 
     public LineChartModel getR12MarketMarginModel() {
         return r12MarketMarginModel;
+    }
+
+    public List<CategoryTableData> getCategoryTableList() {
+        return categoryTableList;
+    }
+
+    public void setCategoryTableList(List<CategoryTableData> categoryTableList) {
+        this.categoryTableList = categoryTableList;
     }
 }
