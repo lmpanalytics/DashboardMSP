@@ -12,47 +12,12 @@
         <title>Dashboard Index</title>
     </h:head>
     <h:body>
-        <h1>Market Selections</h1>
-        <h3>Select Cluster, Market group, and Market</h3>
-        <h2>Data table</h2>
-
-        <f:view>
-            <h2>
-                <p:outputLabel value="Sales"></p:outputLabel>
-            </h2>
-            <p:dataTable value="#{salesBean.salesList}" var="data"
-                         paginator="true" rows="50" scrollable="true" scrollHeight="300"
-                         draggableColumns="true" liveResize="true">
-                <p:column>
-                    <f:facet name="header">
-                        <h:outputText value="MAT"></h:outputText>
-                    </f:facet>
-                    <h:outputText value="#{data.materialNumber}"></h:outputText>
-                    <f:facet name="footer">				
-                        In total there are #{fn:length(salesBean.salesList)} materials.
-                    </f:facet>
-                </p:column>
-                <p:column>
-                    <f:facet name="header">
-                        <h:outputText value="Sales"></h:outputText>
-                    </f:facet>
-                    <h:outputText value="#{data.sales}"></h:outputText>
-                    <f:facet name="footer"> Total:
-                        <h:outputText value="#{salesBean.totalSales}"></h:outputText>
-                        Euro.
-                    </f:facet>
-                </p:column>
-            </p:dataTable>    
-        </f:view>
-        <p></p>
-        <h2>Bar chart</h2>
-        <p:chart type="bar" model="#{salesBean.model}" />
-        <p></p>
-
+        <h1>Dashboard Selections</h1>
+        <h3>Select Spare Part or Maintenance</h3>
         <h:form>
             <p></p>
-            <h:commandButton id="spSales" value="SpSales"
-                             action="dashboard">
+            <h:commandButton id="spSales" value="Spare Parts"
+                             action="dashboardSP">
             </h:commandButton>
         </h:form>
     </h:body>

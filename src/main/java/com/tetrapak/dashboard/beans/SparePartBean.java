@@ -6,8 +6,8 @@
 package com.tetrapak.dashboard.beans;
 
 import com.tetrapak.dashboard.model.CategoryTableData;
-import com.tetrapak.dashboard.model.DashboardSalesData;
-import com.tetrapak.dashboard.model.MarketSalesData;
+import com.tetrapak.dashboard.model.GlobalChartData;
+import com.tetrapak.dashboard.model.CategoryChartData;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -45,7 +45,7 @@ import utility.Utility;
 @Named(value = "dashboardBean")
 @Stateless
 @SessionScoped
-public class DashboardBean implements Serializable {
+public class SparePartBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -53,8 +53,8 @@ public class DashboardBean implements Serializable {
     Neo4jBean neo4jBean;
 
     // ADD CLASS SPECIFIC MAPS AND FIELDS HERE
-    private Map<LocalDate, DashboardSalesData> salesMap;
-    private Map<String, MarketSalesData> marketSalesMap;
+    private Map<LocalDate, GlobalChartData> salesMap;
+    private Map<String, CategoryChartData> marketSalesMap;
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarginModel;
     private LineChartModel r12MarketSalesModel;
@@ -63,7 +63,7 @@ public class DashboardBean implements Serializable {
     private List<CategoryTableData> categoryTableList;
     private int marketCounter;
 
-    public DashboardBean() {
+    public SparePartBean() {
 
     }
 
@@ -131,7 +131,7 @@ public class DashboardBean implements Serializable {
                 LocalDate d = Utility.makeDate(year, month);
 
 //            Add results to Map
-                salesMap.put(d, new DashboardSalesData(
+                salesMap.put(d, new GlobalChartData(
                         d, netSales, directCost, quantity)
                 );
             }
@@ -182,14 +182,12 @@ public class DashboardBean implements Serializable {
 //                Collect and sum sales
             Double netSalesR12 = salesMap.values().stream().filter(
                     m -> Utility.isWithinRange(date, m.getDate())).
-                    collect(Collectors.summingDouble(
-                            DashboardSalesData::getNetSales));
+                    collect(Collectors.summingDouble(GlobalChartData::getNetSales));
 
 //                Collect and sum cost
             Double costR12 = salesMap.values().stream().filter(
                     m -> Utility.isWithinRange(date, m.getDate())).
-                    collect(Collectors.summingDouble(
-                            DashboardSalesData::getDirectCost));
+                    collect(Collectors.summingDouble(GlobalChartData::getDirectCost));
 
 //                System.out.printf("%s -> %s, %s", date, date.plusMonths(11).with(TemporalAdjusters.lastDayOfMonth()), netSalesR12);
             String chartDate = date.plusMonths(11).with(
@@ -208,14 +206,12 @@ public class DashboardBean implements Serializable {
 //                Collect and sum sales from two years ago for growth calculation
         Double r12h12 = salesMap.values().stream().filter(
                 m -> Utility.isWithinRange(dateH12, m.getDate())).
-                collect(Collectors.summingDouble(
-                        DashboardSalesData::getNetSales));
+                collect(Collectors.summingDouble(GlobalChartData::getNetSales));
 
 //                Collect and sum sales from one year ago for growth calculation
         Double r12t0 = salesMap.values().stream().filter(
                 m -> Utility.isWithinRange(dateT0, m.getDate())).
-                collect(Collectors.summingDouble(
-                        DashboardSalesData::getNetSales));
+                collect(Collectors.summingDouble(GlobalChartData::getNetSales));
 
         //            Calculate the growth
         double growthRate = Utility.calcGrowthRate(r12t0, r12h12);
@@ -312,7 +308,7 @@ public class DashboardBean implements Serializable {
                 String key = d + market;
 
 //            Add results to Map
-                marketSalesMap.put(key, new MarketSalesData(d, market, netSales,
+                marketSalesMap.put(key, new CategoryChartData(d, market, netSales,
                         directCost, quantity));
             }
 
@@ -346,8 +342,7 @@ public class DashboardBean implements Serializable {
 
 //       R12 algorithm based on dates
 //        Create set of markets contained in the map
-        Set<String> marketSet = marketSalesMap.values().stream().map(
-                MarketSalesData::getMarket).collect(Collectors.toSet());
+        Set<String> marketSet = marketSalesMap.values().stream().map(CategoryChartData::getMarket).collect(Collectors.toSet());
 
 //        Accumulate sales and cost for each market over rolling 12 periods
         int rollingPeriod = 12;
@@ -367,17 +362,13 @@ public class DashboardBean implements Serializable {
                         filter(
                                 m -> m.getMarket().equals(mkt)
                                 && Utility.isWithinRange(date, m.getDate())).
-                        collect(
-                                Collectors.summingDouble(
-                                        MarketSalesData::getNetSales));
+                        collect(Collectors.summingDouble(CategoryChartData::getNetSales));
 
 //                Collect and sum cost
                 Double costR12 = marketSalesMap.values().stream().filter(
                         m -> m.getMarket().equals(mkt)
                         && Utility.isWithinRange(date, m.getDate())).
-                        collect(
-                                Collectors.summingDouble(
-                                        MarketSalesData::getDirectCost));
+                        collect(Collectors.summingDouble(CategoryChartData::getDirectCost));
 
                 String chartDate = date.plusMonths(11).with(
                         TemporalAdjusters.
@@ -396,14 +387,12 @@ public class DashboardBean implements Serializable {
 //                Collect and sum sales from two years ago for growth calculation
             Double r12SalesH12 = marketSalesMap.values().stream().filter(
                     m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateH12, m.getDate())).collect(Collectors.summingDouble(
-                            MarketSalesData::getNetSales));
+                    dateH12, m.getDate())).collect(Collectors.summingDouble(CategoryChartData::getNetSales));
 
 //                Collect and sum sales from one year ago for growth calculation
             Double r12SalesT0 = marketSalesMap.values().stream().filter(
                     m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateT0, m.getDate())).collect(Collectors.summingDouble(
-                            MarketSalesData::getNetSales));
+                    dateT0, m.getDate())).collect(Collectors.summingDouble(CategoryChartData::getNetSales));
 
 //            Calculate the growth
             double growthRate = Utility.calcGrowthRate(r12SalesT0, r12SalesH12);
@@ -411,8 +400,7 @@ public class DashboardBean implements Serializable {
 //                Collect and sum cost from one year ago for margin calculation
             Double r12CostT0 = marketSalesMap.values().stream().filter(
                     m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateT0, m.getDate())).collect(Collectors.summingDouble(
-                            MarketSalesData::getDirectCost));
+                    dateT0, m.getDate())).collect(Collectors.summingDouble(CategoryChartData::getDirectCost));
 
 //            Calculate the margin
             double margin = Utility.calcMargin(r12SalesT0,
