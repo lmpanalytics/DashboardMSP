@@ -62,6 +62,7 @@ public class SparePartBean implements Serializable {
     private MeterGaugeChartModel r12GrowthModel;
     private List<CategoryTableData> categoryTableList;
     private int marketCounter;
+    private Double totTop10MarketSales;
 
     public SparePartBean() {
 
@@ -182,12 +183,14 @@ public class SparePartBean implements Serializable {
 //                Collect and sum sales
             Double netSalesR12 = salesMap.values().stream().filter(
                     m -> Utility.isWithinRange(date, m.getDate())).
-                    collect(Collectors.summingDouble(GlobalChartData::getNetSales));
+                    collect(Collectors.summingDouble(
+                            GlobalChartData::getNetSales));
 
 //                Collect and sum cost
             Double costR12 = salesMap.values().stream().filter(
                     m -> Utility.isWithinRange(date, m.getDate())).
-                    collect(Collectors.summingDouble(GlobalChartData::getDirectCost));
+                    collect(Collectors.summingDouble(
+                            GlobalChartData::getDirectCost));
 
 //                System.out.printf("%s -> %s, %s", date, date.plusMonths(11).with(TemporalAdjusters.lastDayOfMonth()), netSalesR12);
             String chartDate = date.plusMonths(11).with(
@@ -308,7 +311,8 @@ public class SparePartBean implements Serializable {
                 String key = d + market;
 
 //            Add results to Map
-                marketSalesMap.put(key, new CategoryChartData(d, market, netSales,
+                marketSalesMap.put(key, new CategoryChartData(d, market,
+                        netSales,
                         directCost, quantity));
             }
 
@@ -326,6 +330,9 @@ public class SparePartBean implements Serializable {
     private void populateR12MarketLineCharts() {
         System.out.println("I'm in the 'populateR12MarketLineCharts()' method.");
 
+//        Initiate totTop10MarketSales
+        totTop10MarketSales = 0d;
+
         //        Initiate r12SalesModel
         r12MarketSalesModel = new LineChartModel();
 
@@ -342,7 +349,8 @@ public class SparePartBean implements Serializable {
 
 //       R12 algorithm based on dates
 //        Create set of markets contained in the map
-        Set<String> marketSet = marketSalesMap.values().stream().map(CategoryChartData::getMarket).collect(Collectors.toSet());
+        Set<String> marketSet = marketSalesMap.values().stream().map(
+                CategoryChartData::getMarket).collect(Collectors.toSet());
 
 //        Accumulate sales and cost for each market over rolling 12 periods
         int rollingPeriod = 12;
@@ -362,13 +370,15 @@ public class SparePartBean implements Serializable {
                         filter(
                                 m -> m.getMarket().equals(mkt)
                                 && Utility.isWithinRange(date, m.getDate())).
-                        collect(Collectors.summingDouble(CategoryChartData::getNetSales));
+                        collect(Collectors.summingDouble(
+                                CategoryChartData::getNetSales));
 
 //                Collect and sum cost
                 Double costR12 = marketSalesMap.values().stream().filter(
                         m -> m.getMarket().equals(mkt)
                         && Utility.isWithinRange(date, m.getDate())).
-                        collect(Collectors.summingDouble(CategoryChartData::getDirectCost));
+                        collect(Collectors.summingDouble(
+                                CategoryChartData::getDirectCost));
 
                 String chartDate = date.plusMonths(11).with(
                         TemporalAdjusters.
@@ -387,12 +397,14 @@ public class SparePartBean implements Serializable {
 //                Collect and sum sales from two years ago for growth calculation
             Double r12SalesH12 = marketSalesMap.values().stream().filter(
                     m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateH12, m.getDate())).collect(Collectors.summingDouble(CategoryChartData::getNetSales));
+                    dateH12, m.getDate())).collect(Collectors.summingDouble(
+                            CategoryChartData::getNetSales));
 
 //                Collect and sum sales from one year ago for growth calculation
             Double r12SalesT0 = marketSalesMap.values().stream().filter(
                     m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateT0, m.getDate())).collect(Collectors.summingDouble(CategoryChartData::getNetSales));
+                    dateT0, m.getDate())).collect(Collectors.summingDouble(
+                            CategoryChartData::getNetSales));
 
 //            Calculate the growth
             double growthRate = Utility.calcGrowthRate(r12SalesT0, r12SalesH12);
@@ -400,7 +412,8 @@ public class SparePartBean implements Serializable {
 //                Collect and sum cost from one year ago for margin calculation
             Double r12CostT0 = marketSalesMap.values().stream().filter(
                     m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateT0, m.getDate())).collect(Collectors.summingDouble(CategoryChartData::getDirectCost));
+                    dateT0, m.getDate())).collect(Collectors.summingDouble(
+                            CategoryChartData::getDirectCost));
 
 //            Calculate the margin
             double margin = Utility.calcMargin(r12SalesT0,
@@ -409,6 +422,9 @@ public class SparePartBean implements Serializable {
 //            Populate the Category Table List
             categoryTableList.add(new CategoryTableData(mkt, r12SalesT0,
                     growthRate, margin, 0d));
+
+//            Assign total R12 sales to class field
+            this.totTop10MarketSales = totTop10MarketSales + r12SalesT0;
 
             //        Limit number of markets in the chart
             if (marketCounter < 5) {
@@ -475,4 +491,9 @@ public class SparePartBean implements Serializable {
     public void setCategoryTableList(List<CategoryTableData> categoryTableList) {
         this.categoryTableList = categoryTableList;
     }
+
+    public Double getTotTop10MarketSales() {
+        return totTop10MarketSales;
+    }
+
 }
