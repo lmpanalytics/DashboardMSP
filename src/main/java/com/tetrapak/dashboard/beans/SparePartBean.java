@@ -111,7 +111,7 @@ public class SparePartBean implements Serializable {
         // code query here
         try (Session session = neo4jBean.getDriver().session()) {
 
-            String tx = "MATCH (s:ServiceCategory)<-[:CATEGORY]-(:Material)-[r:SOLD_ON]->(d:Day)"
+            String tx = "MATCH (s:ServiceCategory)<-[:OF_CATEGORY]-(:Material)-[r:SOLD_ON]->(d:Day)"
                     + " WHERE s.name = {name}"
                     + " RETURN d.year AS Year, d.month AS Month, SUM(r.netSales) AS NetSales, SUM(r.directCost) AS DirectCost, SUM(r.quantity) AS Quantity"
                     + " ORDER BY Year, Month";
@@ -281,15 +281,15 @@ public class SparePartBean implements Serializable {
         try (Session session = neo4jBean.getDriver().session()) {
 //  Query the ten biggest markets in terms of net sales over the last 12 months
             String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)"
-                    + " MATCH (m)-[:CATEGORY]->(s:ServiceCategory)"
+                    + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
                     + " WHERE s.name = {name} AND (d.year + \"\" + d.month + \"01\") >= {date} "
                     + " WITH r.marketNumber AS MarketNumber, SUM(r.netSales) AS TNetSales"
                     + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
                     + " WITH collect(MarketNumber) AS MarketNumbers" /* Collect the markets in a list */
-                    + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[:SOLD_IN]->(mkt:Market)"
-                    + " MATCH (m)-[:CATEGORY]->(s:ServiceCategory)"
-                    + " WHERE r.marketNumber IN MarketNumbers AND r.marketNumber = mkt.id AND s.name = {name}"
-                    + " RETURN d.year AS Year, d.month AS Month, mkt.name AS Market, SUM(r.netSales) AS NetSales, SUM(r.directCost) AS DirectCost, SUM(r.quantity) AS Quantity"
+                    + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[:SOLD_FROM]->(mkt:Market)"
+                    + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
+                    + " WHERE r.marketNumber IN MarketNumbers AND r.marketNumber = mkt.mktId AND s.name = {name}"
+                    + " RETURN d.year AS Year, d.month AS Month, mkt.mktName AS Market, SUM(r.netSales) AS NetSales, SUM(r.directCost) AS DirectCost, SUM(r.quantity) AS Quantity"
                     + " ORDER BY Year, Month";
 
             StatementResult result = session.run(tx, Values.parameters(
