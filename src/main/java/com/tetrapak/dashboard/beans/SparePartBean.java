@@ -8,6 +8,7 @@ package com.tetrapak.dashboard.beans;
 import com.tetrapak.dashboard.model.CategoryTableData;
 import com.tetrapak.dashboard.model.GlobalChartData;
 import com.tetrapak.dashboard.model.CategoryChartData;
+import com.tetrapak.dashboard.model.PotentialData;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -58,6 +59,7 @@ public class SparePartBean implements Serializable {
     // ADD CLASS SPECIFIC MAPS AND FIELDS HERE
     private Map<LocalDate, GlobalChartData> salesMap;
     private Map<String, CategoryChartData> marketSalesMap;
+    private Map<String, PotentialData> marketPotentialMap;
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarginModel;
     private LineChartModel r12MarketSalesModel;
@@ -71,6 +73,7 @@ public class SparePartBean implements Serializable {
     private Double totTop10MarketSales;
     private Double totTop10MarketGrowth;
     private Double totTop10MarketMargin;
+    private Double totTop10MarketPotential;
 
     public SparePartBean() {
 
@@ -86,6 +89,9 @@ public class SparePartBean implements Serializable {
 
 //        Initialize the marketSalesMap
         this.marketSalesMap = new LinkedHashMap<>();
+
+//        Initialize the marketPotentialMap
+        this.marketPotentialMap = new LinkedHashMap<>();
 
 //        Initialize the Category Table List
         this.categoryTableList = new LinkedList<>();
@@ -340,7 +346,7 @@ public class SparePartBean implements Serializable {
         } catch (ClientException e) {
             System.err.println("Exception in 'populateMarketSalesMap()':" + e);
         } finally {
-            neo4jBean.closeNeo4jDriver();
+//            neo4jBean.closeNeo4jDriver();
 
         }
     }
@@ -381,11 +387,15 @@ public class SparePartBean implements Serializable {
         double totR12Growth = 0d;
         double totR12CostT0 = 0d;
         double totR12Margin = 0d;
+        double totPotential = 0d;
 
         for (String mkt : marketSet) {
 //                Initiate chart series 
             ChartSeries r12Sales = new ChartSeries(mkt);
             ChartSeries r12Margin = new ChartSeries(mkt);
+
+//            Collect potentials by market and assign to marketPotentialMap
+            mapMarketPotentials(mkt);
 
             for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                 LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -445,21 +455,27 @@ public class SparePartBean implements Serializable {
             double margin = Utility.calcMargin(r12SalesT0,
                     r12CostT0);
 
+//            Extract Potential sales from potential map
+            double potential = marketPotentialMap.get(mkt).getPotSpareParts();
+
 // Populate the Category Table List and round results to 3 significant figures
             BigDecimal bdSales = new BigDecimal(r12SalesT0);
             BigDecimal bdGrowth = new BigDecimal(growthRate);
             BigDecimal bdMargin = new BigDecimal(margin);
+            BigDecimal bdPotential = new BigDecimal(potential);
 
             bdSales = bdSales.round(new MathContext(3));
             bdGrowth = bdGrowth.round(new MathContext(3));
             bdMargin = bdMargin.round(new MathContext(3));
+            bdPotential = bdPotential.round(new MathContext(3));
 
             double r12SalesT0Rounded = bdSales.doubleValue();
             double growthRateRounded = bdGrowth.doubleValue();
             double marginRounded = bdMargin.doubleValue();
+            double potentialRounded = bdPotential.doubleValue();
 
-            categoryTableList.add(new CategoryTableData(mkt,
-                    r12SalesT0Rounded, growthRateRounded, marginRounded, 0d)
+            categoryTableList.add(new CategoryTableData(mkt, r12SalesT0Rounded,
+                    growthRateRounded, marginRounded, potentialRounded)
             );
 
 //            Sum total R12 sales
@@ -472,6 +488,9 @@ public class SparePartBean implements Serializable {
             totR12CostT0 = totR12CostT0 + r12CostT0;
 //            Calculate R12 Margin
             totR12Margin = Utility.calcMargin(totR12SalesT0, totR12CostT0);
+
+//            Sum total Potential sales
+            totPotential = totPotential + potential;
 
             //        Limit number of markets in the chart
             if (marketCounter < 5) {
@@ -508,6 +527,12 @@ public class SparePartBean implements Serializable {
         double totR12MarginRounded = bdTotMargin.doubleValue();
         this.totTop10MarketMargin = totR12MarginRounded;
 
+//  Round total Potential Sales to 3 significant figures and assign to class field
+        BigDecimal bdTotPotential = new BigDecimal(totPotential);
+        bdTotPotential = bdTotPotential.round(new MathContext(3));
+        double totPotentialRounded = bdTotPotential.doubleValue();
+        this.totTop10MarketPotential = totPotentialRounded;
+
         /* *************** CHART PARAMETERS *************** */
 //        Set chart parameters for the sales chart
         r12MarketSalesModel.setLegendPosition("nw");
@@ -526,6 +551,45 @@ public class SparePartBean implements Serializable {
         axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
         axis1.setTickFormat("%y-%b-%#d");
         r12MarketMarginModel.getAxes().put(AxisType.X, axis1);
+    }
+
+    /**
+     * Collect potentials by market and assign to marketPotentialMap
+     *
+     * @param market
+     */
+    private void mapMarketPotentials(String market) {
+        try (Session session = neo4jBean.getDriver().session()) {
+//  Query the ten biggest markets in terms of net sales over the last 12 months
+            String tx = "MATCH (ib:InstalledBase)-[r:POTENTIAL]->(c:Customer)-[:LOCATED_IN]->(m:Market {mktName: {mktName}})"
+                    + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+
+            StatementResult result = session.run(tx, Values.parameters(
+                    "mktName", market));
+
+            while (result.hasNext()) {
+                Record r = result.next();
+
+                String marketName = r.get("MktName").asString();
+                double potSpareParts = r.get("SP_POT").asDouble();
+                double potMaintenanceHrs = r.get("HRS_POT").asDouble();
+                double potMaintenance = r.get("MT_POT").asDouble();
+
+//                Make key
+                String key = marketName;
+
+//            Add results to Map
+                this.marketPotentialMap.put(key,
+                        new PotentialData(potSpareParts, potMaintenanceHrs,
+                                potMaintenance));
+            }
+
+        } catch (ClientException e) {
+            System.err.println("Exception in 'mapMarketPotentials()':" + e);
+        } finally {
+//            neo4jBean.closeNeo4jDriver();
+
+        }
     }
 
     public LineChartModel getR12SalesModel() {
@@ -578,6 +642,10 @@ public class SparePartBean implements Serializable {
 
     public Double getTotTop10MarketMargin() {
         return totTop10MarketMargin;
+    }
+
+    public Double getTotTop10MarketPotential() {
+        return totTop10MarketPotential;
     }
 
 }

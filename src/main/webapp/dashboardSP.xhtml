@@ -35,7 +35,7 @@
 
         <div class="w3-row">
             <div class="w3-third w3-container w3-border">
-                <h2>Top-10 Markets</h2> 
+                <h2>Sales Top-10 Markets</h2> 
                 <f:view>
 
                     <p:dataTable value="#{sparePartBean.categoryTableList}" var="data"
@@ -80,6 +80,9 @@
                                 <h:outputText value="Potential (MEur)"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.potential}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10MarketPotential}"></h:outputText>
+                            </f:facet>
                         </p:column>
                     </p:dataTable>    
                 </f:view>
