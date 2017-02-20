@@ -9,10 +9,13 @@ import com.tetrapak.dashboard.model.CategoryTableData;
 import com.tetrapak.dashboard.model.GlobalChartData;
 import com.tetrapak.dashboard.model.CategoryChartData;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +45,7 @@ import utility.Utility;
  *
  * @author SEPALMM
  */
-@Named(value = "dashboardBean")
+@Named(value = "sparePartBean")
 @Stateless
 @SessionScoped
 public class SparePartBean implements Serializable {
@@ -62,6 +65,9 @@ public class SparePartBean implements Serializable {
     private MeterGaugeChartModel r12GrowthModel;
     private List<CategoryTableData> categoryTableList;
     private int marketCounter;
+    private Double globalGrowth;
+    private Double globalSales;
+    private Double globalMargin;
     private Double totTop10MarketSales;
 
     public SparePartBean() {
@@ -113,7 +119,7 @@ public class SparePartBean implements Serializable {
 
             String tx = "MATCH (s:ServiceCategory)<-[:OF_CATEGORY]-(:Material)-[r:SOLD_ON]->(d:Day)"
                     + " WHERE s.name = {name}"
-                    + " RETURN d.year AS Year, d.month AS Month, SUM(r.netSales) AS NetSales, SUM(r.directCost) AS DirectCost, SUM(r.quantity) AS Quantity"
+                    + " RETURN d.year AS Year, d.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
             StatementResult result = session.run(tx, Values.parameters(
@@ -204,6 +210,18 @@ public class SparePartBean implements Serializable {
             double margin = Utility.calcMargin(netSalesR12,
                     costR12);
             r12Margin.set(chartDate, margin);
+
+//  Round R12 net sales to 3 significant figures and assign to class field
+            BigDecimal bdSales = new BigDecimal(netSalesR12);
+            bdSales = bdSales.round(new MathContext(3));
+            double netSalesR12Rounded = bdSales.doubleValue();
+            this.globalSales = netSalesR12Rounded;
+
+//  Round R12 net margin to 3 significant figures and assign to class field
+            BigDecimal bdMargin = new BigDecimal(margin);
+            bdMargin = bdMargin.round(new MathContext(3));
+            double marginRounded = bdMargin.doubleValue();
+            this.globalMargin = marginRounded;
         }
 
 //                Collect and sum sales from two years ago for growth calculation
@@ -217,7 +235,13 @@ public class SparePartBean implements Serializable {
                 collect(Collectors.summingDouble(GlobalChartData::getNetSales));
 
         //            Calculate the growth
-        double growthRate = Utility.calcGrowthRate(r12t0, r12h12);
+        double r12GrowthRate = Utility.calcGrowthRate(r12t0, r12h12);
+
+//  Round R12 growth rate to 3 significant figures and assign to class field
+        BigDecimal bdGrowthRate = new BigDecimal(r12GrowthRate);
+        bdGrowthRate = bdGrowthRate.round(new MathContext(3));
+        double r12GrowthRateRounded = bdGrowthRate.doubleValue();
+        this.globalGrowth = r12GrowthRateRounded;
 
         //        Populate r12SalesModel             
         r12SalesModel.addSeries(r12Sales);
@@ -228,11 +252,8 @@ public class SparePartBean implements Serializable {
         r12Margin.setLabel("Net Margin");
 
 //        Set chart parameters for the sales chart
-        r12SalesModel.setTitle("Sales of Spare Parts");
-        r12SalesModel.setLegendPosition("e");
-        r12SalesModel.setShowPointLabels(true);
-        r12SalesModel.setZoom(true);
-        r12SalesModel.getAxis(AxisType.Y).setLabel("EUR");
+        r12SalesModel.setLegendPosition("nw");
+        r12SalesModel.getAxis(AxisType.Y).setLabel("MEur");
         DateAxis axis = new DateAxis("Dates");
         axis.setTickAngle(-50);
         axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -240,10 +261,7 @@ public class SparePartBean implements Serializable {
         r12SalesModel.getAxes().put(AxisType.X, axis);
 
 //        Set chart parameters for the margin chart
-        r12MarginModel.setTitle("NetMargin of Spare Parts");
-        r12MarginModel.setLegendPosition("e");
-        r12MarginModel.setShowPointLabels(true);
-        r12MarginModel.setZoom(true);
+        r12MarginModel.setLegendPosition("nw");
         r12MarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
         DateAxis axis1 = new DateAxis("Dates");
         axis1.setTickAngle(-50);
@@ -259,8 +277,7 @@ public class SparePartBean implements Serializable {
                 add(15.0);
             }
         };
-        r12GrowthModel = new MeterGaugeChartModel(growthRate, intervals);
-        r12GrowthModel.setTitle("Growth of Spare Parts");
+        r12GrowthModel = new MeterGaugeChartModel(this.globalGrowth, intervals);
         r12GrowthModel.setGaugeLabel("%");
         r12GrowthModel.setSeriesColors("cc6666,E7E658,66cc66");
 
@@ -289,7 +306,7 @@ public class SparePartBean implements Serializable {
                     + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[:SOLD_FROM]->(mkt:Market)"
                     + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
                     + " WHERE r.marketNumber IN MarketNumbers AND r.marketNumber = mkt.mktId AND s.name = {name}"
-                    + " RETURN d.year AS Year, d.month AS Month, mkt.mktName AS Market, SUM(r.netSales) AS NetSales, SUM(r.directCost) AS DirectCost, SUM(r.quantity) AS Quantity"
+                    + " RETURN d.year AS Year, d.month AS Month, mkt.mktName AS Market, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
             StatementResult result = session.run(tx, Values.parameters(
@@ -355,6 +372,7 @@ public class SparePartBean implements Serializable {
 //        Accumulate sales and cost for each market over rolling 12 periods
         int rollingPeriod = 12;
         marketCounter = 0;
+        double totR12SalesT0 = 0d;
 
         for (String mkt : marketSet) {
 //                Initiate chart series 
@@ -419,12 +437,25 @@ public class SparePartBean implements Serializable {
             double margin = Utility.calcMargin(r12SalesT0,
                     r12CostT0);
 
-//            Populate the Category Table List
-            categoryTableList.add(new CategoryTableData(mkt, r12SalesT0,
-                    growthRate, margin, 0d));
+// Populate the Category Table List and round results to 3 significant figures
+            BigDecimal bdSales = new BigDecimal(r12SalesT0);
+            BigDecimal bdGrowth = new BigDecimal(growthRate);
+            BigDecimal bdMargin = new BigDecimal(margin);
 
-//            Assign total R12 sales to class field
-            this.totTop10MarketSales = totTop10MarketSales + r12SalesT0;
+            bdSales = bdSales.round(new MathContext(3));
+            bdGrowth = bdGrowth.round(new MathContext(3));
+            bdMargin = bdMargin.round(new MathContext(3));
+
+            double r12SalesT0Rounded = bdSales.doubleValue();
+            double growthRateRounded = bdGrowth.doubleValue();
+            double marginRounded = bdMargin.doubleValue();
+
+            categoryTableList.add(new CategoryTableData(mkt,
+                    r12SalesT0Rounded, growthRateRounded, marginRounded, 0d)
+            );
+
+//            Sum total R12 sales
+            totR12SalesT0 = totR12SalesT0 + r12SalesT0;
 
             //        Limit number of markets in the chart
             if (marketCounter < 5) {
@@ -438,13 +469,19 @@ public class SparePartBean implements Serializable {
                 marketCounter++;
             }
         }
+//  Sort category list in decending order based on sales
+        Collections.sort(categoryTableList,
+                (CategoryTableData a, CategoryTableData b) -> b.getSales().
+                        compareTo(a.getSales()));
+//  Round total R12 sales to 3 significant figures and assign to class field
+        BigDecimal bdTotSales = new BigDecimal(totR12SalesT0);
+        bdTotSales = bdTotSales.round(new MathContext(3));
+        double totR12SalesT0Rounded = bdTotSales.doubleValue();
+        this.totTop10MarketSales = totR12SalesT0Rounded;
 
 //        Set chart parameters for the sales chart
-        r12MarketSalesModel.setTitle("Sales of Spare Parts");
-        r12MarketSalesModel.setLegendPosition("e");
-        r12MarketSalesModel.setShowPointLabels(true);
-        r12MarketSalesModel.setZoom(true);
-        r12MarketSalesModel.getAxis(AxisType.Y).setLabel("EUR");
+        r12MarketSalesModel.setLegendPosition("nw");
+        r12MarketSalesModel.getAxis(AxisType.Y).setLabel("MEur");
         DateAxis axis = new DateAxis("Dates");
         axis.setTickAngle(-50);
         axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -452,10 +489,7 @@ public class SparePartBean implements Serializable {
         r12MarketSalesModel.getAxes().put(AxisType.X, axis);
 
 //        Set chart parameters for the margin chart
-        r12MarketMarginModel.setTitle("NetMargin of Spare Parts");
-        r12MarketMarginModel.setLegendPosition("e");
-        r12MarketMarginModel.setShowPointLabels(true);
-        r12MarketMarginModel.setZoom(true);
+        r12MarketMarginModel.setLegendPosition("nw");
         r12MarketMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
         DateAxis axis1 = new DateAxis("Dates");
         axis1.setTickAngle(-50);
@@ -490,6 +524,18 @@ public class SparePartBean implements Serializable {
 
     public void setCategoryTableList(List<CategoryTableData> categoryTableList) {
         this.categoryTableList = categoryTableList;
+    }
+
+    public Double getGlobalGrowth() {
+        return globalGrowth;
+    }
+
+    public Double getGlobalSales() {
+        return globalSales;
+    }
+
+    public Double getGlobalMargin() {
+        return globalMargin;
     }
 
     public Double getTotTop10MarketSales() {

@@ -15,85 +15,79 @@
     </h:head>
     <h:body>
         <header class="w3-container w3-indigo">
-            <h1>Spare Parts</h1>
+            <h1>Spare Parts Dashboard</h1>
         </header>
         <div class="w3-row">
             <div class="w3-third w3-container w3-border">
-                <h2>Global Growth Meter Gauge Chart</h2>
-                <p:chart type="metergauge" model="#{dashboardBean.r12GrowthModel}" />
-                <p>Target: 7.5%</p>
+                <h2>R12 Growth #{sparePartBean.globalGrowth}% (TG 7.5%)</h2>
+                <p:chart type="metergauge" model="#{sparePartBean.r12GrowthModel}" />
             </div>
             <div class="w3-third w3-container w3-border">
-                <h2>Global R12 Sales Chart</h2>
-                <p:chart type="line" model="#{dashboardBean.r12SalesModel}" />
-                <p>Target: 269 MEUR</p>
+                <h2>R12 Sales #{sparePartBean.globalSales} MEur (TG 269 MEur)</h2>
+                <p:chart type="line" model="#{sparePartBean.r12SalesModel}" />
             </div>
             <div class="w3-third w3-container w3-border">
-                <h2>Global Margin Chart</h2>
-                <p:chart type="line" model="#{dashboardBean.r12MarginModel}" />
-                <p>Target: 60%</p>
+                <h2>R12 Net Margin #{sparePartBean.globalMargin}% (TG 60%)</h2>
+                <p:chart type="line" model="#{sparePartBean.r12MarginModel}" />
             </div>
         </div>
         <br></br>
 
         <div class="w3-row">
             <div class="w3-third w3-container w3-border">
-                <h2>Top-10 Market table</h2> 
+                <h2>Top-10 Markets</h2> 
                 <f:view>
-                    <h2>
-                        <p:outputLabel value="Sales"></p:outputLabel>
-                    </h2>
-                    <p:dataTable value="#{dashboardBean.categoryTableList}" var="data"
-                                 paginator="true" rows="50" scrollable="true" scrollHeight="300"
-                                 draggableColumns="true" liveResize="true">
+
+                    <p:dataTable value="#{sparePartBean.categoryTableList}" var="data"
+                                 paginator="false" rows="10" draggableColumns="true" liveResize="true">
                         <p:column>
                             <f:facet name="header">
                                 <h:outputText value="Market"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.category}"></h:outputText>
                         </p:column>
-                        <p:column>
+                        <p:column style="text-align:right">
                             <f:facet name="header">
-                                <h:outputText value="Sales"></h:outputText>
-                            </f:facet>
+                                <h:outputText value="Sales (MEur)"></h:outputText>
+                            </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer"> Total:
-                                <h:outputText value="#{dashboardBean.totTop10MarketSales}"></h:outputText>
+                                <h:outputText value="#{sparePartBean.totTop10MarketSales}"></h:outputText>
                             </f:facet>
                         </p:column>
-                        <p:column>
+                        <p:column style="text-align:right">
                             <f:facet name="header">
-                                <h:outputText value="Growth"></h:outputText>
+                                <h:outputText value="Growth (%)"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.growth}"></h:outputText>
                         </p:column>
-                        <p:column>
+                        <p:column style="text-align:right">
                             <f:facet name="header">
                                 <h:outputText value="Margin (%)"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.margin}"></h:outputText>
                         </p:column>
-                        <p:column>
+                        <p:column style="text-align:right">
                             <f:facet name="header">
-                                <h:outputText value="Potential"></h:outputText>
+                                <h:outputText value="Potential (MEur)"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.potential}"></h:outputText>
                         </p:column>
                     </p:dataTable>    
                 </f:view>
             </div>
-            <div class="w3-third w3-container">
-                <h2>Top-5 Market Sales Chart</h2>
-                <p:chart type="line" model="#{dashboardBean.r12MarketSalesModel}" />
+            <div class="w3-third w3-container  w3-border">
+                <h2>R12 Sales Top-5 Markets</h2>
+                <p:chart type="line" model="#{sparePartBean.r12MarketSalesModel}" />
             </div>
-            <div class="w3-third w3-container">
-                <h2>Top-5 Market Margin Chart</h2>
-                <p:chart type="line" model="#{dashboardBean.r12MarketMarginModel}" />
+            <div class="w3-third w3-container w3-border">
+                <h2>R12 Margin Top-5 Markets</h2>
+                <p:chart type="line" model="#{sparePartBean.r12MarketMarginModel}" />
             </div>
         </div>
 
         <footer class="w3-container w3-light-grey">
-            <h5>Footer</h5>
+            <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report</h5>
         </footer>
         <h:form>
             <p></p>
