@@ -149,4 +149,18 @@ public class UtilityTest {
 
     }
 
+    /**
+     * Test of roundDouble method, of class Utility.
+     */
+    @Test
+    public void testRoundDouble() {
+        System.out.println("roundDouble");
+        double input = 8.123;
+        int significanFigures = 3;
+        double expResult = 8.12;
+        double result = Utility.roundDouble(input, significanFigures);
+        assertEquals(expResult, result, 0.01);
+
+    }
+
 }

@@ -5,6 +5,8 @@
  */
 package utility;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.Month;
 import static java.time.temporal.ChronoUnit.MONTHS;
@@ -112,5 +114,18 @@ public class Utility {
             rate = ((currentValue / pastValue) - 1) * 100d;
         }
         return rate;
+    }
+
+    /**
+     * Round input value to significant figures
+     *
+     * @param input the value to be rounded
+     * @param significanFigures enter 3 for 3 significant figures and so forth
+     * @return rounded value
+     */
+    public static double roundDouble(double input, int significanFigures) {
+        BigDecimal bd = new BigDecimal(input);
+        bd = bd.round(new MathContext(significanFigures));
+        return bd.doubleValue();
     }
 }

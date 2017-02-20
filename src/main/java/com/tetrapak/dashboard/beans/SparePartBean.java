@@ -10,8 +10,6 @@ import com.tetrapak.dashboard.model.GlobalChartData;
 import com.tetrapak.dashboard.model.CategoryChartData;
 import com.tetrapak.dashboard.model.PotentialData;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
@@ -221,16 +219,10 @@ public class SparePartBean implements Serializable {
 
             /* *************** SUMMARY CALCULATIONS *************** */
 //  Round R12 net sales to 3 significant figures and assign to class field
-            BigDecimal bdSales = new BigDecimal(netSalesR12);
-            bdSales = bdSales.round(new MathContext(3));
-            double netSalesR12Rounded = bdSales.doubleValue();
-            this.globalSales = netSalesR12Rounded;
+            this.globalSales = Utility.roundDouble(netSalesR12, 3);
 
 //  Round R12 net margin to 3 significant figures and assign to class field
-            BigDecimal bdMargin = new BigDecimal(margin);
-            bdMargin = bdMargin.round(new MathContext(3));
-            double marginRounded = bdMargin.doubleValue();
-            this.globalMargin = marginRounded;
+            this.globalMargin = Utility.roundDouble(margin, 3);
         }
 
 //                Collect and sum sales from two years ago for growth calculation
@@ -247,10 +239,7 @@ public class SparePartBean implements Serializable {
         double r12GrowthRate = Utility.calcGrowthRate(r12t0, r12h12);
 
 //  Round R12 growth rate to 3 significant figures and assign to class field
-        BigDecimal bdGrowthRate = new BigDecimal(r12GrowthRate);
-        bdGrowthRate = bdGrowthRate.round(new MathContext(3));
-        double r12GrowthRateRounded = bdGrowthRate.doubleValue();
-        this.globalGrowth = r12GrowthRateRounded;
+        this.globalGrowth = Utility.roundDouble(r12GrowthRate, 3);
 
         /* *************** CHART PARAMETERS *************** */
         //        Populate r12SalesModel             
@@ -339,8 +328,7 @@ public class SparePartBean implements Serializable {
 
 //            Add results to Map
                 marketSalesMap.put(key, new CategoryChartData(d, market,
-                        netSales,
-                        directCost, quantity));
+                        netSales, directCost, quantity));
             }
 
         } catch (ClientException e) {
@@ -360,7 +348,7 @@ public class SparePartBean implements Serializable {
 //        Initiate totTop10MarketSales
         totTop10MarketSales = 0d;
 
-        //        Initiate r12SalesModel
+//        Initiate r12SalesModel
         r12MarketSalesModel = new LineChartModel();
 
 //        Initiate r12MarginModel
@@ -389,207 +377,191 @@ public class SparePartBean implements Serializable {
         double totR12Margin = 0d;
         double totPotential = 0d;
 
-        for (String mkt : marketSet) {
-//                Initiate chart series 
-            ChartSeries r12Sales = new ChartSeries(mkt);
-            ChartSeries r12Margin = new ChartSeries(mkt);
+        try (Session session = neo4jBean.getDriver().session()) {
+            for (String mkt : marketSet) {
+//                Initiate chart series and variables
+                ChartSeries r12Sales = new ChartSeries(mkt);
+                ChartSeries r12Margin = new ChartSeries(mkt);
+                double potential = 0d;
 
 //            Collect potentials by market and assign to marketPotentialMap
-            mapMarketPotentials(mkt);
+                mapMarketPotentials(session, mkt);
 
-            for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
-                LocalDate date = Utility.calcStartDate().plusMonths(i).with(
-                        TemporalAdjusters.lastDayOfMonth());
+                for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
+                    LocalDate date = Utility.calcStartDate().plusMonths(i).with(
+                            TemporalAdjusters.lastDayOfMonth());
 
 //                Collect and sum sales
-                Double netSalesR12 = marketSalesMap.values().stream().
-                        filter(
-                                m -> m.getMarket().equals(mkt)
-                                && Utility.isWithinRange(date, m.getDate())).
-                        collect(Collectors.summingDouble(
-                                CategoryChartData::getNetSales));
+                    Double netSalesR12 = marketSalesMap.values().stream().
+                            filter(
+                                    m -> m.getMarket().equals(mkt)
+                                    && Utility.isWithinRange(date, m.getDate())).
+                            collect(Collectors.summingDouble(
+                                    CategoryChartData::getNetSales));
 
 //                Collect and sum cost
-                Double costR12 = marketSalesMap.values().stream().filter(
-                        m -> m.getMarket().equals(mkt)
-                        && Utility.isWithinRange(date, m.getDate())).
-                        collect(Collectors.summingDouble(
-                                CategoryChartData::getDirectCost));
+                    Double costR12 = marketSalesMap.values().stream().filter(
+                            m -> m.getMarket().equals(mkt)
+                            && Utility.isWithinRange(date, m.getDate())).
+                            collect(Collectors.summingDouble(
+                                    CategoryChartData::getDirectCost));
 
-                String chartDate = date.plusMonths(11).with(
-                        TemporalAdjusters.
-                                lastDayOfMonth()).format(
-                                DateTimeFormatter.ISO_DATE);
+                    String chartDate = date.plusMonths(11).with(
+                            TemporalAdjusters.
+                                    lastDayOfMonth()).format(
+                                    DateTimeFormatter.ISO_DATE);
 
-                //        Add data to r12Sales series        
-                r12Sales.set(chartDate, netSalesR12);
+                    //        Add data to r12Sales series        
+                    r12Sales.set(chartDate, netSalesR12);
 
-                //        Add data to r12Margin series   
-                double margin = Utility.calcMargin(netSalesR12,
-                        costR12);
-                r12Margin.set(chartDate, margin);
-            }
-            /* *************** TABLE CALCULATIONS *************** */
+                    //        Add data to r12Margin series   
+                    double margin = Utility.calcMargin(netSalesR12,
+                            costR12);
+                    r12Margin.set(chartDate, margin);
+                }
+                /* *************** TABLE CALCULATIONS *************** */
 //                Collect and sum sales from two years ago for growth calculation
-            Double r12SalesH12 = marketSalesMap.values().stream().filter(
-                    m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateH12, m.getDate())).collect(Collectors.summingDouble(
-                            CategoryChartData::getNetSales));
+                Double r12SalesH12 = marketSalesMap.values().stream().filter(
+                        m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
+                        dateH12, m.getDate())).collect(Collectors.summingDouble(
+                                CategoryChartData::getNetSales));
 
 //                Collect and sum sales from one year ago for growth calculation
-            Double r12SalesT0 = marketSalesMap.values().stream().filter(
-                    m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateT0, m.getDate())).collect(Collectors.summingDouble(
-                            CategoryChartData::getNetSales));
+                Double r12SalesT0 = marketSalesMap.values().stream().filter(
+                        m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
+                        dateT0, m.getDate())).collect(Collectors.summingDouble(
+                                CategoryChartData::getNetSales));
 
 //            Calculate the growth
-            double growthRate = Utility.calcGrowthRate(r12SalesT0, r12SalesH12);
+                double growthRate = Utility.calcGrowthRate(r12SalesT0,
+                        r12SalesH12);
 
 //                Collect and sum cost from one year ago for margin calculation
-            Double r12CostT0 = marketSalesMap.values().stream().filter(
-                    m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                    dateT0, m.getDate())).collect(Collectors.summingDouble(
-                            CategoryChartData::getDirectCost));
+                Double r12CostT0 = marketSalesMap.values().stream().filter(
+                        m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
+                        dateT0, m.getDate())).collect(Collectors.summingDouble(
+                                CategoryChartData::getDirectCost));
 
 //            Calculate the margin
-            double margin = Utility.calcMargin(r12SalesT0,
-                    r12CostT0);
+                double margin = Utility.calcMargin(r12SalesT0,
+                        r12CostT0);
 
 //            Extract Potential sales from potential map
-            double potential = marketPotentialMap.get(mkt).getPotSpareParts();
+                if (marketPotentialMap.containsKey(mkt)) {
+                    potential = marketPotentialMap.get(mkt).getPotSpareParts();
+                }
 
 // Populate the Category Table List and round results to 3 significant figures
-            BigDecimal bdSales = new BigDecimal(r12SalesT0);
-            BigDecimal bdGrowth = new BigDecimal(growthRate);
-            BigDecimal bdMargin = new BigDecimal(margin);
-            BigDecimal bdPotential = new BigDecimal(potential);
+                double r12SalesT0Rounded = Utility.roundDouble(r12SalesT0, 3);
+                double growthRateRounded = Utility.roundDouble(growthRate, 3);
+                double marginRounded = Utility.roundDouble(margin, 3);
+                double potentialRounded = Utility.roundDouble(potential, 3);
 
-            bdSales = bdSales.round(new MathContext(3));
-            bdGrowth = bdGrowth.round(new MathContext(3));
-            bdMargin = bdMargin.round(new MathContext(3));
-            bdPotential = bdPotential.round(new MathContext(3));
-
-            double r12SalesT0Rounded = bdSales.doubleValue();
-            double growthRateRounded = bdGrowth.doubleValue();
-            double marginRounded = bdMargin.doubleValue();
-            double potentialRounded = bdPotential.doubleValue();
-
-            categoryTableList.add(new CategoryTableData(mkt, r12SalesT0Rounded,
-                    growthRateRounded, marginRounded, potentialRounded)
-            );
+                categoryTableList.add(new CategoryTableData(mkt,
+                        r12SalesT0Rounded,
+                        growthRateRounded, marginRounded, potentialRounded)
+                );
 
 //            Sum total R12 sales
-            totR12SalesT0 = totR12SalesT0 + r12SalesT0;
-            totR12SalesH12 = totR12SalesH12 + r12SalesH12;
+                totR12SalesT0 = totR12SalesT0 + r12SalesT0;
+                totR12SalesH12 = totR12SalesH12 + r12SalesH12;
 //            Calculate total R12 growth
-            totR12Growth = Utility.calcGrowthRate(totR12SalesT0,
-                    totR12SalesH12);
+                totR12Growth = Utility.calcGrowthRate(totR12SalesT0,
+                        totR12SalesH12);
 //            Sum total R12 cost
-            totR12CostT0 = totR12CostT0 + r12CostT0;
+                totR12CostT0 = totR12CostT0 + r12CostT0;
 //            Calculate R12 Margin
-            totR12Margin = Utility.calcMargin(totR12SalesT0, totR12CostT0);
+                totR12Margin = Utility.calcMargin(totR12SalesT0, totR12CostT0);
 
 //            Sum total Potential sales
-            totPotential = totPotential + potential;
+                totPotential = totPotential + potential;
 
-            //        Limit number of markets in the chart
-            if (marketCounter < 5) {
-                //        Populate r12MarketSalesModel             
-                r12MarketSalesModel.addSeries(r12Sales);
-                r12Sales.setLabel(mkt);
+                //        Limit number of markets in the chart
+                if (marketCounter < 5) {
+                    //        Populate r12MarketSalesModel             
+                    r12MarketSalesModel.addSeries(r12Sales);
+                    r12Sales.setLabel(mkt);
 
-                //        Populate r12MarketMarginModel             
-                r12MarketMarginModel.addSeries(r12Margin);
-                r12Margin.setLabel(mkt);
-                marketCounter++;
+                    //        Populate r12MarketMarginModel             
+                    r12MarketMarginModel.addSeries(r12Margin);
+                    r12Margin.setLabel(mkt);
+                    marketCounter++;
+                }
             }
-        }
-        /* *************** TABLE SUMMARY CALCULATIONS *************** */
+            /* *************** TABLE SUMMARY CALCULATIONS *************** */
 //  Sort category list in decending order based on sales
-        Collections.sort(categoryTableList,
-                (CategoryTableData a, CategoryTableData b) -> b.getSales().
-                        compareTo(a.getSales()));
-//  Round total R12 Sales to 3 significant figures and assign to class field
-        BigDecimal bdTotSales = new BigDecimal(totR12SalesT0);
-        bdTotSales = bdTotSales.round(new MathContext(3));
-        double totR12SalesT0Rounded = bdTotSales.doubleValue();
-        this.totTop10MarketSales = totR12SalesT0Rounded;
+            Collections.sort(categoryTableList,
+                    (CategoryTableData a, CategoryTableData b) -> b.getSales().
+                            compareTo(a.getSales()));
+
+            this.totTop10MarketSales = Utility.roundDouble(totR12SalesT0, 3);
 
 //  Round total R12 Growth to 3 significant figures and assign to class field
-        BigDecimal bdTotGrowth = new BigDecimal(totR12Growth);
-        bdTotGrowth = bdTotGrowth.round(new MathContext(3));
-        double totR12GrowthRounded = bdTotGrowth.doubleValue();
-        this.totTop10MarketGrowth = totR12GrowthRounded;
+            this.totTop10MarketGrowth = Utility.roundDouble(totR12Growth, 3);
 
 //  Round total R12 Margin to 3 significant figures and assign to class field
-        BigDecimal bdTotMargin = new BigDecimal(totR12Margin);
-        bdTotMargin = bdTotMargin.round(new MathContext(3));
-        double totR12MarginRounded = bdTotMargin.doubleValue();
-        this.totTop10MarketMargin = totR12MarginRounded;
+            this.totTop10MarketMargin = Utility.roundDouble(totR12Margin, 3);
 
 //  Round total Potential Sales to 3 significant figures and assign to class field
-        BigDecimal bdTotPotential = new BigDecimal(totPotential);
-        bdTotPotential = bdTotPotential.round(new MathContext(3));
-        double totPotentialRounded = bdTotPotential.doubleValue();
-        this.totTop10MarketPotential = totPotentialRounded;
+            this.totTop10MarketPotential = Utility.roundDouble(totPotential, 3);
 
-        /* *************** CHART PARAMETERS *************** */
+            /* *************** CHART PARAMETERS *************** */
 //        Set chart parameters for the sales chart
-        r12MarketSalesModel.setLegendPosition("nw");
-        r12MarketSalesModel.getAxis(AxisType.Y).setLabel("MEur");
-        DateAxis axis = new DateAxis("Dates");
-        axis.setTickAngle(-50);
-        axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
-        axis.setTickFormat("%y-%b-%#d");
-        r12MarketSalesModel.getAxes().put(AxisType.X, axis);
+            r12MarketSalesModel.setLegendPosition("nw");
+            r12MarketSalesModel.getAxis(AxisType.Y).setLabel("MEur");
+            DateAxis axis = new DateAxis("Dates");
+            axis.setTickAngle(-50);
+            axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+            axis.setTickFormat("%y-%b-%#d");
+            r12MarketSalesModel.getAxes().put(AxisType.X, axis);
 
 //        Set chart parameters for the margin chart
-        r12MarketMarginModel.setLegendPosition("nw");
-        r12MarketMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
-        DateAxis axis1 = new DateAxis("Dates");
-        axis1.setTickAngle(-50);
-        axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
-        axis1.setTickFormat("%y-%b-%#d");
-        r12MarketMarginModel.getAxes().put(AxisType.X, axis1);
+            r12MarketMarginModel.setLegendPosition("nw");
+            r12MarketMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
+            DateAxis axis1 = new DateAxis("Dates");
+            axis1.setTickAngle(-50);
+            axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+            axis1.setTickFormat("%y-%b-%#d");
+            r12MarketMarginModel.getAxes().put(AxisType.X, axis1);
+        } catch (ClientException e) {
+            System.err.println("Exception in 'mapMarketPotentials()':" + e);
+        } finally {
+            neo4jBean.closeNeo4jDriver();
+
+        }
     }
 
     /**
      * Collect potentials by market and assign to marketPotentialMap
      *
-     * @param market
+     * @param session for neo4j driver
+     * @param market to group by
      */
-    private void mapMarketPotentials(String market) {
-        try (Session session = neo4jBean.getDriver().session()) {
-//  Query the ten biggest markets in terms of net sales over the last 12 months
-            String tx = "MATCH (ib:InstalledBase)-[r:POTENTIAL]->(c:Customer)-[:LOCATED_IN]->(m:Market {mktName: {mktName}})"
-                    + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+    private void mapMarketPotentials(Session session, String market) {
+//  Query Potentials by market
+        String tx = "MATCH (ib:InstalledBase)-[r:POTENTIAL]->(c:Customer)-[:LOCATED_IN]->(m:Market {mktName: {mktName}})"
+                + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
-            StatementResult result = session.run(tx, Values.parameters(
-                    "mktName", market));
+        StatementResult result = session.run(tx, Values.parameters(
+                "mktName", market));
 
-            while (result.hasNext()) {
-                Record r = result.next();
+        while (result.hasNext()) {
+            Record r = result.next();
 
-                String marketName = r.get("MktName").asString();
-                double potSpareParts = r.get("SP_POT").asDouble();
-                double potMaintenanceHrs = r.get("HRS_POT").asDouble();
-                double potMaintenance = r.get("MT_POT").asDouble();
+            String marketName = r.get("MktName").asString();
+            double potSpareParts = r.get("SP_POT").asDouble();
+            double potMaintenanceHrs = r.get("HRS_POT").asDouble();
+            double potMaintenance = r.get("MT_POT").asDouble();
 
 //                Make key
-                String key = marketName;
+            String key = marketName;
 
 //            Add results to Map
-                this.marketPotentialMap.put(key,
-                        new PotentialData(potSpareParts, potMaintenanceHrs,
-                                potMaintenance));
-            }
-
-        } catch (ClientException e) {
-            System.err.println("Exception in 'mapMarketPotentials()':" + e);
-        } finally {
-//            neo4jBean.closeNeo4jDriver();
-
+            this.marketPotentialMap.put(key,
+                    new PotentialData(potSpareParts, potMaintenanceHrs,
+                            potMaintenance));
         }
+
     }
 
     public LineChartModel getR12SalesModel() {
