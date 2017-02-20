@@ -69,6 +69,8 @@ public class SparePartBean implements Serializable {
     private Double globalSales;
     private Double globalMargin;
     private Double totTop10MarketSales;
+    private Double totTop10MarketGrowth;
+    private Double totTop10MarketMargin;
 
     public SparePartBean() {
 
@@ -211,6 +213,7 @@ public class SparePartBean implements Serializable {
                     costR12);
             r12Margin.set(chartDate, margin);
 
+            /* *************** SUMMARY CALCULATIONS *************** */
 //  Round R12 net sales to 3 significant figures and assign to class field
             BigDecimal bdSales = new BigDecimal(netSalesR12);
             bdSales = bdSales.round(new MathContext(3));
@@ -243,6 +246,7 @@ public class SparePartBean implements Serializable {
         double r12GrowthRateRounded = bdGrowthRate.doubleValue();
         this.globalGrowth = r12GrowthRateRounded;
 
+        /* *************** CHART PARAMETERS *************** */
         //        Populate r12SalesModel             
         r12SalesModel.addSeries(r12Sales);
         r12Sales.setLabel("Net Sales");
@@ -373,6 +377,10 @@ public class SparePartBean implements Serializable {
         int rollingPeriod = 12;
         marketCounter = 0;
         double totR12SalesT0 = 0d;
+        double totR12SalesH12 = 0d;
+        double totR12Growth = 0d;
+        double totR12CostT0 = 0d;
+        double totR12Margin = 0d;
 
         for (String mkt : marketSet) {
 //                Initiate chart series 
@@ -411,7 +419,7 @@ public class SparePartBean implements Serializable {
                         costR12);
                 r12Margin.set(chartDate, margin);
             }
-
+            /* *************** TABLE CALCULATIONS *************** */
 //                Collect and sum sales from two years ago for growth calculation
             Double r12SalesH12 = marketSalesMap.values().stream().filter(
                     m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
@@ -456,6 +464,14 @@ public class SparePartBean implements Serializable {
 
 //            Sum total R12 sales
             totR12SalesT0 = totR12SalesT0 + r12SalesT0;
+            totR12SalesH12 = totR12SalesH12 + r12SalesH12;
+//            Calculate total R12 growth
+            totR12Growth = Utility.calcGrowthRate(totR12SalesT0,
+                    totR12SalesH12);
+//            Sum total R12 cost
+            totR12CostT0 = totR12CostT0 + r12CostT0;
+//            Calculate R12 Margin
+            totR12Margin = Utility.calcMargin(totR12SalesT0, totR12CostT0);
 
             //        Limit number of markets in the chart
             if (marketCounter < 5) {
@@ -469,16 +485,30 @@ public class SparePartBean implements Serializable {
                 marketCounter++;
             }
         }
+        /* *************** TABLE SUMMARY CALCULATIONS *************** */
 //  Sort category list in decending order based on sales
         Collections.sort(categoryTableList,
                 (CategoryTableData a, CategoryTableData b) -> b.getSales().
                         compareTo(a.getSales()));
-//  Round total R12 sales to 3 significant figures and assign to class field
+//  Round total R12 Sales to 3 significant figures and assign to class field
         BigDecimal bdTotSales = new BigDecimal(totR12SalesT0);
         bdTotSales = bdTotSales.round(new MathContext(3));
         double totR12SalesT0Rounded = bdTotSales.doubleValue();
         this.totTop10MarketSales = totR12SalesT0Rounded;
 
+//  Round total R12 Growth to 3 significant figures and assign to class field
+        BigDecimal bdTotGrowth = new BigDecimal(totR12Growth);
+        bdTotGrowth = bdTotGrowth.round(new MathContext(3));
+        double totR12GrowthRounded = bdTotGrowth.doubleValue();
+        this.totTop10MarketGrowth = totR12GrowthRounded;
+
+//  Round total R12 Margin to 3 significant figures and assign to class field
+        BigDecimal bdTotMargin = new BigDecimal(totR12Margin);
+        bdTotMargin = bdTotMargin.round(new MathContext(3));
+        double totR12MarginRounded = bdTotMargin.doubleValue();
+        this.totTop10MarketMargin = totR12MarginRounded;
+
+        /* *************** CHART PARAMETERS *************** */
 //        Set chart parameters for the sales chart
         r12MarketSalesModel.setLegendPosition("nw");
         r12MarketSalesModel.getAxis(AxisType.Y).setLabel("MEur");
@@ -540,6 +570,14 @@ public class SparePartBean implements Serializable {
 
     public Double getTotTop10MarketSales() {
         return totTop10MarketSales;
+    }
+
+    public Double getTotTop10MarketGrowth() {
+        return totTop10MarketGrowth;
+    }
+
+    public Double getTotTop10MarketMargin() {
+        return totTop10MarketMargin;
     }
 
 }

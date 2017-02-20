@@ -45,13 +45,15 @@
                                 <h:outputText value="Market"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.category}"></h:outputText>
+                            <f:facet name="footer"> Summary
+                            </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
                             <f:facet name="header">
                                 <h:outputText value="Sales (MEur)"></h:outputText>
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
-                            <f:facet name="footer"> Total:
+                            <f:facet name="footer">
                                 <h:outputText value="#{sparePartBean.totTop10MarketSales}"></h:outputText>
                             </f:facet>
                         </p:column>
@@ -60,12 +62,18 @@
                                 <h:outputText value="Growth (%)"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.growth}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10MarketGrowth}"></h:outputText>
+                            </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
                             <f:facet name="header">
                                 <h:outputText value="Margin (%)"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.margin}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10MarketMargin}"></h:outputText>
+                            </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
                             <f:facet name="header">
