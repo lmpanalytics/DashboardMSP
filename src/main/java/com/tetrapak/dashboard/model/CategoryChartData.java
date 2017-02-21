@@ -8,14 +8,14 @@ package com.tetrapak.dashboard.model;
 import java.time.LocalDate;
 
 /**
- * This class models market data
+ * This class models category data
  *
  * @author SEPALMM
  */
 public class CategoryChartData {
 
     private LocalDate date;
-    private String market;
+    private String category;
     private Double netSales;
     private Double directCost;
     private Double quantity;
@@ -24,15 +24,15 @@ public class CategoryChartData {
      * Constructor for the Market Sales Data
      *
      * @param date the transaction date from the Special Ledger report in BO
-     * @param market the market where the customer is located
+     * @param category the market, customer group, assortment, and etc.
      * @param netSales of sold materials
      * @param directCost of sold materials
      * @param quantity of sold materials
      */
-    public CategoryChartData(LocalDate date, String market, Double netSales,
+    public CategoryChartData(LocalDate date, String category, Double netSales,
             Double directCost, Double quantity) {
         this.date = date;
-        this.market = market;
+        this.category = category;
         this.netSales = netSales;
         this.directCost = directCost;
         this.quantity = quantity;
@@ -46,12 +46,12 @@ public class CategoryChartData {
         this.date = date;
     }
 
-    public String getMarket() {
-        return market;
+    public String getCategory() {
+        return category;
     }
 
-    public void setMarket(String market) {
-        this.market = market;
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public Double getNetSales() {

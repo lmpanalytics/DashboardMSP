@@ -7,6 +7,7 @@ package utility;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -160,6 +161,21 @@ public class UtilityTest {
         double expResult = 8.12;
         double result = Utility.roundDouble(input, significanFigures);
         assertEquals(expResult, result, 0.01);
+
+    }
+
+    /**
+     * Test of makeStartDateLast12MonthSales method, of class Utility.
+     */
+    @Test
+    public void testMakeStartDateLast12MonthSales() {
+        System.out.println("makeStartDateLast12MonthSales");
+        Utility instance = new Utility();
+        String expResult = LocalDate.now().minusMonths(12).with(
+                TemporalAdjusters.lastDayOfMonth()).toString()
+                .replaceAll("-", "");
+        String result = instance.makeStartDateLast12MonthSales();
+        assertEquals(expResult, result);
 
     }
 

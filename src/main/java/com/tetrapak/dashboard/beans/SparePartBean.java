@@ -57,6 +57,7 @@ public class SparePartBean implements Serializable {
     // ADD CLASS SPECIFIC MAPS AND FIELDS HERE
     private Map<LocalDate, GlobalChartData> salesMap;
     private Map<String, CategoryChartData> marketSalesMap;
+    private Map<String, CategoryChartData> custGrpSalesMap;
     private Map<String, PotentialData> marketPotentialMap;
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarginModel;
@@ -88,6 +89,9 @@ public class SparePartBean implements Serializable {
 //        Initialize the marketSalesMap
         this.marketSalesMap = new LinkedHashMap<>();
 
+//        Initialize the custGrpSalesMap
+        this.custGrpSalesMap = new LinkedHashMap<>();
+
 //        Initialize the marketPotentialMap
         this.marketPotentialMap = new LinkedHashMap<>();
 
@@ -102,6 +106,9 @@ public class SparePartBean implements Serializable {
 
 //        Populate Market Map
         populateMarketSalesMap();
+
+//        Populate Customer Group Map
+        populateCustomerGrpSalesMap();
 
 //        Populate the Market Sales & Margin Line Charts with Rolling 12 data
         populateR12MarketLineChartsAndTable();
@@ -290,9 +297,7 @@ public class SparePartBean implements Serializable {
     private void populateMarketSalesMap() {
         System.out.println(" I'm in the 'populateMarketSalesMap()' method.");
 //        Accumulate sales from this date to determine the largest markets
-        String startDateLast12MonthSales
-                = LocalDate.now().minusMonths(12).with(TemporalAdjusters.
-                        lastDayOfMonth()).toString().replaceAll("-", "");
+        String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
         try (Session session = neo4jBean.getDriver().session()) {
 //  Query the ten biggest markets in terms of net sales over the last 12 months
@@ -309,7 +314,7 @@ public class SparePartBean implements Serializable {
                     + " ORDER BY Year, Month";
 
             StatementResult result = session.run(tx, Values.parameters(
-                    "name", "Parts", "date", startDateLast12MonthSales));
+                    "name", "Parts", "date", startDate));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -366,7 +371,7 @@ public class SparePartBean implements Serializable {
 //       R12 algorithm based on dates
 //        Create set of markets contained in the map
         Set<String> marketSet = marketSalesMap.values().stream().map(
-                CategoryChartData::getMarket).collect(Collectors.toSet());
+                CategoryChartData::getCategory).collect(Collectors.toSet());
 
 //        Accumulate sales and cost for each market over rolling 12 periods
         int rollingPeriod = 12;
@@ -395,14 +400,14 @@ public class SparePartBean implements Serializable {
 //                Collect and sum sales
                     Double netSalesR12 = marketSalesMap.values().stream().
                             filter(
-                                    m -> m.getMarket().equals(mkt)
+                                    m -> m.getCategory().equals(mkt)
                                     && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
                                     CategoryChartData::getNetSales));
 
 //                Collect and sum cost
                     Double costR12 = marketSalesMap.values().stream().filter(
-                            m -> m.getMarket().equals(mkt)
+                            m -> m.getCategory().equals(mkt)
                             && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
                                     CategoryChartData::getDirectCost));
@@ -423,15 +428,19 @@ public class SparePartBean implements Serializable {
                 /* *************** TABLE CALCULATIONS *************** */
 //                Collect and sum sales from two years ago for growth calculation
                 Double r12SalesH12 = marketSalesMap.values().stream().filter(
-                        m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                        dateH12, m.getDate())).collect(Collectors.summingDouble(
-                                CategoryChartData::getNetSales));
+                        m -> m.getCategory().equals(mkt) && Utility.
+                        isWithinRange(
+                                dateH12, m.getDate())).collect(Collectors.
+                                summingDouble(
+                                        CategoryChartData::getNetSales));
 
 //                Collect and sum sales from one year ago for growth calculation
                 Double r12SalesT0 = marketSalesMap.values().stream().filter(
-                        m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                        dateT0, m.getDate())).collect(Collectors.summingDouble(
-                                CategoryChartData::getNetSales));
+                        m -> m.getCategory().equals(mkt) && Utility.
+                        isWithinRange(
+                                dateT0, m.getDate())).collect(Collectors.
+                                summingDouble(
+                                        CategoryChartData::getNetSales));
 
 //            Calculate the growth
                 double growthRate = Utility.calcGrowthRate(r12SalesT0,
@@ -439,9 +448,11 @@ public class SparePartBean implements Serializable {
 
 //                Collect and sum cost from one year ago for margin calculation
                 Double r12CostT0 = marketSalesMap.values().stream().filter(
-                        m -> m.getMarket().equals(mkt) && Utility.isWithinRange(
-                        dateT0, m.getDate())).collect(Collectors.summingDouble(
-                                CategoryChartData::getDirectCost));
+                        m -> m.getCategory().equals(mkt) && Utility.
+                        isWithinRange(
+                                dateT0, m.getDate())).collect(Collectors.
+                                summingDouble(
+                                        CategoryChartData::getDirectCost));
 
 //            Calculate the margin
                 double margin = Utility.calcMargin(r12SalesT0,
@@ -559,6 +570,68 @@ public class SparePartBean implements Serializable {
                             potMaintenance));
         }
 
+    }
+
+    /**
+     * ================= CUSTOMER GROUP CONTROLS =================
+     *
+     * Populate CustomerGrp Map with data from database. The data is limited to
+     * the Top-10 Customer Groups based on NetSales in the last 12-Month period,
+     * and also override to include all Global Accounts.
+     */
+    private void populateCustomerGrpSalesMap() {
+        System.out.
+                println(" I'm in the 'populateCustomerGrpSalesMap()' method.");
+//        Accumulate sales from this date to find the largest customers grps
+        String startDate = Utility.makeStartDateLast12MonthSales();
+        // code query here
+        try (Session session = neo4jBean.getDriver().session()) {
+            /* Query the ten biggest customer groups in terms of net sales 
+            over the last 12 months */
+            String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[FOR_FINAL_CUSTOMER]->(cu:Customer)"
+                    + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
+                    + " WHERE s.name = {name} AND (d.year + \"\" + d.month + \"01\") >= {date} "
+                    + " WITH cu.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
+                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                    + " WITH collect(CustGroup) AS CustGroups" /* Collect the markets in a list */
+                    + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[FOR_FINAL_CUSTOMER]->(cu:Customer)"
+                    + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
+                    + " WHERE (cu.custGroup IN CustGroups OR cu.custType = 'Global Account') AND r.custNumber = cu.id AND s.name = {name}" /* Include all Global Accounts as well */
+                    + " RETURN d.year AS Year, d.month AS Month, cu.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                    + " ORDER BY Year, Month";
+
+            StatementResult result = session.run(tx, Values.parameters(
+                    "name", "Parts", "date", startDate));
+
+            while (result.hasNext()) {
+                Record r = result.next();
+
+                int year = r.get("Year").asInt();
+                int month = r.get("Month").asInt();
+                String custGrp = r.get("CustGroup").asString();
+                double netSales = r.get("NetSales").asDouble();
+                double directCost = r.get("DirectCost").asDouble();
+                double quantity = r.get("Quantity").asDouble();
+
+//                Make date
+                LocalDate d = Utility.makeDate(year, month);
+//                Make composite key
+                String key = d + custGrp;
+
+//            Add results to Map
+                custGrpSalesMap.put(key, new CategoryChartData(d, custGrp,
+                        netSales, directCost, quantity));
+            }
+
+//            Print Map contents
+//        custGrpSalesMap.entrySet().stream().map((entry) -> entry.getValue()).forEachOrdered((v) -> {System.out.printf("%s;%s;%s;%s;%s\n", v.getDate(), v.getCategory(), v.getNetSales(), v.getDirectCost(), v.getQuantity());});
+        } catch (ClientException e) {
+            System.err.println(
+                    "Exception in 'populateCustomerGrpSalesMap()':" + e);
+        } finally {
+//            neo4jBean.closeNeo4jDriver();
+
+        }
     }
 
 //    GETTERS & SETTERS

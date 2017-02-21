@@ -128,4 +128,16 @@ public class Utility {
         bd = bd.round(new MathContext(significanFigures));
         return bd.doubleValue();
     }
+
+    /**
+     * Calculate and return the starting date for the last 12 months of sales,
+     * from today.
+     *
+     * @return start date
+     */
+    public static String makeStartDateLast12MonthSales() {
+        return LocalDate.now().minusMonths(12).
+                with(TemporalAdjusters.lastDayOfMonth()).toString().
+                replaceAll("-", "");
+    }
 }
