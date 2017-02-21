@@ -104,7 +104,7 @@ public class SparePartBean implements Serializable {
         populateMarketSalesMap();
 
 //        Populate the Market Sales & Margin Line Charts with Rolling 12 data
-        populateR12MarketLineCharts();
+        populateR12MarketLineChartsAndTable();
     }
 
     @PreDestroy
@@ -340,9 +340,10 @@ public class SparePartBean implements Serializable {
     }
 
     /**
-     * Populate the Market Sales & Margin Line Charts with Rolling 12 data.
+     * Populate the Market Sales & Margin Line Charts and Data Table with
+     * Rolling 12 data.
      */
-    private void populateR12MarketLineCharts() {
+    private void populateR12MarketLineChartsAndTable() {
         System.out.println("I'm in the 'populateR12MarketLineCharts()' method.");
 
 //        Initiate totTop10MarketSales
@@ -458,8 +459,8 @@ public class SparePartBean implements Serializable {
                 double potentialRounded = Utility.roundDouble(potential, 3);
 
                 categoryTableList.add(new CategoryTableData(mkt,
-                        r12SalesT0Rounded,
-                        growthRateRounded, marginRounded, potentialRounded)
+                        r12SalesT0Rounded, growthRateRounded, marginRounded,
+                        potentialRounded)
                 );
 
 //            Sum total R12 sales
@@ -476,7 +477,7 @@ public class SparePartBean implements Serializable {
 //            Sum total Potential sales
                 totPotential = totPotential + potential;
 
-                //        Limit number of markets in the chart
+                //        Set number of markets in the charts
                 if (marketCounter < 5) {
                     //        Populate r12MarketSalesModel             
                     r12MarketSalesModel.addSeries(r12Sales);
@@ -494,15 +495,11 @@ public class SparePartBean implements Serializable {
                     (CategoryTableData a, CategoryTableData b) -> b.getSales().
                             compareTo(a.getSales()));
 
+            /*  Round total R12 Sales, Growth, Margin and Potential Sales to 3 
+            significant figures and assign to class field. */
             this.totTop10MarketSales = Utility.roundDouble(totR12SalesT0, 3);
-
-//  Round total R12 Growth to 3 significant figures and assign to class field
             this.totTop10MarketGrowth = Utility.roundDouble(totR12Growth, 3);
-
-//  Round total R12 Margin to 3 significant figures and assign to class field
             this.totTop10MarketMargin = Utility.roundDouble(totR12Margin, 3);
-
-//  Round total Potential Sales to 3 significant figures and assign to class field
             this.totTop10MarketPotential = Utility.roundDouble(totPotential, 3);
 
             /* *************** CHART PARAMETERS *************** */
@@ -564,6 +561,7 @@ public class SparePartBean implements Serializable {
 
     }
 
+//    GETTERS & SETTERS
     public LineChartModel getR12SalesModel() {
         return r12SalesModel;
     }
