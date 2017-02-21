@@ -82,6 +82,7 @@ public class SparePartBean implements Serializable {
     private Double totTop10CustGrpGrowth;
     private Double totTop10CustGrpMargin;
     private Double totTop10CustGrpPotential;
+    private Session session;
 
     public SparePartBean() {
 
@@ -92,7 +93,10 @@ public class SparePartBean implements Serializable {
         System.out.println("I'm in the 'SparePartBean.init()' method.");
 
 // INITIALIZE CLASS SPECIFIC MAPS AND FIELDS HERE
-        // Initialize the Sales map
+//      Initialize driver
+        this.session = neo4jBean.getDriver().session();
+
+//        Initialize the Sales map
         this.salesMap = new LinkedHashMap<>();
 
 //        Initialize the marketSalesMap
@@ -130,6 +134,9 @@ public class SparePartBean implements Serializable {
 
 //        Populate the Customer Group Sales & Margin Line Charts with Rolling 12 data
         populateR12CustomerGrpLineChartsAndTable();
+
+//        Close driver to avoid leakage
+        neo4jBean.closeNeo4jDriver();
     }
 
     @PreDestroy
@@ -146,14 +153,14 @@ public class SparePartBean implements Serializable {
         System.out.println(" I'm in the populateSalesMap()' method.");
 
         // code query here
-        try (Session session = neo4jBean.getDriver().session()) {
+        try {
 
             String tx = "MATCH (s:ServiceCategory)<-[:OF_CATEGORY]-(:Material)-[r:SOLD_ON]->(d:Day)"
                     + " WHERE s.name = {name}"
                     + " RETURN d.year AS Year, d.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
-            StatementResult result = session.run(tx, Values.parameters(
+            StatementResult result = this.session.run(tx, Values.parameters(
                     "name", "Parts"));
 
             while (result.hasNext()) {
@@ -176,9 +183,6 @@ public class SparePartBean implements Serializable {
 
         } catch (ClientException e) {
             System.err.println("Exception in 'populateSalesMap()':" + e);
-        } finally {
-//            neo4jBean.closeNeo4jDriver();
-
         }
     }
 
@@ -317,7 +321,7 @@ public class SparePartBean implements Serializable {
 //        Accumulate sales from this date to determine the largest markets
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
-        try (Session session = neo4jBean.getDriver().session()) {
+        try {
 //  Query the ten biggest markets in terms of net sales over the last 12 months
             String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)"
                     + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
@@ -331,7 +335,7 @@ public class SparePartBean implements Serializable {
                     + " RETURN d.year AS Year, d.month AS Month, mkt.mktName AS Market, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
-            StatementResult result = session.run(tx, Values.parameters(
+            StatementResult result = this.session.run(tx, Values.parameters(
                     "name", "Parts", "date", startDate));
 
             while (result.hasNext()) {
@@ -356,9 +360,6 @@ public class SparePartBean implements Serializable {
 
         } catch (ClientException e) {
             System.err.println("Exception in 'populateMarketSalesMap()':" + e);
-        } finally {
-//            neo4jBean.closeNeo4jDriver();
-
         }
     }
 
@@ -401,7 +402,7 @@ public class SparePartBean implements Serializable {
         double totR12Margin = 0d;
         double totPotential = 0d;
 
-        try (Session session = neo4jBean.getDriver().session()) {
+        try {
             for (String mkt : marketSet) {
 //                Initiate chart series and variables
                 ChartSeries r12Sales = new ChartSeries(mkt);
@@ -409,7 +410,7 @@ public class SparePartBean implements Serializable {
                 double potential = 0d;
 
 //            Collect potentials by market and assign to marketPotentialMap
-                mapMarketPotentials(session, mkt);
+                mapMarketPotentials(mkt);
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -552,24 +553,20 @@ public class SparePartBean implements Serializable {
         } catch (ClientException e) {
             System.err.println(
                     "Exception in 'populateR12MarketLineCharts method':" + e);
-        } finally {
-//            neo4jBean.closeNeo4jDriver();
-
         }
     }
 
     /**
      * Collect potentials by market and assign to marketPotentialMap
      *
-     * @param session for neo4j driver
      * @param market to group by
      */
-    private void mapMarketPotentials(Session session, String market) {
+    private void mapMarketPotentials(String market) {
 //  Query Potentials by market
         String tx = "MATCH (ib:InstalledBase)-[r:POTENTIAL]->(c:Customer)-[:LOCATED_IN]->(m:Market {mktName: {mktName}})"
                 + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
-        StatementResult result = session.run(tx, Values.parameters(
+        StatementResult result = this.session.run(tx, Values.parameters(
                 "mktName", market));
 
         while (result.hasNext()) {
@@ -604,7 +601,7 @@ public class SparePartBean implements Serializable {
 //        Accumulate sales from this date to find the largest customers grps
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
-        try (Session session = neo4jBean.getDriver().session()) {
+        try {
             /* Query the ten biggest customer groups in terms of net sales 
             over the last 12 months */
             String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[FOR_FINAL_CUSTOMER]->(cu:Customer)"
@@ -619,7 +616,7 @@ public class SparePartBean implements Serializable {
                     + " RETURN d.year AS Year, d.month AS Month, cu.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
-            StatementResult result = session.run(tx, Values.parameters(
+            StatementResult result = this.session.run(tx, Values.parameters(
                     "name", "Parts", "date", startDate));
 
             while (result.hasNext()) {
@@ -647,9 +644,6 @@ public class SparePartBean implements Serializable {
         } catch (ClientException e) {
             System.err.println(
                     "Exception in 'populateCustomerGrpSalesMap()':" + e);
-        } finally {
-//            neo4jBean.closeNeo4jDriver();
-
         }
     }
 
@@ -693,7 +687,7 @@ public class SparePartBean implements Serializable {
         double totR12Margin = 0d;
         double totPotential = 0d;
 
-        try (Session session = neo4jBean.getDriver().session()) {
+        try {
             for (String cgr : custGrpSet) {
 //                Initiate chart series and variables
                 ChartSeries r12Sales = new ChartSeries(cgr);
@@ -701,7 +695,7 @@ public class SparePartBean implements Serializable {
                 double potential = 0d;
 
 //            Collect potentials by customer group and assign to customerGroupPotentialMap
-                mapCustomerGrpPotentials(session, cgr);
+                mapCustomerGrpPotentials(cgr);
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -842,24 +836,20 @@ public class SparePartBean implements Serializable {
         } catch (ClientException e) {
             System.err.println(
                     "Exception in 'populateR12CustomerGrpLineChartsAndTable method':" + e);
-        } finally {
-            neo4jBean.closeNeo4jDriver();
-
         }
     }
 
     /**
      * Collect potentials by customer group and assign to custGrpPotentialMap
      *
-     * @param session for neo4j driver
      * @param customerGrp to group by
      */
-    private void mapCustomerGrpPotentials(Session session, String customerGrp) {
+    private void mapCustomerGrpPotentials(String customerGrp) {
 //  Query Potentials by customer group
         String tx = "MATCH (ib:InstalledBase)-[r:POTENTIAL]->(cu:Customer {custGroup: {customerGrp}})"
                 + " RETURN cu.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
-        StatementResult result = session.run(tx, Values.parameters(
+        StatementResult result = this.session.run(tx, Values.parameters(
                 "customerGrp", customerGrp));
 
         while (result.hasNext()) {
