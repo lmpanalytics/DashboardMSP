@@ -32,13 +32,13 @@
             </div>
         </div>
         <br></br>
-
+        <!-- MARKET COMPONENTS -->
         <div class="w3-row">
             <div class="w3-third w3-container w3-border">
                 <h2>Sales Top-10 Markets</h2> 
                 <f:view>
 
-                    <p:dataTable value="#{sparePartBean.categoryTableList}" var="data"
+                    <p:dataTable value="#{sparePartBean.marketTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true">
                         <p:column>
                             <f:facet name="header">
@@ -94,6 +94,70 @@
             <div class="w3-third w3-container w3-border">
                 <h2>R12 Margin Top-5 Markets</h2>
                 <p:chart type="line" model="#{sparePartBean.r12MarketMarginModel}" />
+            </div>
+        </div>
+        <!-- CUSTOMER GROUP COMPONENTS -->
+        <div class="w3-row">
+            <div class="w3-third w3-container w3-border">
+                <h2>Sales Top-10 Customer Groups</h2> 
+                <f:view>
+
+                    <p:dataTable value="#{sparePartBean.custGrpTableList}" var="data"
+                                 paginator="false" rows="10" draggableColumns="true" liveResize="true">
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Customer Group"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.category}"></h:outputText>
+                            <f:facet name="footer"> Summary
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Sales (MEur)"></h:outputText>
+                            </f:facet>                            
+                            <h:outputText value="#{data.sales}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10CustGrpSales}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Growth (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.growth}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10CustGrpGrowth}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Margin (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.margin}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10CustGrpMargin}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Potential (MEur)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.potential}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10CustGrpPotential}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                    </p:dataTable>    
+                </f:view>
+            </div>
+            <div class="w3-third w3-container  w3-border">
+                <h2>R12 Sales Top-5 Customer Groups</h2>
+                <p:chart type="line" model="#{sparePartBean.r12CustGrpSalesModel}" />
+            </div>
+            <div class="w3-third w3-container w3-border">
+                <h2>R12 Margin Top-5 Customer Groups</h2>
+                <p:chart type="line" model="#{sparePartBean.r12CustGrpMarginModel}" />
             </div>
         </div>
 
