@@ -161,6 +161,71 @@
             </div>
         </div>
 
+        <!-- ASSORTMENT GROUP COMPONENTS -->
+        <div class="w3-row">
+            <div class="w3-third w3-container w3-border">
+                <h2>Sales Top-10 Assortment Groups</h2> 
+                <f:view>
+
+                    <p:dataTable value="#{sparePartBean.assortmentTableList}" var="data"
+                                 paginator="false" rows="10" draggableColumns="true" liveResize="true">
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Assortment Group"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.category}"></h:outputText>
+                            <f:facet name="footer"> Summary
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Sales (MEur)"></h:outputText>
+                            </f:facet>                            
+                            <h:outputText value="#{data.sales}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10AssortmentSales}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Growth (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.growth}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10AssortmentGrowth}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Margin (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.margin}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10AssortmentMargin}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Potential (MEur)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.potential}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBean.totTop10AssortmentPotential}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                    </p:dataTable>    
+                </f:view>
+            </div>
+            <div class="w3-third w3-container  w3-border">
+                <h2>R12 Sales Top-5 Assortment Groups</h2>
+                <p:chart type="line" model="#{sparePartBean.r12AssortmentSalesModel}" />
+            </div>
+            <div class="w3-third w3-container w3-border">
+                <h2>R12 Margin Top-5 Assortment Groups</h2>
+                <p:chart type="line" model="#{sparePartBean.r12AssortmentMarginModel}" />
+            </div>
+        </div>
+
         <footer class="w3-container w3-light-grey">
             <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report</h5>
         </footer>

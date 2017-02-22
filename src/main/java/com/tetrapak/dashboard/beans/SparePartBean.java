@@ -58,19 +58,25 @@ public class SparePartBean implements Serializable {
     private Map<LocalDate, GlobalChartData> salesMap;
     private Map<String, CategoryChartData> marketSalesMap;
     private Map<String, CategoryChartData> custGrpSalesMap;
+    private Map<String, CategoryChartData> assortmentSalesMap;
     private Map<String, PotentialData> marketPotentialMap;
     private Map<String, PotentialData> custGrpPotentialMap;
+    private Map<String, PotentialData> assortmentPotentialMap;
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarginModel;
     private LineChartModel r12MarketSalesModel;
     private LineChartModel r12MarketMarginModel;
     private LineChartModel r12CustGrpSalesModel;
     private LineChartModel r12CustGrpMarginModel;
+    private LineChartModel r12AssortmentSalesModel;
+    private LineChartModel r12AssortmentMarginModel;
     private MeterGaugeChartModel r12GrowthModel;
     private List<CategoryTableData> marketTableList;
     private List<CategoryTableData> custGrpTableList;
+    private List<CategoryTableData> assortmentTableList;
     private int marketCounter;
     private int custGrpCounter;
+    private int assortmentCounter;
     private Double globalGrowth;
     private Double globalSales;
     private Double globalMargin;
@@ -82,6 +88,10 @@ public class SparePartBean implements Serializable {
     private Double totTop10CustGrpGrowth;
     private Double totTop10CustGrpMargin;
     private Double totTop10CustGrpPotential;
+    private Double totTop10AssortmentSales;
+    private Double totTop10AssortmentGrowth;
+    private Double totTop10AssortmentMargin;
+    private Double totTop10AssortmentPotential;
     private Session session;
 
     public SparePartBean() {
@@ -105,17 +115,26 @@ public class SparePartBean implements Serializable {
 //        Initialize the custGrpSalesMap
         this.custGrpSalesMap = new LinkedHashMap<>();
 
+//        Initialize the assortmentSalesMap
+        this.assortmentSalesMap = new LinkedHashMap<>();
+
 //        Initialize the marketPotentialMap
         this.marketPotentialMap = new LinkedHashMap<>();
 
 //        Initialize the custGrpPotentialMap
         this.custGrpPotentialMap = new LinkedHashMap<>();
 
+//        Initialize the assortmentPotentialMap
+        this.assortmentPotentialMap = new LinkedHashMap<>();
+
 //        Initialize the Market Table List
         this.marketTableList = new LinkedList<>();
 
 //        Initialize the Customer Group Table List
         this.custGrpTableList = new LinkedList<>();
+
+//        Initialize the Assortment Table List
+        this.assortmentTableList = new LinkedList<>();
 
 //        Populate sales map with data from database
         populateSalesMap();
@@ -129,11 +148,17 @@ public class SparePartBean implements Serializable {
 //        Populate Customer Group Map
         populateCustomerGrpSalesMap();
 
+//        Populate Assortment Group Map
+        populateAssortmentGrpSalesMap();
+
 //        Populate the Market Sales & Margin Line Charts with Rolling 12 data
         populateR12MarketLineChartsAndTable();
 
 //        Populate the Customer Group Sales & Margin Line Charts with Rolling 12 data
         populateR12CustomerGrpLineChartsAndTable();
+
+//        Populate the Assortment Group Sales & Margin Line Charts with Rolling 12 data
+        populateR12AssortmentGrpLineChartsAndTable();
 
 //        Close driver to avoid leakage
         neo4jBean.closeNeo4jDriver();
@@ -604,13 +629,13 @@ public class SparePartBean implements Serializable {
         try {
             /* Query the ten biggest customer groups in terms of net sales 
             over the last 12 months */
-            String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[FOR_FINAL_CUSTOMER]->(cu:Customer)"
+            String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[:FOR_FINAL_CUSTOMER]->(cu:Customer)"
                     + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
                     + " WHERE s.name = {name} AND (d.year + \"\" + d.month + \"01\") >= {date} "
                     + " WITH cu.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
                     + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                     + " WITH collect(CustGroup) AS CustGroups" /* Collect the customer groups in a list */
-                    + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[FOR_FINAL_CUSTOMER]->(cu:Customer)"
+                    + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)-[:FOR_FINAL_CUSTOMER]->(cu:Customer)"
                     + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
                     + " WHERE (cu.custGroup IN CustGroups OR cu.custType = 'Global Account') AND r.custNumber = cu.id AND s.name = {name}" /* Include all Global Accounts as well */
                     + " RETURN d.year AS Year, d.month AS Month, cu.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
@@ -871,6 +896,305 @@ public class SparePartBean implements Serializable {
 
     }
 
+    /**
+     * ================= ASSORTMENT GROUP CONTROLS =================
+     *
+     * Populate AssortmentGrp Map with data from database. The data is limited
+     * to the Top-10 Assortment Groups based on NetSales in the last 12-Month
+     * period.
+     */
+    private void populateAssortmentGrpSalesMap() {
+        System.out.
+                println(" I'm in the 'populateAssortmentGrpSalesMap' method.");
+//        Accumulate sales from this date to find the largest customers grps
+        String startDate = Utility.makeStartDateLast12MonthSales();
+        // code query here
+        try {
+            /* Query the ten biggest assortment groups in terms of net sales 
+            over the last 12 months */
+            String tx = "MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)<-[:MATERIAL]-(:Mpg)<-[:MPG]-(a:Assortment)"
+                    + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
+                    + " WHERE s.name = {name} AND (d.year + \"\" + d.month + \"01\") >= {date} "
+                    + " WITH"
+                    + " CASE r.localAssortmentGrp"
+                    + " WHEN '' "
+                    + " THEN a.name"
+                    + " ELSE r.localAssortmentGrp"
+                    + " END AS AsGrp, SUM(r.netSales) AS TNetSales"
+                    + " ORDER BY TNetSales DESC LIMIT 10"/* Here, set the number of top assortment groups */
+                    + " WITH collect(AsGrp) AS AssortmentGrps" /* Collect the assortment groups in a list */
+                    + " MATCH (d:Day)<-[r:SOLD_ON]-(m:Material)<-[:MATERIAL]-(:Mpg)<-[:MPG]-(a:Assortment)"
+                    + " MATCH (m)-[:OF_CATEGORY]->(s:ServiceCategory)"
+                    + " WHERE (r.localAssortmentGrp IN AssortmentGrps OR a.name IN AssortmentGrps) AND s.name = {name}"
+                    + " RETURN d.year AS Year, d.month AS Month,"
+                    + " CASE r.localAssortmentGrp"
+                    + " WHEN '' " /* Global mtrl master contains AsGroup */
+                    + " THEN a.name"
+                    + " ELSE r.localAssortmentGrp" /* Else use Local AsGroup */
+                    + " END AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                    + " ORDER BY Year, Month";
+
+            StatementResult result = this.session.run(tx, Values.parameters(
+                    "name", "Parts", "date", startDate));
+
+            while (result.hasNext()) {
+                Record r = result.next();
+
+                int year = r.get("Year").asInt();
+                int month = r.get("Month").asInt();
+                String assortmentGrp = r.get("Asg").asString();
+                double netSales = r.get("NetSales").asDouble();
+                double directCost = r.get("DirectCost").asDouble();
+                double quantity = r.get("Quantity").asDouble();
+
+//                Make date
+                LocalDate d = Utility.makeDate(year, month);
+//                Make composite key
+                String key = d + assortmentGrp;
+
+//            Add results to Map
+                assortmentSalesMap.put(key, new CategoryChartData(d,
+                        assortmentGrp, netSales, directCost, quantity));
+            }
+
+//            Print Map contents
+//        assortmentSalesMap.entrySet().stream().map((entry) -> entry.getValue()).forEachOrdered((v) -> {System.out.printf("%s;%s;%s;%s;%s\n", v.getDate(), v.getCategory(), v.getNetSales(), v.getDirectCost(), v.getQuantity());});
+        } catch (ClientException e) {
+            System.err.println(
+                    "Exception in 'populateAssortmentGrpSalesMap':" + e);
+        }
+    }
+
+    /**
+     * Populate the Customer Group Sales & Margin Line Charts and Data Table
+     * with Rolling 12 data.
+     */
+    private void populateR12AssortmentGrpLineChartsAndTable() {
+        System.out.println(
+                "I'm in the 'populateR12AssortmentGrpLineChartsAndTable' method.");
+
+//        Initiate totTop10AssortmentSales
+        totTop10AssortmentSales = 0d;
+
+//        Initiate r12AssortmentSalesModel
+        r12AssortmentSalesModel = new LineChartModel();
+
+//        Initiate r12AssortmentMarginModel
+        r12AssortmentMarginModel = new LineChartModel();
+
+        //        Calculate historical sales start dates to use in Growth calculation
+        LocalDate dateT0 = Utility.makeDate(LocalDate.now().minusYears(1).
+                getYear(), LocalDate.now().getMonthValue()
+        );
+        LocalDate dateH12 = Utility.makeDate(LocalDate.now().minusYears(2).
+                getYear(), LocalDate.now().getMonthValue()
+        );
+
+//       R12 algorithm based on dates
+//        Create set of assortment groups contained in the map
+        Set<String> assortmentGrpSet = assortmentSalesMap.values().stream().map(
+                CategoryChartData::getCategory).collect(Collectors.toSet());
+
+//        Accumulate sales and cost for each assortment group over rolling 12 periods
+        int rollingPeriod = 12;
+        assortmentCounter = 0;
+        double totR12SalesT0 = 0d;
+        double totR12SalesH12 = 0d;
+        double totR12Growth = 0d;
+        double totR12CostT0 = 0d;
+        double totR12Margin = 0d;
+        double totPotential = 0d;
+
+        try {
+            for (String asg : assortmentGrpSet) {
+//                Initiate chart series and variables
+                ChartSeries r12Sales = new ChartSeries(asg);
+                ChartSeries r12Margin = new ChartSeries(asg);
+                double potential = 0d;
+
+//            Collect potentials by assortment group and assign to assortmentPotentialMap
+                mapAssortmentGrpPotentials(asg);
+
+                for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
+                    LocalDate date = Utility.calcStartDate().plusMonths(i).with(
+                            TemporalAdjusters.lastDayOfMonth());
+
+//                Collect and sum sales
+                    Double netSalesR12 = assortmentSalesMap.values().stream().
+                            filter(m -> m.getCategory().equals(asg)
+                            && Utility.isWithinRange(date, m.getDate())).
+                            collect(Collectors.summingDouble(
+                                    CategoryChartData::getNetSales));
+
+//                Collect and sum cost
+                    Double costR12 = assortmentSalesMap.values().stream().
+                            filter(
+                                    m -> m.getCategory().equals(asg)
+                                    && Utility.isWithinRange(date, m.getDate())).
+                            collect(Collectors.summingDouble(
+                                    CategoryChartData::getDirectCost));
+
+                    String chartDate = date.plusMonths(11).with(
+                            TemporalAdjusters.lastDayOfMonth()).format(
+                            DateTimeFormatter.ISO_DATE);
+
+                    //        Add data to r12Sales series        
+                    r12Sales.set(chartDate, netSalesR12);
+
+                    //        Add data to r12Margin series   
+                    double margin = Utility.calcMargin(netSalesR12,
+                            costR12);
+                    r12Margin.set(chartDate, margin);
+                }
+                /* *************** TABLE CALCULATIONS *************** */
+//                Collect and sum sales from two years ago for growth calculation
+                Double r12SalesH12 = assortmentSalesMap.values().stream().
+                        filter(
+                                m -> m.getCategory().equals(asg) && Utility.
+                                isWithinRange(
+                                        dateH12, m.getDate())).collect(
+                                Collectors.
+                                        summingDouble(
+                                                CategoryChartData::getNetSales));
+
+//                Collect and sum sales from one year ago for growth calculation
+                Double r12SalesT0 = assortmentSalesMap.values().stream().filter(
+                        m -> m.getCategory().equals(asg) && Utility.
+                        isWithinRange(
+                                dateT0, m.getDate())).collect(Collectors.
+                                summingDouble(
+                                        CategoryChartData::getNetSales));
+
+//            Calculate the growth
+                double growthRate = Utility.calcGrowthRate(r12SalesT0,
+                        r12SalesH12);
+
+//                Collect and sum cost from one year ago for margin calculation
+                Double r12CostT0 = assortmentSalesMap.values().stream().filter(
+                        m -> m.getCategory().equals(asg) && Utility.
+                        isWithinRange(
+                                dateT0, m.getDate())).collect(Collectors.
+                                summingDouble(
+                                        CategoryChartData::getDirectCost));
+
+//            Calculate the margin
+                double margin = Utility.calcMargin(r12SalesT0,
+                        r12CostT0);
+
+//            Extract Potential sales from potential map
+                if (assortmentPotentialMap.containsKey(asg)) {
+                    potential = assortmentPotentialMap.get(asg).
+                            getPotSpareParts();
+                }
+
+// Populate the Category Table List and round results to 3 significant figures
+                double r12SalesT0Rounded = Utility.roundDouble(r12SalesT0, 3);
+                double growthRateRounded = Utility.roundDouble(growthRate, 3);
+                double marginRounded = Utility.roundDouble(margin, 3);
+                double potentialRounded = Utility.roundDouble(potential, 3);
+
+                assortmentTableList.add(new CategoryTableData(asg,
+                        r12SalesT0Rounded, growthRateRounded, marginRounded,
+                        potentialRounded)
+                );
+
+//            Sum total R12 sales
+                totR12SalesT0 = totR12SalesT0 + r12SalesT0;
+                totR12SalesH12 = totR12SalesH12 + r12SalesH12;
+//            Calculate total R12 growth
+                totR12Growth = Utility.calcGrowthRate(totR12SalesT0,
+                        totR12SalesH12);
+//            Sum total R12 cost
+                totR12CostT0 = totR12CostT0 + r12CostT0;
+//            Calculate R12 Margin
+                totR12Margin = Utility.calcMargin(totR12SalesT0, totR12CostT0);
+
+//            Sum total Potential sales
+                totPotential = totPotential + potential;
+
+                //        Set number of assortment groups in the charts
+                if (assortmentCounter < 5) {
+                    //        Populate r12AssortmentSalesModel             
+                    r12AssortmentSalesModel.addSeries(r12Sales);
+                    r12Sales.setLabel(asg);
+
+                    //        Populate r12AssortmentMarginModel             
+                    r12AssortmentMarginModel.addSeries(r12Margin);
+                    r12Margin.setLabel(asg);
+                    assortmentCounter++;
+                }
+            }
+            /* *************** TABLE SUMMARY CALCULATIONS *************** */
+//  Sort category list in decending order based on sales
+            Collections.sort(assortmentTableList,
+                    (CategoryTableData a, CategoryTableData b) -> b.getSales().
+                            compareTo(a.getSales()));
+
+            /*  Round total R12 Sales, Growth, Margin and Potential Sales to 3 
+            significant figures and assign to class field. */
+            this.totTop10AssortmentSales = Utility.roundDouble(totR12SalesT0, 3);
+            this.totTop10AssortmentGrowth = Utility.roundDouble(totR12Growth, 3);
+            this.totTop10AssortmentMargin = Utility.roundDouble(totR12Margin, 3);
+            this.totTop10AssortmentPotential = Utility.roundDouble(totPotential,
+                    3);
+
+            /* *************** CHART PARAMETERS *************** */
+//        Set chart parameters for the sales chart
+            r12AssortmentSalesModel.setLegendPosition("nw");
+            r12AssortmentSalesModel.getAxis(AxisType.Y).setLabel("MEur");
+            DateAxis axis = new DateAxis("Dates");
+            axis.setTickAngle(-50);
+            axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+            axis.setTickFormat("%y-%b-%#d");
+            r12AssortmentSalesModel.getAxes().put(AxisType.X, axis);
+
+//        Set chart parameters for the margin chart
+            r12AssortmentMarginModel.setLegendPosition("nw");
+            r12AssortmentMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
+            DateAxis axis1 = new DateAxis("Dates");
+            axis1.setTickAngle(-50);
+            axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+            axis1.setTickFormat("%y-%b-%#d");
+            r12AssortmentMarginModel.getAxes().put(AxisType.X, axis1);
+        } catch (ClientException e) {
+            System.err.println(
+                    "Exception in 'populateR12AssortmentGrpLineChartsAndTable method':" + e);
+        }
+    }
+
+    /**
+     * Collect potentials by assortment group and assign to
+     * assortmentPotentialMap
+     *
+     * @param assortment to group by
+     */
+    private void mapAssortmentGrpPotentials(String assortment) {
+//  Query Potentials by assortment group
+        String tx = "MATCH (ib:InstalledBase {name: {assortment}})-[r:POTENTIAL]->(:Customer)"
+                + " RETURN ib.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+
+        StatementResult result = this.session.run(tx, Values.parameters(
+                "assortment", assortment));
+
+        while (result.hasNext()) {
+            Record r = result.next();
+
+            String assortmentGrp = r.get("Assortment").asString();
+            double potSpareParts = r.get("SP_POT").asDouble();
+            double potMaintenanceHrs = r.get("HRS_POT").asDouble();
+            double potMaintenance = r.get("MT_POT").asDouble();
+
+//                Make key
+            String key = assortmentGrp;
+
+//            Add results to Map
+            this.assortmentPotentialMap.put(key,
+                    new PotentialData(potSpareParts, potMaintenanceHrs,
+                            potMaintenance));
+        }
+
+    }
+
 //    GETTERS & SETTERS
     public LineChartModel getR12SalesModel() {
         return r12SalesModel;
@@ -884,18 +1208,6 @@ public class SparePartBean implements Serializable {
         return r12GrowthModel;
     }
 
-    public LineChartModel getR12MarketSalesModel() {
-        return r12MarketSalesModel;
-    }
-
-    public LineChartModel getR12MarketMarginModel() {
-        return r12MarketMarginModel;
-    }
-
-    public List<CategoryTableData> getMarketTableList() {
-        return marketTableList;
-    }
-
     public Double getGlobalGrowth() {
         return globalGrowth;
     }
@@ -906,6 +1218,18 @@ public class SparePartBean implements Serializable {
 
     public Double getGlobalMargin() {
         return globalMargin;
+    }
+
+    public LineChartModel getR12MarketSalesModel() {
+        return r12MarketSalesModel;
+    }
+
+    public LineChartModel getR12MarketMarginModel() {
+        return r12MarketMarginModel;
+    }
+
+    public List<CategoryTableData> getMarketTableList() {
+        return marketTableList;
     }
 
     public Double getTotTop10MarketSales() {
@@ -950,6 +1274,34 @@ public class SparePartBean implements Serializable {
 
     public List<CategoryTableData> getCustGrpTableList() {
         return custGrpTableList;
+    }
+
+    public LineChartModel getR12AssortmentSalesModel() {
+        return r12AssortmentSalesModel;
+    }
+
+    public LineChartModel getR12AssortmentMarginModel() {
+        return r12AssortmentMarginModel;
+    }
+
+    public List<CategoryTableData> getAssortmentTableList() {
+        return assortmentTableList;
+    }
+
+    public Double getTotTop10AssortmentSales() {
+        return totTop10AssortmentSales;
+    }
+
+    public Double getTotTop10AssortmentGrowth() {
+        return totTop10AssortmentGrowth;
+    }
+
+    public Double getTotTop10AssortmentMargin() {
+        return totTop10AssortmentMargin;
+    }
+
+    public Double getTotTop10AssortmentPotential() {
+        return totTop10AssortmentPotential;
     }
 
 }
