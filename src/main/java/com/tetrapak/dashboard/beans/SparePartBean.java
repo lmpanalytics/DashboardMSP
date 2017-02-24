@@ -48,9 +48,9 @@ import utility.Utility;
 @Stateless
 @SessionScoped
 public class SparePartBean implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     @Inject
     Neo4jBean neo4jBean;
 
@@ -93,11 +93,11 @@ public class SparePartBean implements Serializable {
     private Double totTop10AssortmentMargin;
     private Double totTop10AssortmentPotential;
     private Session session;
-
+    
     public SparePartBean() {
-
+        
     }
-
+    
     @PostConstruct
     public void init() {
         System.out.println("I'm in the 'SparePartBean.init()' method.");
@@ -162,11 +162,13 @@ public class SparePartBean implements Serializable {
 
 //        Close driver to avoid leakage
         neo4jBean.closeNeo4jDriver();
+        session.close();
     }
-
+    
     @PreDestroy
     public void destroyMe() {
         neo4jBean.closeNeo4jDriver();
+        session.close();
         System.out.println(
                 "Neo4jDriver in the SparePartBean has been disposed of.");
     }
@@ -179,18 +181,18 @@ public class SparePartBean implements Serializable {
 
         // code query here
         try {
-
+            
             String tx = "MATCH (s:ServiceCategory)<-[:OF_CATEGORY]-(:Material)-[r:SOLD_ON]->(d:Day)"
                     + " WHERE s.name = {name}"
                     + " RETURN d.year AS Year, d.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
-
+            
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", "Parts"));
-
+            
             while (result.hasNext()) {
                 Record r = result.next();
-
+                
                 int year = r.get("Year").asInt();
                 int month = r.get("Month").asInt();
                 double netSales = r.get("NetSales").asDouble();
@@ -205,7 +207,7 @@ public class SparePartBean implements Serializable {
                         d, netSales, directCost, quantity)
                 );
             }
-
+            
         } catch (ClientException e) {
             System.err.println("Exception in 'populateSalesMap()':" + e);
         }
@@ -241,7 +243,7 @@ public class SparePartBean implements Serializable {
 //                Initiate chart series 
         ChartSeries r12Sales = new ChartSeries();
         ChartSeries r12Margin = new ChartSeries();
-
+        
         for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
             LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                     TemporalAdjusters.lastDayOfMonth());
@@ -312,6 +314,7 @@ public class SparePartBean implements Serializable {
         axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
         axis.setTickFormat("%y-%b-%#d");
         r12SalesModel.getAxes().put(AxisType.X, axis);
+        r12SalesModel.setAnimate(true);
 
 //        Set chart parameters for the margin chart
         r12MarginModel.setLegendPosition("nw");
@@ -321,19 +324,23 @@ public class SparePartBean implements Serializable {
         axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
         axis1.setTickFormat("%y-%b-%#d");
         r12MarginModel.getAxes().put(AxisType.X, axis1);
+        r12MarginModel.setAnimate(true);
 
-//        Set gauge segments
+//      Set chart parameters for the MeterGauge chart 
+        double maxscaleValue = 15d;
         List<Number> intervals = new ArrayList<Number>() {
             {
                 add(5.0);
                 add(7.5) /* Target */;
-                add(15.0);
+                add(maxscaleValue);
             }
         };
         r12GrowthModel = new MeterGaugeChartModel(this.globalGrowth, intervals);
+        r12GrowthModel.setMax(maxscaleValue);
+        r12GrowthModel.setMin(0d);
         r12GrowthModel.setGaugeLabel("%");
         r12GrowthModel.setSeriesColors("cc6666,E7E658,66cc66");
-
+        
     }
 
     /**
@@ -359,13 +366,13 @@ public class SparePartBean implements Serializable {
                     + " WHERE r.marketNumber IN MarketNumbers AND r.marketNumber = mkt.mktId AND s.name = {name}"
                     + " RETURN d.year AS Year, d.month AS Month, mkt.mktName AS Market, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
-
+            
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", "Parts", "date", startDate));
-
+            
             while (result.hasNext()) {
                 Record r = result.next();
-
+                
                 int year = r.get("Year").asInt();
                 int month = r.get("Month").asInt();
                 String market = r.get("Market").asString();
@@ -382,7 +389,7 @@ public class SparePartBean implements Serializable {
                 marketSalesMap.put(key, new CategoryChartData(d, market,
                         netSales, directCost, quantity));
             }
-
+            
         } catch (ClientException e) {
             System.err.println("Exception in 'populateMarketSalesMap()':" + e);
         }
@@ -426,7 +433,7 @@ public class SparePartBean implements Serializable {
         double totR12CostT0 = 0d;
         double totR12Margin = 0d;
         double totPotential = 0d;
-
+        
         try {
             for (String mkt : marketSet) {
 //                Initiate chart series and variables
@@ -436,7 +443,7 @@ public class SparePartBean implements Serializable {
 
 //            Collect potentials by market and assign to marketPotentialMap
                 mapMarketPotentials(mkt);
-
+                
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                             TemporalAdjusters.lastDayOfMonth());
@@ -455,7 +462,7 @@ public class SparePartBean implements Serializable {
                             && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
                                     CategoryChartData::getDirectCost));
-
+                    
                     String chartDate = date.plusMonths(11).with(
                             TemporalAdjusters.
                                     lastDayOfMonth()).format(
@@ -512,7 +519,7 @@ public class SparePartBean implements Serializable {
                 double growthRateRounded = Utility.roundDouble(growthRate, 3);
                 double marginRounded = Utility.roundDouble(margin, 3);
                 double potentialRounded = Utility.roundDouble(potential, 3);
-
+                
                 marketTableList.add(new CategoryTableData(mkt,
                         r12SalesT0Rounded, growthRateRounded, marginRounded,
                         potentialRounded)
@@ -566,6 +573,7 @@ public class SparePartBean implements Serializable {
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             axis.setTickFormat("%y-%b-%#d");
             r12MarketSalesModel.getAxes().put(AxisType.X, axis);
+            r12MarketSalesModel.setAnimate(true);
 
 //        Set chart parameters for the margin chart
             r12MarketMarginModel.setLegendPosition("nw");
@@ -575,6 +583,7 @@ public class SparePartBean implements Serializable {
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             axis1.setTickFormat("%y-%b-%#d");
             r12MarketMarginModel.getAxes().put(AxisType.X, axis1);
+            r12MarketMarginModel.setAnimate(true);
         } catch (ClientException e) {
             System.err.println(
                     "Exception in 'populateR12MarketLineCharts method':" + e);
@@ -590,13 +599,13 @@ public class SparePartBean implements Serializable {
 //  Query Potentials by market
         String tx = "MATCH (ib:InstalledBase)-[r:POTENTIAL]->(c:Customer)-[:LOCATED_IN]->(m:Market {mktName: {mktName}})"
                 + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
-
+        
         StatementResult result = this.session.run(tx, Values.parameters(
                 "mktName", market));
-
+        
         while (result.hasNext()) {
             Record r = result.next();
-
+            
             String marketName = r.get("MktName").asString();
             double potSpareParts = r.get("SP_POT").asDouble();
             double potMaintenanceHrs = r.get("HRS_POT").asDouble();
@@ -610,7 +619,7 @@ public class SparePartBean implements Serializable {
                     new PotentialData(potSpareParts, potMaintenanceHrs,
                             potMaintenance));
         }
-
+        
     }
 
     /**
@@ -640,13 +649,13 @@ public class SparePartBean implements Serializable {
                     + " WHERE (cu.custGroup IN CustGroups OR cu.custType = 'Global Account') AND r.custNumber = cu.id AND s.name = {name}" /* Include all Global Accounts as well */
                     + " RETURN d.year AS Year, d.month AS Month, cu.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
-
+            
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", "Parts", "date", startDate));
-
+            
             while (result.hasNext()) {
                 Record r = result.next();
-
+                
                 int year = r.get("Year").asInt();
                 int month = r.get("Month").asInt();
                 String custGrp = r.get("CustGroup").asString();
@@ -711,7 +720,7 @@ public class SparePartBean implements Serializable {
         double totR12CostT0 = 0d;
         double totR12Margin = 0d;
         double totPotential = 0d;
-
+        
         try {
             for (String cgr : custGrpSet) {
 //                Initiate chart series and variables
@@ -721,7 +730,7 @@ public class SparePartBean implements Serializable {
 
 //            Collect potentials by customer group and assign to customerGroupPotentialMap
                 mapCustomerGrpPotentials(cgr);
-
+                
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                             TemporalAdjusters.lastDayOfMonth());
@@ -739,7 +748,7 @@ public class SparePartBean implements Serializable {
                             && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
                                     CategoryChartData::getDirectCost));
-
+                    
                     String chartDate = date.plusMonths(11).with(
                             TemporalAdjusters.lastDayOfMonth()).format(
                             DateTimeFormatter.ISO_DATE);
@@ -795,7 +804,7 @@ public class SparePartBean implements Serializable {
                 double growthRateRounded = Utility.roundDouble(growthRate, 3);
                 double marginRounded = Utility.roundDouble(margin, 3);
                 double potentialRounded = Utility.roundDouble(potential, 3);
-
+                
                 custGrpTableList.add(new CategoryTableData(cgr,
                         r12SalesT0Rounded, growthRateRounded, marginRounded,
                         potentialRounded)
@@ -849,6 +858,7 @@ public class SparePartBean implements Serializable {
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             axis.setTickFormat("%y-%b-%#d");
             r12CustGrpSalesModel.getAxes().put(AxisType.X, axis);
+            r12CustGrpSalesModel.setAnimate(true);
 
 //        Set chart parameters for the margin chart
             r12CustGrpMarginModel.setLegendPosition("nw");
@@ -858,6 +868,7 @@ public class SparePartBean implements Serializable {
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             axis1.setTickFormat("%y-%b-%#d");
             r12CustGrpMarginModel.getAxes().put(AxisType.X, axis1);
+            r12CustGrpMarginModel.setAnimate(true);
         } catch (ClientException e) {
             System.err.println(
                     "Exception in 'populateR12CustomerGrpLineChartsAndTable method':" + e);
@@ -873,13 +884,13 @@ public class SparePartBean implements Serializable {
 //  Query Potentials by customer group
         String tx = "MATCH (ib:InstalledBase)-[r:POTENTIAL]->(cu:Customer {custGroup: {customerGrp}})"
                 + " RETURN cu.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
-
+        
         StatementResult result = this.session.run(tx, Values.parameters(
                 "customerGrp", customerGrp));
-
+        
         while (result.hasNext()) {
             Record r = result.next();
-
+            
             String custGroupName = r.get("CustGrpName").asString();
             double potSpareParts = r.get("SP_POT").asDouble();
             double potMaintenanceHrs = r.get("HRS_POT").asDouble();
@@ -893,7 +904,7 @@ public class SparePartBean implements Serializable {
                     new PotentialData(potSpareParts, potMaintenanceHrs,
                             potMaintenance));
         }
-
+        
     }
 
     /**
@@ -933,13 +944,13 @@ public class SparePartBean implements Serializable {
                     + " ELSE r.localAssortmentGrp" /* Else use Local AsGroup */
                     + " END AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
-
+            
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", "Parts", "date", startDate));
-
+            
             while (result.hasNext()) {
                 Record r = result.next();
-
+                
                 int year = r.get("Year").asInt();
                 int month = r.get("Month").asInt();
                 String assortmentGrp = r.get("Asg").asString();
@@ -1004,7 +1015,7 @@ public class SparePartBean implements Serializable {
         double totR12CostT0 = 0d;
         double totR12Margin = 0d;
         double totPotential = 0d;
-
+        
         try {
             for (String asg : assortmentGrpSet) {
 //                Initiate chart series and variables
@@ -1014,7 +1025,7 @@ public class SparePartBean implements Serializable {
 
 //            Collect potentials by assortment group and assign to assortmentPotentialMap
                 mapAssortmentGrpPotentials(asg);
-
+                
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                             TemporalAdjusters.lastDayOfMonth());
@@ -1033,7 +1044,7 @@ public class SparePartBean implements Serializable {
                                     && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
                                     CategoryChartData::getDirectCost));
-
+                    
                     String chartDate = date.plusMonths(11).with(
                             TemporalAdjusters.lastDayOfMonth()).format(
                             DateTimeFormatter.ISO_DATE);
@@ -1092,7 +1103,7 @@ public class SparePartBean implements Serializable {
                 double growthRateRounded = Utility.roundDouble(growthRate, 3);
                 double marginRounded = Utility.roundDouble(margin, 3);
                 double potentialRounded = Utility.roundDouble(potential, 3);
-
+                
                 assortmentTableList.add(new CategoryTableData(asg,
                         r12SalesT0Rounded, growthRateRounded, marginRounded,
                         potentialRounded)
@@ -1147,6 +1158,7 @@ public class SparePartBean implements Serializable {
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             axis.setTickFormat("%y-%b-%#d");
             r12AssortmentSalesModel.getAxes().put(AxisType.X, axis);
+            r12AssortmentSalesModel.setAnimate(true);
 
 //        Set chart parameters for the margin chart
             r12AssortmentMarginModel.setLegendPosition("nw");
@@ -1156,6 +1168,7 @@ public class SparePartBean implements Serializable {
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             axis1.setTickFormat("%y-%b-%#d");
             r12AssortmentMarginModel.getAxes().put(AxisType.X, axis1);
+            r12AssortmentMarginModel.setAnimate(true);
         } catch (ClientException e) {
             System.err.println(
                     "Exception in 'populateR12AssortmentGrpLineChartsAndTable method':" + e);
@@ -1172,13 +1185,13 @@ public class SparePartBean implements Serializable {
 //  Query Potentials by assortment group
         String tx = "MATCH (ib:InstalledBase {name: {assortment}})-[r:POTENTIAL]->(:Customer)"
                 + " RETURN ib.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
-
+        
         StatementResult result = this.session.run(tx, Values.parameters(
                 "assortment", assortment));
-
+        
         while (result.hasNext()) {
             Record r = result.next();
-
+            
             String assortmentGrp = r.get("Assortment").asString();
             double potSpareParts = r.get("SP_POT").asDouble();
             double potMaintenanceHrs = r.get("HRS_POT").asDouble();
@@ -1192,116 +1205,116 @@ public class SparePartBean implements Serializable {
                     new PotentialData(potSpareParts, potMaintenanceHrs,
                             potMaintenance));
         }
-
+        
     }
 
 //    GETTERS & SETTERS
     public LineChartModel getR12SalesModel() {
         return r12SalesModel;
     }
-
+    
     public LineChartModel getR12MarginModel() {
         return r12MarginModel;
     }
-
+    
     public MeterGaugeChartModel getR12GrowthModel() {
         return r12GrowthModel;
     }
-
+    
     public Double getGlobalGrowth() {
         return globalGrowth;
     }
-
+    
     public Double getGlobalSales() {
         return globalSales;
     }
-
+    
     public Double getGlobalMargin() {
         return globalMargin;
     }
-
+    
     public LineChartModel getR12MarketSalesModel() {
         return r12MarketSalesModel;
     }
-
+    
     public LineChartModel getR12MarketMarginModel() {
         return r12MarketMarginModel;
     }
-
+    
     public List<CategoryTableData> getMarketTableList() {
         return marketTableList;
     }
-
+    
     public Double getTotTop10MarketSales() {
         return totTop10MarketSales;
     }
-
+    
     public Double getTotTop10MarketGrowth() {
         return totTop10MarketGrowth;
     }
-
+    
     public Double getTotTop10MarketMargin() {
         return totTop10MarketMargin;
     }
-
+    
     public Double getTotTop10MarketPotential() {
         return totTop10MarketPotential;
     }
-
+    
     public Double getTotTop10CustGrpSales() {
         return totTop10CustGrpSales;
     }
-
+    
     public Double getTotTop10CustGrpGrowth() {
         return totTop10CustGrpGrowth;
     }
-
+    
     public Double getTotTop10CustGrpMargin() {
         return totTop10CustGrpMargin;
     }
-
+    
     public Double getTotTop10CustGrpPotential() {
         return totTop10CustGrpPotential;
     }
-
+    
     public LineChartModel getR12CustGrpSalesModel() {
         return r12CustGrpSalesModel;
     }
-
+    
     public LineChartModel getR12CustGrpMarginModel() {
         return r12CustGrpMarginModel;
     }
-
+    
     public List<CategoryTableData> getCustGrpTableList() {
         return custGrpTableList;
     }
-
+    
     public LineChartModel getR12AssortmentSalesModel() {
         return r12AssortmentSalesModel;
     }
-
+    
     public LineChartModel getR12AssortmentMarginModel() {
         return r12AssortmentMarginModel;
     }
-
+    
     public List<CategoryTableData> getAssortmentTableList() {
         return assortmentTableList;
     }
-
+    
     public Double getTotTop10AssortmentSales() {
         return totTop10AssortmentSales;
     }
-
+    
     public Double getTotTop10AssortmentGrowth() {
         return totTop10AssortmentGrowth;
     }
-
+    
     public Double getTotTop10AssortmentMargin() {
         return totTop10AssortmentMargin;
     }
-
+    
     public Double getTotTop10AssortmentPotential() {
         return totTop10AssortmentPotential;
     }
-
+    
 }

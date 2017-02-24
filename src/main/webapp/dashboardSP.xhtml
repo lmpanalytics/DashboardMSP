@@ -14,29 +14,31 @@
         </h:head>
     </h:head>
     <h:body>
-        <header class="w3-container w3-indigo">
-            <h1>Spare Parts Dashboard</h1>
-        </header>
-        <div class="w3-row">
-            <div class="w3-third w3-container w3-border">
-                <h2>R12 Growth #{sparePartBean.globalGrowth}% (TG 7.5%)</h2>
-                <p:chart type="metergauge" model="#{sparePartBean.r12GrowthModel}" />
+        <f:view contentType="text/html">
+            <header class="w3-container w3-indigo">
+                <h1>Spare Parts Dashboard</h1>
+            </header>
+            <div class="w3-row">
+                <div class="w3-third w3-container w3-border">
+                    <h2>R12 Growth #{sparePartBean.globalGrowth}% (TG 7.5%)</h2>
+                    <p:chart type="metergauge" model="#{sparePartBean.r12GrowthModel}" />
+                </div>
+                <div class="w3-third w3-container w3-border">
+
+                    <h2>R12 Sales #{sparePartBean.globalSales} MEur (TG 269 MEur)</h2>
+                    <p:chart type="line" model="#{sparePartBean.r12SalesModel}" />
+
+                </div>
+                <div class="w3-third w3-container w3-border">
+                    <h2>R12 Net Margin #{sparePartBean.globalMargin}% (TG 60%)</h2>
+                    <p:chart type="line" model="#{sparePartBean.r12MarginModel}" />
+                </div>
             </div>
-            <div class="w3-third w3-container w3-border">
-                <h2>R12 Sales #{sparePartBean.globalSales} MEur (TG 269 MEur)</h2>
-                <p:chart type="line" model="#{sparePartBean.r12SalesModel}" />
-            </div>
-            <div class="w3-third w3-container w3-border">
-                <h2>R12 Net Margin #{sparePartBean.globalMargin}% (TG 60%)</h2>
-                <p:chart type="line" model="#{sparePartBean.r12MarginModel}" />
-            </div>
-        </div>
-        <br></br>
-        <!-- MARKET COMPONENTS -->
-        <div class="w3-row">
-            <div class="w3-third w3-container w3-border">
-                <h2>Sales Top-10 Markets</h2> 
-                <f:view>
+            <br></br>
+            <!-- MARKET COMPONENTS -->
+            <div class="w3-row">
+                <div class="w3-third w3-container w3-border">
+                    <h2>Sales Top-10 Markets</h2> 
 
                     <p:dataTable value="#{sparePartBean.marketTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true">
@@ -85,25 +87,24 @@
                             </f:facet>
                         </p:column>
                     </p:dataTable>    
-                </f:view>
+                </div>
+                <div class="w3-third w3-container  w3-border">
+                    <h2>R12 Sales Top-5 Markets</h2>
+                    <p:chart type="line" model="#{sparePartBean.r12MarketSalesModel}" />
+                </div>
+                <div class="w3-third w3-container w3-border">
+                    <h2>R12 Margin Top-5 Markets</h2>
+                    <p:chart type="line" model="#{sparePartBean.r12MarketMarginModel}" />
+                </div>              
             </div>
-            <div class="w3-third w3-container  w3-border">
-                <h2>R12 Sales Top-5 Markets</h2>
-                <p:chart type="line" model="#{sparePartBean.r12MarketSalesModel}" />
-            </div>
-            <div class="w3-third w3-container w3-border">
-                <h2>R12 Margin Top-5 Markets</h2>
-                <p:chart type="line" model="#{sparePartBean.r12MarketMarginModel}" />
-            </div>
-        </div>
-        <!-- CUSTOMER GROUP COMPONENTS -->
-        <div class="w3-row">
-            <div class="w3-third w3-container w3-border">
-                <h2>Sales Top-10 Customer Groups</h2> 
-                <f:view>
+            <br></br>
+            <!-- CUSTOMER GROUP COMPONENTS -->
+            <div class="w3-row">
+                <div class="w3-third w3-container w3-border">
+                    <h2>Sales Top-10 Customer Groups</h2> 
 
                     <p:dataTable value="#{sparePartBean.custGrpTableList}" var="data"
-                                 paginator="false" rows="10" draggableColumns="true" liveResize="true">
+                                 paginator="false" rows="15" draggableColumns="true" liveResize="true">
                         <p:column>
                             <f:facet name="header">
                                 <h:outputText value="Customer Group"></h:outputText>
@@ -148,24 +149,23 @@
                                 <h:outputText value="#{sparePartBean.totTop10CustGrpPotential}"></h:outputText>
                             </f:facet>
                         </p:column>
-                    </p:dataTable>    
-                </f:view>
+                    </p:dataTable>  
+                    (Including Global Accounts) 
+                </div>
+                <div class="w3-third w3-container  w3-border">
+                    <h2>R12 Sales Top-5 Customer Groups</h2>
+                    <p:chart type="line" model="#{sparePartBean.r12CustGrpSalesModel}" />
+                </div>
+                <div class="w3-third w3-container w3-border">
+                    <h2>R12 Margin Top-5 Customer Groups</h2>
+                    <p:chart type="line" model="#{sparePartBean.r12CustGrpMarginModel}" />
+                </div>
             </div>
-            <div class="w3-third w3-container  w3-border">
-                <h2>R12 Sales Top-5 Customer Groups</h2>
-                <p:chart type="line" model="#{sparePartBean.r12CustGrpSalesModel}" />
-            </div>
-            <div class="w3-third w3-container w3-border">
-                <h2>R12 Margin Top-5 Customer Groups</h2>
-                <p:chart type="line" model="#{sparePartBean.r12CustGrpMarginModel}" />
-            </div>
-        </div>
-
-        <!-- ASSORTMENT GROUP COMPONENTS -->
-        <div class="w3-row">
-            <div class="w3-third w3-container w3-border">
-                <h2>Sales Top-10 Assortment Groups</h2> 
-                <f:view>
+            <br></br>
+            <!-- ASSORTMENT GROUP COMPONENTS -->
+            <div class="w3-row">
+                <div class="w3-third w3-container w3-border">
+                    <h2>Sales Top-10 Assortment Groups</h2> 
 
                     <p:dataTable value="#{sparePartBean.assortmentTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true">
@@ -214,28 +214,27 @@
                             </f:facet>
                         </p:column>
                     </p:dataTable>    
-                </f:view>
+                </div>
+                <div class="w3-third w3-container  w3-border">
+                    <h2>R12 Sales Top-5 Assortment Grps</h2>
+                    <p:chart type="line" model="#{sparePartBean.r12AssortmentSalesModel}" />
+                </div>
+                <div class="w3-third w3-container w3-border">
+                    <h2>R12 Margin Top-5 Assortment Grps</h2>
+                    <p:chart type="line" model="#{sparePartBean.r12AssortmentMarginModel}" />
+                </div>
             </div>
-            <div class="w3-third w3-container  w3-border">
-                <h2>R12 Sales Top-5 Assortment Groups</h2>
-                <p:chart type="line" model="#{sparePartBean.r12AssortmentSalesModel}" />
-            </div>
-            <div class="w3-third w3-container w3-border">
-                <h2>R12 Margin Top-5 Assortment Groups</h2>
-                <p:chart type="line" model="#{sparePartBean.r12AssortmentMarginModel}" />
-            </div>
-        </div>
-
-        <footer class="w3-container w3-light-grey">
-            <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report</h5>
-        </footer>
-        <h:form>
             <p></p>
-            <h:commandButton id="index" value="Return to Index"
-                             action="index">
-            </h:commandButton>
-        </h:form>
-
+            <footer class="w3-container w3-light-grey">
+                <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report</h5>
+            </footer>
+            <h:form>
+                <p></p>
+                <h:commandButton id="index" value="Return to Index"
+                                 action="index">
+                </h:commandButton>
+            </h:form>
+        </f:view>
     </h:body>
 </html>
 
