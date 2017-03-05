@@ -19,25 +19,25 @@
                 <h1>Spare Parts Dashboard</h1>
             </header>
             <div class="w3-row">
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
                     <h2>R12 Growth #{sparePartBean.globalGrowth}% (TG 7.5%)</h2>
                     <p:chart type="metergauge" model="#{sparePartBean.r12GrowthModel}" />
                 </div>
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
 
                     <h2>R12 Sales #{sparePartBean.globalSales} MEur (TG 269 MEur)</h2>
                     <p:chart type="line" model="#{sparePartBean.r12SalesModel}" />
 
                 </div>
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
                     <h2>R12 Net Margin #{sparePartBean.globalMargin}% (TG 60%)</h2>
                     <p:chart type="line" model="#{sparePartBean.r12MarginModel}" />
                 </div>
             </div>
-            <br></br>
+            <p:separator />
             <!-- MARKET COMPONENTS -->
             <div class="w3-row">
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
                     <h2>Sales Top-10 Markets</h2> 
 
                     <p:dataTable value="#{sparePartBean.marketTableList}" var="data"
@@ -88,19 +88,19 @@
                         </p:column>
                     </p:dataTable>    
                 </div>
-                <div class="w3-third w3-container  w3-border">
+                <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Markets</h2>
                     <p:chart type="line" model="#{sparePartBean.r12MarketSalesModel}" />
                 </div>
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Markets</h2>
                     <p:chart type="line" model="#{sparePartBean.r12MarketMarginModel}" />
                 </div>              
             </div>
-            <br></br>
+            <p:separator />
             <!-- CUSTOMER GROUP COMPONENTS -->
             <div class="w3-row">
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
                     <h2>Sales Top-10 Customer Groups</h2> 
 
                     <p:dataTable value="#{sparePartBean.custGrpTableList}" var="data"
@@ -152,19 +152,19 @@
                     </p:dataTable>  
                     (Including Global Accounts) 
                 </div>
-                <div class="w3-third w3-container  w3-border">
+                <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Customer Groups</h2>
                     <p:chart type="line" model="#{sparePartBean.r12CustGrpSalesModel}" />
                 </div>
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Customer Groups</h2>
                     <p:chart type="line" model="#{sparePartBean.r12CustGrpMarginModel}" />
                 </div>
             </div>
-            <br></br>
+            <p:separator />
             <!-- ASSORTMENT GROUP COMPONENTS -->
             <div class="w3-row">
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
                     <h2>Sales Top-10 Assortment Groups</h2> 
 
                     <p:dataTable value="#{sparePartBean.assortmentTableList}" var="data"
@@ -215,11 +215,11 @@
                         </p:column>
                     </p:dataTable>    
                 </div>
-                <div class="w3-third w3-container  w3-border">
+                <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Assortment Grps</h2>
                     <p:chart type="line" model="#{sparePartBean.r12AssortmentSalesModel}" />
                 </div>
-                <div class="w3-third w3-container w3-border">
+                <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Assortment Grps</h2>
                     <p:chart type="line" model="#{sparePartBean.r12AssortmentMarginModel}" />
                 </div>
