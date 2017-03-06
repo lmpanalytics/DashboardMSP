@@ -21,17 +21,17 @@
             <div class="w3-row">
                 <div class="w3-third w3-container">
                     <h2>R12 Growth #{sparePartBean.globalGrowth}% (TG 7.5%)</h2>
-                    <p:chart type="metergauge" model="#{sparePartBean.r12GrowthModel}" />
+                    <p:chart type="metergauge" model="#{sparePartBean.r12GrowthModel}"  responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
 
                     <h2>R12 Sales #{sparePartBean.globalSales} MEur (TG 269 MEur)</h2>
-                    <p:chart type="line" model="#{sparePartBean.r12SalesModel}" />
+                    <p:chart type="line" model="#{sparePartBean.r12SalesModel}" style="height:400px;" responsive="true"/>
 
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Net Margin #{sparePartBean.globalMargin}% (TG 60%)</h2>
-                    <p:chart type="line" model="#{sparePartBean.r12MarginModel}" />
+                    <p:chart type="line" model="#{sparePartBean.r12MarginModel}" style="height:400px;" responsive="true"/>
                 </div>
             </div>
             <p:separator />
@@ -90,11 +90,11 @@
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Markets</h2>
-                    <p:chart type="line" model="#{sparePartBean.r12MarketSalesModel}" />
+                    <p:chart type="line" model="#{sparePartBean.r12MarketSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Markets</h2>
-                    <p:chart type="line" model="#{sparePartBean.r12MarketMarginModel}" />
+                    <p:chart type="line" model="#{sparePartBean.r12MarketMarginModel}" style="height:500px;" responsive="true"/>
                 </div>              
             </div>
             <p:separator />
@@ -154,11 +154,11 @@
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Customer Groups</h2>
-                    <p:chart type="line" model="#{sparePartBean.r12CustGrpSalesModel}" />
+                    <p:chart type="line" model="#{sparePartBean.r12CustGrpSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Customer Groups</h2>
-                    <p:chart type="line" model="#{sparePartBean.r12CustGrpMarginModel}" />
+                    <p:chart type="line" model="#{sparePartBean.r12CustGrpMarginModel}" style="height:500px;" responsive="true"/>
                 </div>
             </div>
             <p:separator />
@@ -217,11 +217,11 @@
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Assortment Grps</h2>
-                    <p:chart type="line" model="#{sparePartBean.r12AssortmentSalesModel}" />
+                    <p:chart type="line" model="#{sparePartBean.r12AssortmentSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Assortment Grps</h2>
-                    <p:chart type="line" model="#{sparePartBean.r12AssortmentMarginModel}" />
+                    <p:chart type="line" model="#{sparePartBean.r12AssortmentMarginModel}" style="height:500px;" responsive="true"/>
                 </div>
             </div>
             <p></p>

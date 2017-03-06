@@ -16,9 +16,11 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -77,7 +79,6 @@ public class SparePartBean implements Serializable {
     private List<CategoryTableData> custGrpTableList;
     private List<CategoryTableData> assortmentTableList;
     private int marketCounter;
-    private int custGrpCounter;
     private int assortmentCounter;
     private Double globalGrowth;
     private Double globalSales;
@@ -95,6 +96,7 @@ public class SparePartBean implements Serializable {
     private Double totTop10AssortmentMargin;
     private Double totTop10AssortmentPotential;
     private Session session;
+    private Set<String> setOfCustGrps;
 
     public SparePartBean() {
 
@@ -113,6 +115,9 @@ public class SparePartBean implements Serializable {
 
 //        Initialize the top-10 Customer group list
         this.top10CustomerGrps = new LinkedList<>();
+
+//        Initialize the set of Customer group list   
+        this.setOfCustGrps = new LinkedHashSet<>();
 
 //        Initialize the top-10 Assortment group list
         this.top10AssortmentGrps = new LinkedList<>();
@@ -330,6 +335,7 @@ public class SparePartBean implements Serializable {
 //        Set chart parameters for the margin chart
         r12MarginModel.setLegendPosition("nw");
         r12MarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
+        r12MarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
         DateAxis axis1 = new DateAxis("Dates");
         axis1.setTickAngle(-50);
         axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -368,7 +374,7 @@ public class SparePartBean implements Serializable {
 //  Query the ten biggest markets in terms of net sales over the last 12 months
 
             String tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
-                    + " WHERE (t.year + \"\" + t.month + \"01\") >= {date}"
+                    + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName" /* Model based on Special Ledger */
                     + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
                     + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
                     /* Collect the markets in a list */
@@ -383,7 +389,7 @@ public class SparePartBean implements Serializable {
             }
 
             String tx1 = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
-                    + " WHERE m.mktName IN {Markets}"
+                    + " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName" /* Use Top10 markets and model based on Special Ledger */
                     + " RETURN t.year AS Year, t.month AS Month, m.mktName AS Market, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
@@ -585,6 +591,9 @@ public class SparePartBean implements Serializable {
 //        Set chart parameters for the sales chart
             r12MarketSalesModel.setLegendPosition("nw");
             r12MarketSalesModel.getAxis(AxisType.Y).setLabel("MEur");
+            r12MarketSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
+            r12MarketSalesModel.setSeriesColors(
+                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -595,6 +604,9 @@ public class SparePartBean implements Serializable {
 //        Set chart parameters for the margin chart
             r12MarketMarginModel.setLegendPosition("nw");
             r12MarketMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
+            r12MarketMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
+            r12MarketMarginModel.setSeriesColors(
+                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -669,7 +681,7 @@ public class SparePartBean implements Serializable {
             while (result.hasNext()) {
                 Record r = result.next();
 
-                top10CustomerGrps = r.get("CustGroups").asList();
+                this.top10CustomerGrps = r.get("CustGroups").asList();
             }
 
             String tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
@@ -678,7 +690,7 @@ public class SparePartBean implements Serializable {
                     + " ORDER BY Year, Month";
 
             StatementResult result1 = this.session.run(tx1, Values.parameters(
-                    "name", "Parts", "CustGroups", top10CustomerGrps));
+                    "name", "Parts", "CustGroups", this.top10CustomerGrps));
 
             while (result1.hasNext()) {
                 Record r = result1.next();
@@ -702,6 +714,13 @@ public class SparePartBean implements Serializable {
 
 //            Print Map contents
 //        custGrpSalesMap.entrySet().stream().map((entry) -> entry.getValue()).forEachOrdered((v) -> {System.out.printf("%s;%s;%s;%s;%s\n", v.getDate(), v.getCategory(), v.getNetSales(), v.getDirectCost(), v.getQuantity());});
+//  Populate a Table Customer Grp List to be used in the sales table.
+            ArrayList<CategoryChartData> tList = new ArrayList<>(
+                    custGrpSalesMap.values());
+//            Extract Customer groups to list
+            this.setOfCustGrps = tList.stream().map(c -> c.getCategory()).
+                    collect(Collectors.toSet());
+
         } catch (ClientException e) {
             System.err.println(
                     "Exception in 'populateCustomerGrpSalesMap()':" + e);
@@ -736,7 +755,6 @@ public class SparePartBean implements Serializable {
 //       R12 algorithm based on dates
 //        Accumulate sales and cost for each customer group over rolling 12 periods
         int rollingPeriod = 12;
-        custGrpCounter = 0;
         double totR12SalesT0 = 0d;
         double totR12SalesH12 = 0d;
         double totR12Growth = 0d;
@@ -745,14 +763,18 @@ public class SparePartBean implements Serializable {
         double totPotential = 0d;
 
         try {
-            for (Object cgr : top10CustomerGrps) {
+//            Convert set of customer groups to list
+            List<String> listOfCustGrps = new LinkedList<>(this.setOfCustGrps);
+
+//            Loop through the customer groups
+            for (String cgr : listOfCustGrps) {
 //                Initiate chart series and variables
-                ChartSeries r12Sales = new ChartSeries(cgr.toString());
-                ChartSeries r12Margin = new ChartSeries(cgr.toString());
+                ChartSeries r12Sales = new ChartSeries(cgr);
+                ChartSeries r12Margin = new ChartSeries(cgr);
                 double potential = 0d;
 
 //            Collect potentials by customer group and assign to customerGroupPotentialMap
-                mapCustomerGrpPotentials(cgr.toString());
+                mapCustomerGrpPotentials(cgr);
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -828,7 +850,7 @@ public class SparePartBean implements Serializable {
                 double marginRounded = Utility.roundDouble(margin, 3);
                 double potentialRounded = Utility.roundDouble(potential, 3);
 
-                custGrpTableList.add(new CategoryTableData(cgr.toString(),
+                custGrpTableList.add(new CategoryTableData(cgr,
                         r12SalesT0Rounded, growthRateRounded, marginRounded,
                         potentialRounded)
                 );
@@ -847,17 +869,14 @@ public class SparePartBean implements Serializable {
 //            Sum total Potential sales
                 totPotential = totPotential + potential;
 
-                //        Set number of customer groups in the charts
-                if (custGrpCounter < 5) {
-                    //        Populate r12CustGrpSalesModel             
-                    r12CustGrpSalesModel.addSeries(r12Sales);
-                    r12Sales.setLabel(cgr.toString());
+                //        Populate r12CustGrpSalesModel             
+                r12CustGrpSalesModel.addSeries(r12Sales);
+                r12Sales.setLabel(cgr);
 
-                    //        Populate r12CustGrpMarginModel             
-                    r12CustGrpMarginModel.addSeries(r12Margin);
-                    r12Margin.setLabel(cgr.toString());
-                    custGrpCounter++;
-                }
+                //        Populate r12CustGrpMarginModel             
+                r12CustGrpMarginModel.addSeries(r12Margin);
+                r12Margin.setLabel(cgr);
+
             }
             /* *************** TABLE SUMMARY CALCULATIONS *************** */
 //  Sort category list in decending order based on sales
@@ -873,9 +892,27 @@ public class SparePartBean implements Serializable {
             this.totTop10CustGrpPotential = Utility.roundDouble(totPotential, 3);
 
             /* *************** CHART PARAMETERS *************** */
+            int myCounter = 0;
+//            Keep Top-5 series for the line charts
+            for (CategoryTableData c : custGrpTableList) {
+//                Remove series after serie 5 (in descending order)
+                if (myCounter > 4) {
+                    String target = c.getCategory();
+                    r12CustGrpSalesModel.getSeries().removeIf(p -> p.getLabel().
+                            equals(target));
+                    r12CustGrpMarginModel.getSeries().removeIf(
+                            p -> p.getLabel().equals(target));
+                }
+
+                myCounter++;
+            }
+
 //        Set chart parameters for the sales chart
             r12CustGrpSalesModel.setLegendPosition("nw");
             r12CustGrpSalesModel.getAxis(AxisType.Y).setLabel("MEur");
+            r12CustGrpSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
+            r12CustGrpSalesModel.setSeriesColors(
+                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -886,6 +923,9 @@ public class SparePartBean implements Serializable {
 //        Set chart parameters for the margin chart
             r12CustGrpMarginModel.setLegendPosition("nw");
             r12CustGrpMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
+            r12CustGrpMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
+            r12CustGrpMarginModel.setSeriesColors(
+                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -947,7 +987,8 @@ public class SparePartBean implements Serializable {
             /* Query the ten biggest assortment groups in terms of net sales 
             over the last 12 months */
 
-            String tx = "MATCH (a:Assortment)-[:POTENTIAL_AT]->(:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
+            String tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (t)<-[:IN]-(a:Assortment)"
+                    + " OPTIONAL MATCH (a)-[:POTENTIAL_AT]->(c)"
                     + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date}"
                     + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
                     + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
@@ -963,7 +1004,8 @@ public class SparePartBean implements Serializable {
                 top10AssortmentGrps = r.get("Assortments").asList();
             }
 
-            String tx1 = "MATCH (a:Assortment)-[:POTENTIAL_AT]->(:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
+            String tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (t)<-[:IN]-(a:Assortment)"
+                    + " OPTIONAL MATCH (a)-[:POTENTIAL_AT]->(c)"
                     + " WHERE a.name IN {Assortments}"
                     + " RETURN t.year AS Year, t.month AS Month, a.name AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
@@ -1172,6 +1214,9 @@ public class SparePartBean implements Serializable {
 //        Set chart parameters for the sales chart
             r12AssortmentSalesModel.setLegendPosition("nw");
             r12AssortmentSalesModel.getAxis(AxisType.Y).setLabel("MEur");
+            r12AssortmentSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
+            r12AssortmentSalesModel.setSeriesColors(
+                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -1182,6 +1227,9 @@ public class SparePartBean implements Serializable {
 //        Set chart parameters for the margin chart
             r12AssortmentMarginModel.setLegendPosition("nw");
             r12AssortmentMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
+            r12AssortmentMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
+            r12AssortmentMarginModel.setSeriesColors(
+                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
