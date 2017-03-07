@@ -97,6 +97,7 @@ public class SparePartBean implements Serializable {
     private Double totTop10AssortmentPotential;
     private Session session;
     private Set<String> setOfCustGrps;
+    private String chartColours = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
 
     public SparePartBean() {
 
@@ -592,8 +593,7 @@ public class SparePartBean implements Serializable {
             r12MarketSalesModel.setLegendPosition("nw");
             r12MarketSalesModel.getAxis(AxisType.Y).setLabel("MEur");
             r12MarketSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12MarketSalesModel.setSeriesColors(
-                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
+            r12MarketSalesModel.setSeriesColors(this.chartColours);
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -605,8 +605,7 @@ public class SparePartBean implements Serializable {
             r12MarketMarginModel.setLegendPosition("nw");
             r12MarketMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
             r12MarketMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12MarketMarginModel.setSeriesColors(
-                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
+            r12MarketMarginModel.setSeriesColors(this.chartColours);
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -911,8 +910,7 @@ public class SparePartBean implements Serializable {
             r12CustGrpSalesModel.setLegendPosition("nw");
             r12CustGrpSalesModel.getAxis(AxisType.Y).setLabel("MEur");
             r12CustGrpSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12CustGrpSalesModel.setSeriesColors(
-                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
+            r12CustGrpSalesModel.setSeriesColors(this.chartColours);
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -924,8 +922,7 @@ public class SparePartBean implements Serializable {
             r12CustGrpMarginModel.setLegendPosition("nw");
             r12CustGrpMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
             r12CustGrpMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12CustGrpMarginModel.setSeriesColors(
-                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
+            r12CustGrpMarginModel.setSeriesColors(this.chartColours);
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -1215,8 +1212,7 @@ public class SparePartBean implements Serializable {
             r12AssortmentSalesModel.setLegendPosition("nw");
             r12AssortmentSalesModel.getAxis(AxisType.Y).setLabel("MEur");
             r12AssortmentSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12AssortmentSalesModel.setSeriesColors(
-                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
+            r12AssortmentSalesModel.setSeriesColors(this.chartColours);
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -1228,8 +1224,7 @@ public class SparePartBean implements Serializable {
             r12AssortmentMarginModel.setLegendPosition("nw");
             r12AssortmentMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
             r12AssortmentMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12AssortmentMarginModel.setSeriesColors(
-                    "d7191c,fdae61,ffffbf,abd9e9,2c7bb6");
+            r12AssortmentMarginModel.setSeriesColors(this.chartColours);
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
