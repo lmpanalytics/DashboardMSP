@@ -349,7 +349,7 @@ public class SparePartBean implements Serializable {
         List<Number> intervals = new ArrayList<Number>() {
             {
                 add(5.0);
-                add(7.5) /* Target */;
+                add(7.2) /* Target */;
                 add(maxscaleValue);
             }
         };
