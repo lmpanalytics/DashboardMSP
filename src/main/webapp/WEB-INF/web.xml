@@ -29,4 +29,31 @@
     <welcome-file-list>
         <welcome-file>index.xhtml</welcome-file>
     </welcome-file-list>
+    <security-constraint>
+        <display-name>Constraint1</display-name>
+        <web-resource-collection>
+            <web-resource-name>wrcoll</web-resource-name>
+            <description></description>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <description></description>
+            <role-name>CENTRAL_TEAM</role-name>
+            <role-name>TPPC</role-name>
+            <role-name>BUIC</role-name>
+            <role-name>ECA</role-name>
+            <role-name>GC</role-name>
+            <role-name>GMEA</role-name>
+            <role-name>NCSA</role-name>
+            <role-name>SAEAO</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <login-config>
+        <auth-method>FORM</auth-method>
+        <realm-name>file</realm-name>
+        <form-login-config>
+            <form-login-page>/login.html</form-login-page>
+            <form-error-page>/error.html</form-error-page>
+        </form-login-config>
+    </login-config>
 </web-app>
