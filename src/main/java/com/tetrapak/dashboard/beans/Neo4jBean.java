@@ -5,6 +5,7 @@
  */
 package com.tetrapak.dashboard.beans;
 
+import javax.annotation.PreDestroy;
 import javax.ejb.LocalBean;
 import javax.ejb.Singleton;
 import org.neo4j.driver.v1.AuthTokens;
@@ -20,7 +21,7 @@ import org.neo4j.driver.v1.GraphDatabase;
 @LocalBean
 public class Neo4jBean {
 
-    private static final String HOSTNAME = "localhost";
+    private static final String HOSTNAME = "localhost:7687";
     // 'For most use cases it is recommended to use a single driver instance
     // throughout an application.'
     private final Driver DRIVER = GraphDatabase.driver(
@@ -31,6 +32,13 @@ public class Neo4jBean {
      * Default constructor.
      */
     public Neo4jBean() {
+    }
+
+    @PreDestroy
+    public void destroyMe() {
+        DRIVER.session().close();
+        DRIVER.close();
+        System.out.println("Neo4jDriver in Neo4jBean has been disposed of.");
     }
 
     /**

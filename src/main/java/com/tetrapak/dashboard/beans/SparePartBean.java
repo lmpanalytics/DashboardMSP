@@ -177,17 +177,11 @@ public class SparePartBean implements Serializable {
 //        Populate the Assortment Group Sales & Margin Line Charts with Rolling 12 data
         populateR12AssortmentGrpLineChartsAndTable();
 
-//        Close driver to avoid leakage
-        neo4jBean.closeNeo4jDriver();
-        session.close();
     }
 
     @PreDestroy
     public void destroyMe() {
-        neo4jBean.closeNeo4jDriver();
-        session.close();
-        System.out.println(
-                "Neo4jDriver in the SparePartBean has been disposed of.");
+
     }
 
     /**
