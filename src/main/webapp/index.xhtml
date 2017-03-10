@@ -13,12 +13,36 @@
     </h:head>
     <h:body>
         <h1>Dashboard Selections</h1>
-        <h3>Select Spare Part or Maintenance</h3>
+        <h3>Clusters and Service Category</h3>
         <h:form>
-            <p></p>
-            <h:commandButton id="spSales" value="Spare Parts"
-                             action="dashboardSP">
-            </h:commandButton>
+            <h:panelGrid columns="3" cellpadding="5">              
+                <p:selectCheckboxMenu id="cluster" value="#{checkboxViewCluster.selectedClusters}" label="Clusters"
+                                      filter="true" filterMatchMode="startsWith" panelStyle="width:300px">
+                    <f:selectItems value="#{checkboxViewCluster.clusters}" />
+                </p:selectCheckboxMenu>
+
+                <p:commandButton value="Submit" update="displayClusters" oncomplete="PF('clusterDialog').show()" />
+                <h:outputLabel for="cluster" value=" Select Cluster" />
+            </h:panelGrid>
+            <p:dialog header="Selected" modal="true" showEffect="fade" hideEffect="fade" widgetVar="clusterDialog" width="250">
+                <p:outputPanel id="displayClusters">
+
+                    <p:dataList value="#{checkboxViewCluster.selectedClusters}" var="cluster" emptyMessage="No clusters selected" style="margin-bottom: 10px;">
+                        <f:facet name="header">
+                            Clusters
+                        </f:facet>
+                        #{cluster}
+                    </p:dataList>
+                </p:outputPanel>
+            </p:dialog>
+        </h:form>
+        <h:form>
+            <h:panelGrid columns="3" cellpadding="5">             
+                <h:commandButton id="spSales" value="Spare Parts"
+                                 action="dashboardSP">
+                </h:commandButton>
+                <h:outputLabel for="spSales" value=" ... Submit ..... Select Category" />
+            </h:panelGrid>
         </h:form>
     </h:body>
 </html>

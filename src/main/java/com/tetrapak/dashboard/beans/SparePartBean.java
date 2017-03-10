@@ -97,9 +97,10 @@ public class SparePartBean implements Serializable {
     private Double totTop10AssortmentPotential;
     private Session session;
     private Set<String> setOfCustGrps;
-    private String chartColours = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
+    private final String CHART_COLORS;
 
     public SparePartBean() {
+        this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
 
     }
 
@@ -587,7 +588,7 @@ public class SparePartBean implements Serializable {
             r12MarketSalesModel.setLegendPosition("nw");
             r12MarketSalesModel.getAxis(AxisType.Y).setLabel("MEur");
             r12MarketSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12MarketSalesModel.setSeriesColors(this.chartColours);
+            r12MarketSalesModel.setSeriesColors(this.CHART_COLORS);
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -599,7 +600,7 @@ public class SparePartBean implements Serializable {
             r12MarketMarginModel.setLegendPosition("nw");
             r12MarketMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
             r12MarketMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12MarketMarginModel.setSeriesColors(this.chartColours);
+            r12MarketMarginModel.setSeriesColors(this.CHART_COLORS);
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -904,7 +905,7 @@ public class SparePartBean implements Serializable {
             r12CustGrpSalesModel.setLegendPosition("nw");
             r12CustGrpSalesModel.getAxis(AxisType.Y).setLabel("MEur");
             r12CustGrpSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12CustGrpSalesModel.setSeriesColors(this.chartColours);
+            r12CustGrpSalesModel.setSeriesColors(this.CHART_COLORS);
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -916,7 +917,7 @@ public class SparePartBean implements Serializable {
             r12CustGrpMarginModel.setLegendPosition("nw");
             r12CustGrpMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
             r12CustGrpMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12CustGrpMarginModel.setSeriesColors(this.chartColours);
+            r12CustGrpMarginModel.setSeriesColors(this.CHART_COLORS);
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -1206,7 +1207,7 @@ public class SparePartBean implements Serializable {
             r12AssortmentSalesModel.setLegendPosition("nw");
             r12AssortmentSalesModel.getAxis(AxisType.Y).setLabel("MEur");
             r12AssortmentSalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12AssortmentSalesModel.setSeriesColors(this.chartColours);
+            r12AssortmentSalesModel.setSeriesColors(this.CHART_COLORS);
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -1218,7 +1219,7 @@ public class SparePartBean implements Serializable {
             r12AssortmentMarginModel.setLegendPosition("nw");
             r12AssortmentMarginModel.getAxis(AxisType.Y).setLabel("Margin (%)");
             r12AssortmentMarginModel.getAxis(AxisType.Y).setTickFormat("%.1f");
-            r12AssortmentMarginModel.setSeriesColors(this.chartColours);
+            r12AssortmentMarginModel.setSeriesColors(this.CHART_COLORS);
             DateAxis axis1 = new DateAxis("Dates");
             axis1.setTickAngle(-50);
             axis1.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
