@@ -219,20 +219,22 @@ public class SparePartBean implements Serializable {
             if (this.clusters.length == 5) {
 //  Speed up query if all 5 clusters are selected
                 tx = "MATCH (t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
-                        + " (t)-[r:FOR]->(:Customer)"
+                        + " q = (t)-[r:FOR]->(:Customer)"
+                        + " WITH DISTINCT q AS q, r, t"
                         + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             } else {
 
                 tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
-                        + " (t)-[r:FOR]->(:Customer)"
+                        + " q = (t)-[r:FOR]->(:Customer)"
                         + " WHERE c.name IN {Clusters}"
+                        + " WITH DISTINCT q AS q, r, t"
                         + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             }
 
             StatementResult result = this.session.run(tx, Values.parameters(
-                    "name", "Parts", "Clusters", clusters));
+                    "name", "Parts", "Clusters", this.clusters));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -400,16 +402,30 @@ public class SparePartBean implements Serializable {
         // code query here
         try {
 //  Query the ten biggest markets in terms of net sales over the last 12 months
+            String tx = "";
 
-            String tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
-                    + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName" /* Model based on Special Ledger */
-                    + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
-                    /* Collect the markets in a list */
-                    + " RETURN collect(Market) AS Markets";
+            if (this.clusters.length == 5) {
+//  Speed up query if all 5 clusters are selected
+
+                tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
+                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName" /* Model based on Special Ledger */
+                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
+                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                        /* Collect the markets in a list */
+                        + " RETURN collect(Market) AS Markets";
+            } else {
+                tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
+                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters}" /* Model based on Special Ledger */
+                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
+                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                        /* Collect the markets in a list */
+                        + " RETURN collect(Market) AS Markets";
+            }
 
             StatementResult result = this.session.run(tx, Values.parameters(
-                    "name", "Parts", "date", startDate));
+                    "name", "Parts", "date", startDate,
+                    "Clusters", this.clusters));
 
             while (result.hasNext()) {
                 Record r = result.next();
