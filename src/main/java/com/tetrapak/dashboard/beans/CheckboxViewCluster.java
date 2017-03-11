@@ -10,20 +10,26 @@ package com.tetrapak.dashboard.beans;
  *
  * @author SEPALMM
  */
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.faces.bean.ManagedBean;
+import javax.enterprise.context.SessionScoped;
+import javax.inject.Named;
 
-@ManagedBean
-public class CheckboxViewCluster {
+@Named(value = "checkboxViewCluster")
+@SessionScoped
+public class CheckboxViewCluster implements Serializable {
 
-    private String[] selectedClusters;
+    private static final long serialVersionUID = 1L;
+
+    //        Avoid NPE
+    private String[] selectedClusters = {"0"};
     private List<String> clusters;
 
     @PostConstruct
     public void init() {
-        clusters = new ArrayList<String>();
+        clusters = new ArrayList<>();
         clusters.add("E&CA");
         clusters.add("GC");
         clusters.add("GME&A");

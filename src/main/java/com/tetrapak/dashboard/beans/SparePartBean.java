@@ -24,8 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.Stateless;
-import javax.faces.bean.SessionScoped;
+import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import org.neo4j.driver.v1.Record;
@@ -46,14 +45,16 @@ import utility.Utility;
  * @author SEPALMM
  */
 @Named(value = "sparePartBean")
-@Stateless
-@SessionScoped
+@ViewScoped
 public class SparePartBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Inject
     Neo4jBean neo4jBean;
+
+    @Inject
+    CheckboxViewCluster cc;
 
     // ADD CLASS SPECIFIC MAPS AND FIELDS HERE
     private List<Object> top10Markets;
@@ -98,6 +99,7 @@ public class SparePartBean implements Serializable {
     private Session session;
     private Set<String> setOfCustGrps;
     private final String CHART_COLORS;
+    private String[] clusters;
 
     public SparePartBean() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
@@ -154,6 +156,9 @@ public class SparePartBean implements Serializable {
 //        Initialize the Assortment Table List
         this.assortmentTableList = new LinkedList<>();
 
+//        Initialize and get cluster selections from the index page
+        initiateClusterSelection();
+
 //        Populate sales map with data from database
         populateSalesMap();
 
@@ -180,6 +185,21 @@ public class SparePartBean implements Serializable {
 
     }
 
+    private void initiateClusterSelection() {
+        //        Initiate Array of clusters
+        List<String> clusterList = cc.getClusters();
+        this.clusters = new String[clusterList.size()];
+        clusterList.toArray(clusters);
+//           Get Array of selected clusters and Handle skipped selection
+        String[] testArray = cc.getSelectedClusters();
+        if (testArray.length > 0 && !testArray[0].equals("0")) {
+            this.clusters = cc.getSelectedClusters();
+
+        } else {
+            System.out.println("No cluster selection, using all clusters...");
+        }
+    }
+
     @PreDestroy
     public void destroyMe() {
 
@@ -194,13 +214,25 @@ public class SparePartBean implements Serializable {
         // code query here
         try {
 
-            String tx = "MATCH (t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
-                    + " (t)-[r:FOR]->(fc:Customer)"
-                    + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                    + " ORDER BY Year, Month";
+            String tx = "";
+
+            if (this.clusters.length == 5) {
+//  Speed up query if all 5 clusters are selected
+                tx = "MATCH (t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
+                        + " (t)-[r:FOR]->(:Customer)"
+                        + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                        + " ORDER BY Year, Month";
+            } else {
+
+                tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
+                        + " (t)-[r:FOR]->(:Customer)"
+                        + " WHERE c.name IN {Clusters}"
+                        + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                        + " ORDER BY Year, Month";
+            }
 
             StatementResult result = this.session.run(tx, Values.parameters(
-                    "name", "Parts"));
+                    "name", "Parts", "Clusters", clusters));
 
             while (result.hasNext()) {
                 Record r = result.next();
