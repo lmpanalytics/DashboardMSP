@@ -709,16 +709,28 @@ public class SparePartBean implements Serializable {
         try {
             /* Query the ten biggest customer groups in terms of net sales 
             over the last 12 months */
+            String tx = "";
+            if (this.clusters.length == 5) {
+                //  Speed up query if all 5 clusters are selected
 
-            String tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
-                    + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date}"
-                    + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
-                    /* Collect the customer groups in a list */
-                    + " RETURN collect(CustGroup) AS CustGroups";
-
+                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date}"
+                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
+                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
+                        /* Collect the customer groups in a list */
+                        + " RETURN collect(CustGroup) AS CustGroups";
+            } else {
+                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters}" /* Model based on Special Ledger */
+                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
+                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
+                        /* Collect the customer groups in a list */
+                        + " RETURN collect(CustGroup) AS CustGroups";
+            }
             StatementResult result = this.session.run(tx, Values.parameters(
-                    "name", "Parts", "date", startDate));
+                    "name", "Parts", "date", startDate,
+                    "Clusters", this.clusters));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -726,13 +738,24 @@ public class SparePartBean implements Serializable {
                 this.top10CustomerGrps = r.get("CustGroups").asList();
             }
 
-            String tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
-                    + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account')" /* Include all Global Accounts as well */
-                    + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                    + " ORDER BY Year, Month";
+            String tx1 = "";
+            if (this.clusters.length == 5) {
+                //  Speed up query if all 5 clusters are selected
 
+                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
+                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account')" /* Include all Global Accounts as well */
+                        + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                        + " ORDER BY Year, Month";
+            } else {
+                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
+                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters}" /* Include all Global Accounts as well, and Model based on Special Ledger */
+                        + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                        + " ORDER BY Year, Month";
+            }
             StatementResult result1 = this.session.run(tx1, Values.parameters(
-                    "name", "Parts", "CustGroups", this.top10CustomerGrps));
+                    "name", "Parts", "CustGroups", this.top10CustomerGrps,
+                    "Clusters", this.clusters));
 
             while (result1.hasNext()) {
                 Record r = result1.next();
