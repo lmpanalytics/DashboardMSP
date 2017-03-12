@@ -23,17 +23,20 @@
             </header>
             <div class="w3-row">
                 <div class="w3-third w3-container">
-                    <h2>R12 Growth #{sparePartBean.globalGrowth}% (TG 7.2%)</h2>
+                    <h2>R12 Growth #{sparePartBean.globalGrowth}%</h2>
+                    Global TG 7.2%
                     <p:chart type="metergauge" model="#{sparePartBean.r12GrowthModel}"  responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
 
-                    <h2>R12 Sales #{sparePartBean.globalSales} MEur (TG 259 MEur)</h2>
+                    <h2>R12 Sales #{sparePartBean.globalSales} MEur</h2>
+                    Global TG 259 MEur
                     <p:chart type="line" model="#{sparePartBean.r12SalesModel}" style="height:400px;" responsive="true"/>
 
                 </div>
                 <div class="w3-third w3-container">
-                    <h2>R12 Net Margin #{sparePartBean.globalMargin}% (TG 49.4%)</h2>
+                    <h2>R12 Net Margin #{sparePartBean.globalMargin}%</h2>
+                     Global TG 49.4%
                     <p:chart type="line" model="#{sparePartBean.r12MarginModel}" style="height:400px;" responsive="true"/>
                 </div>
             </div>
