@@ -1340,11 +1340,19 @@ public class SparePartBean implements Serializable {
      */
     private void mapAssortmentGrpPotentials(String assortment) {
 //  Query Potentials by assortment group
-        String tx = "MATCH (a:Assortment {name: {assortment}})-[r:POTENTIAL_AT]->(:Customer)"
-                + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
+        String tx = "";
+        if (this.clusters.length == 5) {
+            //  Speed up query if all 5 clusters are selected
+            tx = "MATCH (a:Assortment {name: {assortment}})-[r:POTENTIAL_AT]->(:Customer)"
+                    + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+        } else {
+            tx = "MATCH (a:Assortment {name: {assortment}})-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+                    + " WHERE cl.name IN {Clusters}"
+                    + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+        }
         StatementResult result = this.session.run(tx, Values.parameters(
-                "assortment", assortment));
+                "assortment", assortment, "Clusters", this.clusters));
 
         while (result.hasNext()) {
             Record r = result.next();
