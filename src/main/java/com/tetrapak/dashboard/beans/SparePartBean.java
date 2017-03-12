@@ -1008,11 +1008,20 @@ public class SparePartBean implements Serializable {
      */
     private void mapCustomerGrpPotentials(String customerGrp) {
 //  Query Potentials by customer group
-        String tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer {custGroup: {customerGrp}})"
-                + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+
+        String tx = "";
+        if (this.clusters.length == 5) {
+            //  Speed up query if all 5 clusters are selected
+            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer {custGroup: {customerGrp}})"
+                    + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+        } else {
+            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer {custGroup: {customerGrp}})-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+                    + " WHERE cl.name IN {Clusters}"
+                    + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+        }
 
         StatementResult result = this.session.run(tx, Values.parameters(
-                "customerGrp", customerGrp));
+                "customerGrp", customerGrp, "Clusters", this.clusters));
 
         while (result.hasNext()) {
             Record r = result.next();
