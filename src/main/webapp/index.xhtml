@@ -7,6 +7,7 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions">
     <h:head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
         <h:outputStylesheet library="css" name="default.css" />
         <title>Dashboard Index</title>
@@ -42,6 +43,14 @@
                                  action="dashboardSP">
                 </h:commandButton>
                 <h:outputLabel for="spSales" value="" />
+            </h:panelGrid>
+        </h:form>
+        <h:form>
+            <h:panelGrid columns="3" cellpadding="5">             
+                <h:commandButton id="msSales" value="Maintenance"
+                                 action="dashboardMS">
+                </h:commandButton>
+                <h:outputLabel for="msSales" value="" />
             </h:panelGrid>
         </h:form>
     </h:body>
