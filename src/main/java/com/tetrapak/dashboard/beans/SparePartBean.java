@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -64,9 +65,11 @@ public class SparePartBean implements Serializable {
     private Map<String, CategoryChartData> marketSalesMap;
     private Map<String, CategoryChartData> custGrpSalesMap;
     private Map<String, CategoryChartData> assortmentSalesMap;
+
     private Map<String, PotentialData> marketPotentialMap;
     private Map<String, PotentialData> custGrpPotentialMap;
     private Map<String, PotentialData> assortmentPotentialMap;
+
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarginModel;
     private LineChartModel r12MarketSalesModel;
@@ -503,14 +506,13 @@ public class SparePartBean implements Serializable {
         double totPotential = 0d;
 
         try {
+//            Collect potentials by market and assign to marketPotentialMap
+            mapMarketPotentials();
             for (Object mkt : top10Markets) {
 //                Initiate chart series and variables
                 ChartSeries r12Sales = new ChartSeries(mkt.toString());
                 ChartSeries r12Margin = new ChartSeries(mkt.toString());
                 double potential = 0d;
-
-//            Collect potentials by market and assign to marketPotentialMap
-                mapMarketPotentials(mkt.toString());
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -668,13 +670,12 @@ public class SparePartBean implements Serializable {
      *
      * @param market to group by
      */
-    private void mapMarketPotentials(String market) {
+    private void mapMarketPotentials() {
 //  Query Potentials by market
-        String tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(m:MarketDB {mktName: {mktName}})"
+        String tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(m:MarketDB)"
                 + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
-        StatementResult result = this.session.run(tx, Values.parameters(
-                "mktName", market));
+        StatementResult result = this.session.run(tx);
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -687,10 +688,11 @@ public class SparePartBean implements Serializable {
 //                Make key
             String key = marketName;
 
-//            Add results to Map
+//            Add results to Map and factor in AL Flow Parts effect
             this.marketPotentialMap.put(key,
-                    new PotentialData(potSpareParts, potMaintenanceHrs,
-                            potMaintenance));
+                    new PotentialData(potSpareParts * 1.3,
+                            potMaintenanceHrs * 1.06,
+                            potMaintenance * 1.06));
         }
 
     }
@@ -831,6 +833,8 @@ public class SparePartBean implements Serializable {
         double totPotential = 0d;
 
         try {
+//            Collect potentials by customer group and assign to customerGroupPotentialMap
+            mapCustomerGrpPotentials();
 //            Convert set of customer groups to list
             List<String> listOfCustGrps = new LinkedList<>(this.setOfCustGrps);
 
@@ -840,9 +844,6 @@ public class SparePartBean implements Serializable {
                 ChartSeries r12Sales = new ChartSeries(cgr);
                 ChartSeries r12Margin = new ChartSeries(cgr);
                 double potential = 0d;
-
-//            Collect potentials by customer group and assign to customerGroupPotentialMap
-                mapCustomerGrpPotentials(cgr);
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -1009,22 +1010,22 @@ public class SparePartBean implements Serializable {
      *
      * @param customerGrp to group by
      */
-    private void mapCustomerGrpPotentials(String customerGrp) {
+    private void mapCustomerGrpPotentials() {
 //  Query Potentials by customer group
 
         String tx = "";
         if (this.clusters.length == 5) {
             //  Speed up query if all 5 clusters are selected
-            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer {custGroup: {customerGrp}})"
+            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer)"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         } else {
-            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer {custGroup: {customerGrp}})-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
                     + " WHERE cl.name IN {Clusters}"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         }
 
         StatementResult result = this.session.run(tx, Values.parameters(
-                "customerGrp", customerGrp, "Clusters", this.clusters));
+                "Clusters", this.clusters));
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -1037,10 +1038,11 @@ public class SparePartBean implements Serializable {
 //                Make key
             String key = custGroupName;
 
-//            Add results to Map
+//            Add results to Map and factor in AL Flow Parts effect
             this.custGrpPotentialMap.put(key,
-                    new PotentialData(potSpareParts, potMaintenanceHrs,
-                            potMaintenance));
+                    new PotentialData(potSpareParts * 1.3,
+                            potMaintenanceHrs * 1.06,
+                            potMaintenance * 1.06));
         }
 
     }
@@ -1174,14 +1176,13 @@ public class SparePartBean implements Serializable {
         double totPotential = 0d;
 
         try {
+//            Collect potentials by Assortment group and assign to assortmentPotentialMap
+            mapAssortmentGrpPotentials();
             for (Object asg : top10AssortmentGrps) {
 //                Initiate chart series and variables
                 ChartSeries r12Sales = new ChartSeries(asg.toString());
                 ChartSeries r12Margin = new ChartSeries(asg.toString());
                 double potential = 0d;
-
-//            Collect potentials by assortment group and assign to assortmentPotentialMap
-                mapAssortmentGrpPotentials(asg.toString());
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -1250,8 +1251,8 @@ public class SparePartBean implements Serializable {
                         r12CostT0);
 
 //            Extract Potential sales from potential map
-                if (assortmentPotentialMap.containsKey(asg)) {
-                    potential = assortmentPotentialMap.get(asg).
+                if (assortmentPotentialMap.containsKey(asg.toString())) {
+                    potential = assortmentPotentialMap.get(asg.toString()).
                             getPotSpareParts();
                 }
 
@@ -1342,21 +1343,21 @@ public class SparePartBean implements Serializable {
      *
      * @param assortment to group by
      */
-    private void mapAssortmentGrpPotentials(String assortment) {
+    private void mapAssortmentGrpPotentials() {
 //  Query Potentials by assortment group
 
         String tx = "";
         if (this.clusters.length == 5) {
             //  Speed up query if all 5 clusters are selected
-            tx = "MATCH (a:Assortment {name: {assortment}})-[r:POTENTIAL_AT]->(:Customer)"
+            tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)"
                     + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         } else {
-            tx = "MATCH (a:Assortment {name: {assortment}})-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+            tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
                     + " WHERE cl.name IN {Clusters}"
                     + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         }
         StatementResult result = this.session.run(tx, Values.parameters(
-                "assortment", assortment, "Clusters", this.clusters));
+                "Clusters", this.clusters));
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -1374,7 +1375,21 @@ public class SparePartBean implements Serializable {
                     new PotentialData(potSpareParts, potMaintenanceHrs,
                             potMaintenance));
         }
+//        Get sum of potentials to estimate AL Flow Parts potentials
+        Collection<PotentialData> potCollection = assortmentPotentialMap.
+                values();
+        Double totPotSpareParts = potCollection.stream().collect(Collectors.
+                summingDouble(PotentialData::getPotSpareParts));
+        Double totPotMaintenanceHrs = potCollection.stream().collect(Collectors.
+                summingDouble(PotentialData::getPotMaintenanceHrs));
+        Double totPotMaintenance = potCollection.stream().collect(Collectors.
+                summingDouble(PotentialData::getPotMaintenance));
 
+//            Calc AL Flow Parts potentials and add results to Map
+        this.assortmentPotentialMap.put("Al flow parts",
+                new PotentialData(totPotSpareParts * 0.3,
+                        totPotMaintenanceHrs * 0.06,
+                        totPotMaintenance * 0.06));
     }
 
 //    GETTERS & SETTERS

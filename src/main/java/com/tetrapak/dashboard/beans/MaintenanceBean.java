@@ -474,14 +474,13 @@ public class MaintenanceBean implements Serializable {
         double totPotential = 0d;
 
         try {
+//            Collect potentials by market and assign to marketPotentialMap
+            mapMarketPotentials();
             for (Object mkt : top10Markets) {
 //                Initiate chart series and variables
                 ChartSeries r12Sales = new ChartSeries(mkt.toString());
                 ChartSeries r12Margin = new ChartSeries(mkt.toString());
                 double potential = 0d;
-
-//            Collect potentials by market and assign to marketPotentialMap
-                mapMarketPotentials(mkt.toString());
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -639,13 +638,12 @@ public class MaintenanceBean implements Serializable {
      *
      * @param market to group by
      */
-    private void mapMarketPotentials(String market) {
+    private void mapMarketPotentials() {
 //  Query Potentials by market
-        String tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(m:MarketDB {mktName: {mktName}})"
+        String tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(m:MarketDB)"
                 + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
-        StatementResult result = this.session.run(tx, Values.parameters(
-                "mktName", market));
+        StatementResult result = this.session.run(tx);
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -660,8 +658,9 @@ public class MaintenanceBean implements Serializable {
 
 //            Add results to Map
             this.marketPotentialMap.put(key,
-                    new PotentialData(potSpareParts, potMaintenanceHrs,
-                            potMaintenance));
+                    new PotentialData(potSpareParts * 1.3,
+                            potMaintenanceHrs * 1.06,
+                            potMaintenance * 1.06));
         }
 
     }
@@ -802,6 +801,8 @@ public class MaintenanceBean implements Serializable {
         double totPotential = 0d;
 
         try {
+//            Collect potentials by customer group and assign to customerGroupPotentialMap
+            mapCustomerGrpPotentials();
 //            Convert set of customer groups to list
             List<String> listOfCustGrps = new LinkedList<>(this.setOfCustGrps);
 
@@ -811,9 +812,6 @@ public class MaintenanceBean implements Serializable {
                 ChartSeries r12Sales = new ChartSeries(cgr);
                 ChartSeries r12Margin = new ChartSeries(cgr);
                 double potential = 0d;
-
-//            Collect potentials by customer group and assign to customerGroupPotentialMap
-                mapCustomerGrpPotentials(cgr);
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
@@ -980,13 +978,13 @@ public class MaintenanceBean implements Serializable {
      *
      * @param customerGrp to group by
      */
-    private void mapCustomerGrpPotentials(String customerGrp) {
+    private void mapCustomerGrpPotentials() {
 //  Query Potentials by customer group
 
         String tx = "";
         if (this.clusters.length == 5) {
             //  Speed up query if all 5 clusters are selected
-            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer {custGroup: {customerGrp}})"
+            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer)"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         } else {
             tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer {custGroup: {customerGrp}})-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
@@ -995,7 +993,7 @@ public class MaintenanceBean implements Serializable {
         }
 
         StatementResult result = this.session.run(tx, Values.parameters(
-                "customerGrp", customerGrp, "Clusters", this.clusters));
+                "Clusters", this.clusters));
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -1010,8 +1008,9 @@ public class MaintenanceBean implements Serializable {
 
 //            Add results to Map
             this.custGrpPotentialMap.put(key,
-                    new PotentialData(potSpareParts, potMaintenanceHrs,
-                            potMaintenance));
+                    new PotentialData(potSpareParts * 1.3,
+                            potMaintenanceHrs * 1.06,
+                            potMaintenance * 1.06));
         }
 
     }
