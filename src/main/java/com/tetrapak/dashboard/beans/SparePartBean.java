@@ -25,6 +25,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateful;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -46,7 +51,12 @@ import utility.Utility;
  * @author SEPALMM
  */
 @Named(value = "sparePartBean")
+@Stateful
 @ViewScoped
+
+@DeclareRoles(
+        {"CENTRAL_TEAM", "TPPC", "BUIC", "ECA", "GC", "GMEA", "NCSA", "SAEAO"})
+@RolesAllowed({"CENTRAL_TEAM"})
 public class SparePartBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -56,6 +66,9 @@ public class SparePartBean implements Serializable {
 
     @Inject
     CheckboxViewCluster cc;
+
+    @Resource
+    SessionContext ctx;
 
     // ADD CLASS SPECIFIC MAPS AND FIELDS HERE
     private List<Object> top10Markets;

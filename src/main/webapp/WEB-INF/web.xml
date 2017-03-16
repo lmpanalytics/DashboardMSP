@@ -22,9 +22,7 @@
         <url-pattern>*.xhtml</url-pattern>
     </servlet-mapping>
     <session-config>
-        <session-timeout>
-            30
-        </session-timeout>
+        <session-timeout>60</session-timeout>
     </session-config>
     <welcome-file-list>
         <welcome-file>index.xhtml</welcome-file>
@@ -33,11 +31,11 @@
         <display-name>Constraint1</display-name>
         <web-resource-collection>
             <web-resource-name>wrcoll</web-resource-name>
-            <description></description>
+            <description/>
             <url-pattern>/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <description></description>
+            <description/>
             <role-name>CENTRAL_TEAM</role-name>
             <role-name>TPPC</role-name>
             <role-name>BUIC</role-name>
