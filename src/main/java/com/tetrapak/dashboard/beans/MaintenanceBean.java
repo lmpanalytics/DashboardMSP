@@ -669,7 +669,7 @@ public class MaintenanceBean implements Serializable {
 //                Make key
             String key = marketName;
 
-//            Add results to Map
+//            Add results to Map and factor in AL Flow Parts effect
             this.marketPotentialMap.put(key,
                     new PotentialData(potSpareParts * 1.3,
                             potMaintenanceHrs * 1.06,
@@ -1000,7 +1000,7 @@ public class MaintenanceBean implements Serializable {
             tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer)"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         } else {
-            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer {custGroup: {customerGrp}})-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
                     + " WHERE cl.name IN {Clusters}"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         }
@@ -1019,7 +1019,7 @@ public class MaintenanceBean implements Serializable {
 //                Make key
             String key = custGroupName;
 
-//            Add results to Map
+//            Add results to Map and factor in AL Flow Parts effect
             this.custGrpPotentialMap.put(key,
                     new PotentialData(potSpareParts * 1.3,
                             potMaintenanceHrs * 1.06,
