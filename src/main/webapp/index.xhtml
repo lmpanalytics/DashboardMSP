@@ -14,7 +14,7 @@
     </h:head>
     <h:body>
         <h1>Dashboard Selections</h1>
-        <h3>Clusters and Service Category</h3>
+        <h3>Clusters</h3>
         <h:form>
             <h:panelGrid columns="3" cellpadding="5">              
                 <p:selectCheckboxMenu id="cluster" value="#{checkboxViewCluster.selectedClusters}" label="Clusters"
@@ -37,6 +37,8 @@
                 </p:outputPanel>
             </p:dialog>
         </h:form>
+        <p:separator />
+        <h3>Global Service Categories</h3>
         <h:form>
             <h:panelGrid columns="3" cellpadding="5">             
                 <h:commandButton id="spSales" value="Spare Parts"
@@ -51,6 +53,16 @@
                                  action="dashboardMS">
                 </h:commandButton>
                 <h:outputLabel for="msSales" value="" />
+            </h:panelGrid>
+        </h:form>
+        <p:separator />
+        <h3>BU Reports</h3>
+        <h:form>
+            <h:panelGrid columns="3" cellpadding="5">             
+                <h:commandButton id="spSalesBULF" value="BULF"
+                                 action="dashboardSP_BULF">
+                </h:commandButton>
+                <h:outputLabel for="spSalesBULF" value="" />
             </h:panelGrid>
         </h:form>
     </h:body>
