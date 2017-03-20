@@ -164,7 +164,7 @@ public class SparePartBeanBULF_qty implements Serializable {
 //        Populate sales map with data from database
         populateSalesMap();
 
-//        Populate the Global Sales Line Charts with Rolling 12 data
+//        Populate the Global Sales Volume Line Charts with Rolling 12 data
         populateR12LineCharts();
 
 //        Populate Market Map
@@ -176,13 +176,13 @@ public class SparePartBeanBULF_qty implements Serializable {
 //        Populate Assortment Group Map
         populateAssortmentGrpSalesMap();
 
-//        Populate the Market Sales Line Charts with Rolling 12 data
+//        Populate the Market Sales Volume Line Charts with Rolling 12 data
         populateR12MarketLineChartsAndTable();
 
-//        Populate the Customer Group Sales Line Charts with Rolling 12 data
+//        Populate the Customer Group Sales Volume Line Charts with Rolling 12 data
         populateR12CustomerGrpLineChartsAndTable();
 
-//        Populate the Assortment Group Sales Line Charts with Rolling 12 data
+//        Populate the Assortment Group Sales Volume Line Charts with Rolling 12 data
         populateR12AssortmentGrpLineChartsAndTable();
 
     }
@@ -266,7 +266,7 @@ public class SparePartBeanBULF_qty implements Serializable {
     }
 
     /**
-     * Populate the Global Sales Line Charts with Rolling 12 data.
+     * Populate the Global Sales Volume Line Charts with Rolling 12 data.
      */
     private void populateR12LineCharts() {
         System.out.println("I'm in the 'populateR12LineCharts()' method.");
@@ -277,7 +277,7 @@ public class SparePartBeanBULF_qty implements Serializable {
 //        Initiate r12GrowthModel
         r12GrowthModel = new MeterGaugeChartModel();
 
-//        Calculate historical sales start dates to use in Growth calculation
+//        Calculate historical sales volume start dates to use in Growth calculation
         LocalDate dateT0 = Utility.makeDate(LocalDate.now().minusYears(1).
                 getYear(), LocalDate.now().getMonthValue()
         );
@@ -286,7 +286,7 @@ public class SparePartBeanBULF_qty implements Serializable {
         );
 
 //       R12 algorithm based on dates
-//        Accumulate sales over rolling 12 periods
+//        Accumulate sales volume over rolling 12 periods
         int rollingPeriod = 12;
 
 //                Initiate chart series 
@@ -296,33 +296,33 @@ public class SparePartBeanBULF_qty implements Serializable {
             LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                     TemporalAdjusters.lastDayOfMonth());
 
-//                Collect and sum sales
-            Double netSalesR12 = salesMap.values().stream().filter(
+//                Collect and sum sales volume
+            Double salesVolumeR12 = salesMap.values().stream().filter(
                     m -> Utility.isWithinRange(date, m.getDate())).
                     collect(Collectors.summingDouble(
                             GlobalChartData::getQuantity));
 
-//                System.out.printf("%s -> %s, %s", date, date.plusMonths(11).with(TemporalAdjusters.lastDayOfMonth()), netSalesR12);
+//                System.out.printf("%s -> %s, %s", date, date.plusMonths(11).with(TemporalAdjusters.lastDayOfMonth()), salesVolumeR12);
             String chartDate = date.plusMonths(11).with(
                     TemporalAdjusters.lastDayOfMonth()).format(
                     DateTimeFormatter.ISO_DATE);
 
             //        Add data to r12Sales series        
-            r12Sales.set(chartDate, netSalesR12);
+            r12Sales.set(chartDate, salesVolumeR12);
 
 
             /* *************** SUMMARY CALCULATIONS *************** */
-//  Round R12 net sales to 3 significant figures and assign to class field
-            this.globalSales = Utility.roundDouble(netSalesR12, 3);
+//  Round R12 sales volume to 3 significant figures and assign to class field
+            this.globalSales = Utility.roundDouble(salesVolumeR12, 3);
         }
 
-//                Collect and sum sales from two years ago for growth calculation
+//                Collect and sum sales volume from two years ago for growth calculation
         Double r12h12 = salesMap.values().stream().filter(
                 m -> Utility.isWithinRange(dateH12, m.getDate())).
                 collect(Collectors.summingDouble(
                         GlobalChartData::getQuantity));
 
-//                Collect and sum sales from one year ago for growth calculation
+//                Collect and sum sales volume from one year ago for growth calculation
         Double r12t0 = salesMap.values().stream().filter(
                 m -> Utility.isWithinRange(dateT0, m.getDate())).
                 collect(Collectors.summingDouble(
@@ -337,9 +337,9 @@ public class SparePartBeanBULF_qty implements Serializable {
         /* *************** CHART PARAMETERS *************** */
         //        Populate r12SalesModel             
         r12SalesModel.addSeries(r12Sales);
-        r12Sales.setLabel("Net Sales");
+        r12Sales.setLabel("Sales Volume");
 
-//        Set chart parameters for the sales chart
+//        Set chart parameters for the sales volume chart
         r12SalesModel.setLegendPosition("nw");
         r12SalesModel.getAxis(AxisType.Y).setLabel("kPcs");
         DateAxis axis = new DateAxis("Dates");
@@ -370,15 +370,15 @@ public class SparePartBeanBULF_qty implements Serializable {
     /**
      * ============================ MARKET CONTROLS ===========================
      * Populate Market Map with data from database. The data is limited to the
-     * Top-10 Markets based on NetSales in the last 12-Month period.
+     * Top-10 Markets based on Sales Volume in the last 12-Month period.
      */
     private void populateMarketSalesMap() {
         System.out.println(" I'm in the 'populateMarketSalesMap()' method.");
-//        Accumulate sales from this date to determine the largest markets
+//        Accumulate sales volume from this date to determine the largest markets
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
         try {
-//  Query the ten biggest markets in terms of net sales over the last 12 months
+//  Query the ten biggest markets in terms of sales volume over the last 12 months
             String tx = "";
 
             if (this.clusters.length == 5) {
@@ -450,7 +450,7 @@ public class SparePartBeanBULF_qty implements Serializable {
     }
 
     /**
-     * Populate the Market Sales Line Charts and Data Table with Rolling 12
+     * Populate the Market Sales Volume Line Charts and Data Table with Rolling 12
      * data.
      */
     private void populateR12MarketLineChartsAndTable() {
@@ -462,7 +462,7 @@ public class SparePartBeanBULF_qty implements Serializable {
 //        Initiate r12MarketSalesModel
         r12MarketSalesModel = new LineChartModel();
 
-        //        Calculate historical sales start dates to use in Growth calculation
+        //        Calculate historical sales volume start dates to use in Growth calculation
         LocalDate dateT0 = Utility.makeDate(LocalDate.now().minusYears(1).
                 getYear(), LocalDate.now().getMonthValue()
         );
@@ -471,7 +471,7 @@ public class SparePartBeanBULF_qty implements Serializable {
         );
 
 //       R12 algorithm based on dates
-//        Accumulate sales for each market over rolling 12 periods
+//        Accumulate sales volume for each market over rolling 12 periods
         int rollingPeriod = 12;
         marketCounter = 0;
         double totR12SalesT0 = 0d;
@@ -487,8 +487,8 @@ public class SparePartBeanBULF_qty implements Serializable {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                             TemporalAdjusters.lastDayOfMonth());
 
-//                Collect and sum sales
-                    Double netSalesR12 = marketSalesMap.values().stream().
+//                Collect and sum sales volume
+                    Double salesVolumeR12 = marketSalesMap.values().stream().
                             filter(
                                     m -> m.getCategory().equals(mkt)
                                     && Utility.isWithinRange(date, m.getDate())).
@@ -501,11 +501,11 @@ public class SparePartBeanBULF_qty implements Serializable {
                                     DateTimeFormatter.ISO_DATE);
 
                     //        Add data to r12Sales series        
-                    r12Sales.set(chartDate, netSalesR12);
+                    r12Sales.set(chartDate, salesVolumeR12);
 
                 }
                 /* *************** TABLE CALCULATIONS *************** */
-//                Collect and sum sales from two years ago for growth calculation
+//                Collect and sum sales volume from two years ago for growth calculation
                 Double r12SalesH12 = marketSalesMap.values().stream().filter(
                         m -> m.getCategory().equals(mkt) && Utility.
                         isWithinRange(
@@ -513,7 +513,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                                 summingDouble(
                                         CategoryChartData::getQuantity));
 
-//                Collect and sum sales from one year ago for growth calculation
+//                Collect and sum sales volume from one year ago for growth calculation
                 Double r12SalesT0 = marketSalesMap.values().stream().filter(
                         m -> m.getCategory().equals(mkt) && Utility.
                         isWithinRange(
@@ -534,7 +534,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                         0d)
                 );
 
-//            Sum total R12 sales
+//            Sum total R12 sales volume
                 totR12SalesT0 = totR12SalesT0 + r12SalesT0;
                 totR12SalesH12 = totR12SalesH12 + r12SalesH12;
 //            Calculate total R12 growth
@@ -551,7 +551,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                 }
             }
             /* *************** TABLE SUMMARY CALCULATIONS *************** */
-//  Sort category list in decending order based on sales
+//  Sort category list in decending order based on sales volume
             Collections.sort(marketTableList,
                     (CategoryTableData a, CategoryTableData b) -> b.getSales().
                             compareTo(a.getSales()));
@@ -562,7 +562,7 @@ public class SparePartBeanBULF_qty implements Serializable {
             this.totTop10MarketGrowth = Utility.roundDouble(totR12Growth, 3);
 
             /* *************** CHART PARAMETERS *************** */
-//        Set chart parameters for the sales chart
+//        Set chart parameters for the sales volume chart
             r12MarketSalesModel.setLegendPosition("nw");
             r12MarketSalesModel.getAxis(AxisType.Y).setLabel("kPcs");
             r12MarketSalesModel.setSeriesColors(this.CHART_COLORS);
@@ -583,17 +583,17 @@ public class SparePartBeanBULF_qty implements Serializable {
      * ================= CUSTOMER GROUP CONTROLS =================
      *
      * Populate CustomerGrp Map with data from database. The data is limited to
-     * the Top-10 Customer Groups based on NetSales in the last 12-Month period,
+     * the Top-10 Customer Groups based on Sales Volume in the last 12-Month period,
      * and also override to include all Global Accounts.
      */
     private void populateCustomerGrpSalesMap() {
         System.out.
                 println(" I'm in the 'populateCustomerGrpSalesMap()' method.");
-//        Accumulate sales from this date to find the largest customers grps
+//        Accumulate sales volume from this date to find the largest customers grps
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
         try {
-            /* Query the ten biggest customer groups in terms of net sales 
+            /* Query the ten biggest customer groups in terms of sales volume 
             over the last 12 months */
             String tx = "";
             if (this.clusters.length == 5) {
@@ -672,7 +672,7 @@ public class SparePartBeanBULF_qty implements Serializable {
 
 //            Print Map contents
 //        custGrpSalesMap.entrySet().stream().map((entry) -> entry.getValue()).forEachOrdered((v) -> {System.out.printf("%s;%s;%s;%s;%s\n", v.getDate(), v.getCategory(), v.getNetSales(), v.getDirectCost(), v.getQuantity());});
-//  Populate a Table Customer Grp List to be used in the sales table.
+//  Populate a Table Customer Grp List to be used in the sales volume table.
             ArrayList<CategoryChartData> tList = new ArrayList<>(
                     custGrpSalesMap.values());
 //            Extract Customer groups to list
@@ -699,7 +699,7 @@ public class SparePartBeanBULF_qty implements Serializable {
 //        Initiate r12CustGrpSalesModel
         r12CustGrpSalesModel = new LineChartModel();
 
-        //        Calculate historical sales start dates to use in Growth calculation
+        //        Calculate historical sales volume start dates to use in Growth calculation
         LocalDate dateT0 = Utility.makeDate(LocalDate.now().minusYears(1).
                 getYear(), LocalDate.now().getMonthValue()
         );
@@ -708,7 +708,7 @@ public class SparePartBeanBULF_qty implements Serializable {
         );
 
 //       R12 algorithm based on dates
-//        Accumulate sales for each customer group over rolling 12 periods
+//        Accumulate sales volume for each customer group over rolling 12 periods
         int rollingPeriod = 12;
         double totR12SalesT0 = 0d;
         double totR12SalesH12 = 0d;
@@ -727,8 +727,8 @@ public class SparePartBeanBULF_qty implements Serializable {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                             TemporalAdjusters.lastDayOfMonth());
 
-//                Collect and sum sales
-                    Double netSalesR12 = custGrpSalesMap.values().stream().
+//                Collect and sum sales volume
+                    Double salesVolumeR12 = custGrpSalesMap.values().stream().
                             filter(m -> m.getCategory().equals(cgr)
                             && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
@@ -739,10 +739,10 @@ public class SparePartBeanBULF_qty implements Serializable {
                             DateTimeFormatter.ISO_DATE);
 
                     //        Add data to r12Sales series        
-                    r12Sales.set(chartDate, netSalesR12);
+                    r12Sales.set(chartDate, salesVolumeR12);
                 }
                 /* *************** TABLE CALCULATIONS *************** */
-//                Collect and sum sales from two years ago for growth calculation
+//                Collect and sum sales volume from two years ago for growth calculation
                 Double r12SalesH12 = custGrpSalesMap.values().stream().filter(
                         m -> m.getCategory().equals(cgr) && Utility.
                         isWithinRange(
@@ -750,7 +750,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                                 summingDouble(
                                         CategoryChartData::getQuantity));
 
-//                Collect and sum sales from one year ago for growth calculation
+//                Collect and sum sales volume from one year ago for growth calculation
                 Double r12SalesT0 = custGrpSalesMap.values().stream().filter(
                         m -> m.getCategory().equals(cgr) && Utility.
                         isWithinRange(
@@ -771,7 +771,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                         0d)
                 );
 
-//            Sum total R12 sales
+//            Sum total R12 sales volume
                 totR12SalesT0 = totR12SalesT0 + r12SalesT0;
                 totR12SalesH12 = totR12SalesH12 + r12SalesH12;
 //            Calculate total R12 growth
@@ -784,7 +784,7 @@ public class SparePartBeanBULF_qty implements Serializable {
 
             }
             /* *************** TABLE SUMMARY CALCULATIONS *************** */
-//  Sort category list in decending order based on sales
+//  Sort category list in decending order based on sales volume
             Collections.sort(custGrpTableList,
                     (CategoryTableData a, CategoryTableData b) -> b.getSales().
                             compareTo(a.getSales()));
@@ -808,7 +808,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                 myCounter++;
             }
 
-//        Set chart parameters for the sales chart
+//        Set chart parameters for the sales volume chart
             r12CustGrpSalesModel.setLegendPosition("nw");
             r12CustGrpSalesModel.getAxis(AxisType.Y).setLabel("kPcs");
             r12CustGrpSalesModel.setSeriesColors(this.CHART_COLORS);
@@ -829,17 +829,17 @@ public class SparePartBeanBULF_qty implements Serializable {
      * ================= ASSORTMENT GROUP CONTROLS =================
      *
      * Populate AssortmentGrp Map with data from database. The data is limited
-     * to the Top-10 Assortment Groups based on NetSales in the last 12-Month
+     * to the Top-10 Assortment Groups based on Sales Volume in the last 12-Month
      * period.
      */
     private void populateAssortmentGrpSalesMap() {
         System.out.
                 println(" I'm in the 'populateAssortmentGrpSalesMap' method.");
-//        Accumulate sales from this date to find the largest customers grps
+//        Accumulate sales volume from this date to find the largest customers grps
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
         try {
-            /* Query the ten biggest assortment groups in terms of net sales 
+            /* Query the ten biggest assortment groups in terms of sales volume 
             over the last 12 months */
 
             String tx = "";
@@ -932,7 +932,7 @@ public class SparePartBeanBULF_qty implements Serializable {
 //        Initiate r12AssortmentSalesModel
         r12AssortmentSalesModel = new LineChartModel();
 
-        //        Calculate historical sales start dates to use in Growth calculation
+        //        Calculate historical sales volume start dates to use in Growth calculation
         LocalDate dateT0 = Utility.makeDate(LocalDate.now().minusYears(1).
                 getYear(), LocalDate.now().getMonthValue()
         );
@@ -941,7 +941,7 @@ public class SparePartBeanBULF_qty implements Serializable {
         );
 
 //       R12 algorithm based on dates
-//        Accumulate sales for each assortment group over rolling 12 periods
+//        Accumulate sales volume for each assortment group over rolling 12 periods
         int rollingPeriod = 12;
         assortmentCounter = 0;
         double totR12SalesT0 = 0d;
@@ -957,8 +957,8 @@ public class SparePartBeanBULF_qty implements Serializable {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                             TemporalAdjusters.lastDayOfMonth());
 
-//                Collect and sum sales
-                    Double netSalesR12 = assortmentSalesMap.values().stream().
+//                Collect and sum sales volume
+                    Double salesVolumeR12 = assortmentSalesMap.values().stream().
                             filter(m -> m.getCategory().equals(asg)
                             && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
@@ -969,11 +969,11 @@ public class SparePartBeanBULF_qty implements Serializable {
                             DateTimeFormatter.ISO_DATE);
 
                     //        Add data to r12Sales series        
-                    r12Sales.set(chartDate, netSalesR12);
+                    r12Sales.set(chartDate, salesVolumeR12);
 
                 }
                 /* *************** TABLE CALCULATIONS *************** */
-//                Collect and sum sales from two years ago for growth calculation
+//                Collect and sum sales volume from two years ago for growth calculation
                 Double r12SalesH12 = assortmentSalesMap.values().stream().
                         filter(
                                 m -> m.getCategory().equals(asg) && Utility.
@@ -983,7 +983,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                                         summingDouble(
                                                 CategoryChartData::getQuantity));
 
-//                Collect and sum sales from one year ago for growth calculation
+//                Collect and sum sales volume from one year ago for growth calculation
                 Double r12SalesT0 = assortmentSalesMap.values().stream().filter(
                         m -> m.getCategory().equals(asg) && Utility.
                         isWithinRange(
@@ -1004,7 +1004,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                         0d)
                 );
 
-//            Sum total R12 sales
+//            Sum total R12 sales volume
                 totR12SalesT0 = totR12SalesT0 + r12SalesT0;
                 totR12SalesH12 = totR12SalesH12 + r12SalesH12;
 //            Calculate total R12 growth
@@ -1021,7 +1021,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                 }
             }
             /* *************** TABLE SUMMARY CALCULATIONS *************** */
-//  Sort category list in decending order based on sales
+//  Sort category list in decending order based on sales volume
             Collections.sort(assortmentTableList,
                     (CategoryTableData a, CategoryTableData b) -> b.getSales().
                             compareTo(a.getSales()));
@@ -1032,7 +1032,7 @@ public class SparePartBeanBULF_qty implements Serializable {
             this.totTop10AssortmentGrowth = Utility.roundDouble(totR12Growth, 3);
 
             /* *************** CHART PARAMETERS *************** */
-//        Set chart parameters for the sales chart
+//        Set chart parameters for the sales volume chart
             r12AssortmentSalesModel.setLegendPosition("nw");
             r12AssortmentSalesModel.getAxis(AxisType.Y).setLabel("kPcs");
             r12AssortmentSalesModel.setSeriesColors(this.CHART_COLORS);
