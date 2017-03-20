@@ -117,6 +117,17 @@ public class SparePartBeanBULF implements Serializable {
     private final String CHART_COLORS;
     private String[] clusters;
     private final String SERVICE_CATEGORY;
+    private final String[] ASSORTMENT_GRPS_BU = {
+        "Homogeniser parts",
+        "Separator parts",
+        "Plate heat exchanger parts",
+        "Tubular heat exchanger parts",
+        "Scraped-surface heat exchanger parts",
+        "System equipment parts",
+        "Brazed heat exchangers",
+        "Dbf components",
+        "Dbf parts"
+    };
 
     public SparePartBeanBULF() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
@@ -126,7 +137,7 @@ public class SparePartBeanBULF implements Serializable {
 
     @PostConstruct
     public void init() {
-        System.out.println("I'm in the 'SparePartBean.init()' method.");
+        System.out.println("I'm in the 'SparePartBeanBULF.init()' method.");
 
 // INITIALIZE CLASS SPECIFIC MAPS AND FIELDS HERE
 //      Initialize driver
@@ -237,22 +248,26 @@ public class SparePartBeanBULF implements Serializable {
             if (this.clusters.length == 5) {
 //  Speed up query if all 5 clusters are selected
                 tx = "MATCH (t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
+                        + " (a:Assortment)-[:IN]->(t),"
                         + " q = (t)-[r:FOR]->(:Customer)"
+                        + " WHERE a.name IN {assortmentGrpsBU}"
                         + " WITH DISTINCT q AS q, r, t"
                         + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             } else {
 
                 tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
+                        + " (a:Assortment)-[:IN]->(t),"
                         + " q = (t)-[r:FOR]->(:Customer)"
-                        + " WHERE c.name IN {Clusters}"
+                        + " WHERE c.name IN {Clusters} AND a.name IN {assortmentGrpsBU}"
                         + " WITH DISTINCT q AS q, r, t"
                         + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             }
 
             StatementResult result = this.session.run(tx, Values.parameters(
-                    "name", this.SERVICE_CATEGORY, "Clusters", this.clusters));
+                    "name", this.SERVICE_CATEGORY, "Clusters", this.clusters,
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -373,6 +388,7 @@ public class SparePartBeanBULF implements Serializable {
 //        Set chart parameters for the sales chart
         r12SalesModel.setLegendPosition("nw");
         r12SalesModel.getAxis(AxisType.Y).setLabel("MEur");
+        r12SalesModel.getAxis(AxisType.Y).setTickFormat("%.1f");
         DateAxis axis = new DateAxis("Dates");
         axis.setTickAngle(-50);
         axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
@@ -425,16 +441,19 @@ public class SparePartBeanBULF implements Serializable {
             if (this.clusters.length == 5) {
 //  Speed up query if all 5 clusters are selected
 
-                tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
-                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName" /* Model based on Special Ledger */
+                tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (m:MarketDB)-[:MADE]->(t),"
+                        + " (a:Assortment)-[:IN]->(t)"
+                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
                         + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
                         /* Collect the markets in a list */
                         + " RETURN collect(Market) AS Markets";
             } else {
                 tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
-                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters}" /* Model based on Special Ledger */
+                        + " (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
+                        + " (a:Assortment)-[:IN]->(t)"
+                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
                         + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
                         /* Collect the markets in a list */
@@ -443,20 +462,24 @@ public class SparePartBeanBULF implements Serializable {
 
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
-                    "Clusters", this.clusters));
+                    "Clusters", this.clusters,
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
             while (result.hasNext()) {
                 Record r = result.next();
                 this.top10Markets = r.get("Markets").asList();
             }
 
-            String tx1 = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
-                    + " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName" /* Use Top10 markets and model based on Special Ledger */
+            String tx1 = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (m:MarketDB)-[:MADE]->(t),"
+                    + " (a:Assortment)-[:IN]->(t)"
+                    + " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}" /* Use Top10 markets and model based on Special Ledger */
                     + " RETURN t.year AS Year, t.month AS Month, m.mktName AS Market, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
             StatementResult result1 = this.session.run(tx1, Values.parameters(
-                    "name", this.SERVICE_CATEGORY, "Markets", this.top10Markets));
+                    "name", this.SERVICE_CATEGORY, "Markets", this.top10Markets,
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
             while (result1.hasNext()) {
                 Record r = result1.next();
@@ -685,10 +708,12 @@ public class SparePartBeanBULF implements Serializable {
      */
     private void mapMarketPotentials() {
 //  Query Potentials by market
-        String tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(m:MarketDB)"
+        String tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(m:MarketDB)"
+                + " WHERE a.name IN {assortmentGrpsBU}"
                 + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
-        StatementResult result = this.session.run(tx);
+        StatementResult result = this.session.run(tx, Values.parameters(
+                "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -730,16 +755,18 @@ public class SparePartBeanBULF implements Serializable {
             if (this.clusters.length == 5) {
                 //  Speed up query if all 5 clusters are selected
 
-                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date}"
+                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (a:Assortment)-[:IN]->(t)"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU}"
                         + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                         /* Collect the customer groups in a list */
                         + " RETURN collect(CustGroup) AS CustGroups";
             } else {
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters}" /* Model based on Special Ledger */
+                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
+                        + " (a:Assortment)-[:IN]->(t)"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
                         + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                         /* Collect the customer groups in a list */
@@ -747,7 +774,8 @@ public class SparePartBeanBULF implements Serializable {
             }
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
-                    "Clusters", this.clusters));
+                    "Clusters", this.clusters,
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -759,21 +787,24 @@ public class SparePartBeanBULF implements Serializable {
             if (this.clusters.length == 5) {
                 //  Speed up query if all 5 clusters are selected
 
-                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
-                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account')" /* Include all Global Accounts as well */
+                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (a:Assortment)-[:IN]->(t)"
+                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND a.name IN {assortmentGrpsBU}" /* Include all Global Accounts as well */
                         + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             } else {
                 tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
-                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters}" /* Include all Global Accounts as well, and Model based on Special Ledger */
+                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
+                        + " (a:Assortment)-[:IN]->(t)"
+                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Include all Global Accounts as well, and Model based on Special Ledger */
                         + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             }
             StatementResult result1 = this.session.run(tx1, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "CustGroups",
                     this.top10CustomerGrps,
-                    "Clusters", this.clusters));
+                    "Clusters", this.clusters,
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
             while (result1.hasNext()) {
                 Record r = result1.next();
@@ -1029,16 +1060,18 @@ public class SparePartBeanBULF implements Serializable {
         String tx = "";
         if (this.clusters.length == 5) {
             //  Speed up query if all 5 clusters are selected
-            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer)"
+            tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)"
+                    + " WHERE a.name IN {assortmentGrpsBU}"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         } else {
-            tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
-                    + " WHERE cl.name IN {Clusters}"
+            tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+                    + " WHERE cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         }
 
         StatementResult result = this.session.run(tx, Values.parameters(
-                "Clusters", this.clusters));
+                "Clusters", this.clusters,
+                "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -1081,7 +1114,7 @@ public class SparePartBeanBULF implements Serializable {
             if (this.clusters.length == 5) {
                 //  Speed up query if all 5 clusters are selected
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (t)<-[:IN]-(a:Assortment)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date}"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU}"
                         + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
                         /* Collect the assortment groups in a list */
@@ -1089,7 +1122,7 @@ public class SparePartBeanBULF implements Serializable {
             } else {
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                         + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters}" /* Model based on Special Ledger */
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
                         + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
                         /* Collect the assortment groups in a list */
@@ -1097,7 +1130,8 @@ public class SparePartBeanBULF implements Serializable {
             }
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
-                    "Clusters", this.clusters));
+                    "Clusters", this.clusters,
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -1120,8 +1154,8 @@ public class SparePartBeanBULF implements Serializable {
 
             }
             StatementResult result1 = this.session.run(tx1, Values.parameters(
-                    "name", this.SERVICE_CATEGORY, "Assortments",
-                    this.top10AssortmentGrps,
+                    "name", this.SERVICE_CATEGORY,
+                    "Assortments", this.top10AssortmentGrps,
                     "Clusters", this.clusters));
 
             while (result1.hasNext()) {
@@ -1363,14 +1397,16 @@ public class SparePartBeanBULF implements Serializable {
         if (this.clusters.length == 5) {
             //  Speed up query if all 5 clusters are selected
             tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)"
+                    + " WHERE a.name IN {assortmentGrpsBU}"
                     + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         } else {
             tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
-                    + " WHERE cl.name IN {Clusters}"
+                    + " WHERE cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}"
                     + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         }
         StatementResult result = this.session.run(tx, Values.parameters(
-                "Clusters", this.clusters));
+                "Clusters", this.clusters,
+                "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
         while (result.hasNext()) {
             Record r = result.next();
