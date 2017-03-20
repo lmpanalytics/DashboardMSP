@@ -29,7 +29,7 @@
                 </div>
                 <div class="w3-half w3-container">
 
-                    <h2>R12 Sales #{sparePartBeanBULF_qty.globalSales} kPcs</h2>
+                    <h2>R12 Sales Volume #{sparePartBeanBULF_qty.globalSales} kPcs</h2>
                     Global BU TG (TBD) Qty
                     <p:chart type="line" model="#{sparePartBeanBULF_qty.r12SalesModel}" style="height:400px;" responsive="true"/>
 
@@ -39,7 +39,7 @@
             <!-- MARKET COMPONENTS -->
             <div class="w3-row">
                 <div class="w3-half w3-container">
-                    <h2>Sales Top-10 Markets</h2> 
+                    <h2>Sales Volume Top-10 Markets</h2> 
 
                     <p:dataTable value="#{sparePartBeanBULF_qty.marketTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true" style="font-size:12px">
@@ -53,7 +53,7 @@
                         </p:column>
                         <p:column style="text-align:right">
                             <f:facet name="header">
-                                <h:outputText value="Sales (kPcs)"></h:outputText>
+                                <h:outputText value="Sales Volume (kPcs)"></h:outputText>
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer">
@@ -72,7 +72,7 @@
                     </p:dataTable>    
                 </div>
                 <div class="w3-half w3-container">
-                    <h2>R12 Sales Top-5 Markets</h2>
+                    <h2>R12 Sales Volume Top-5 Markets</h2>
                     <p:chart type="line" model="#{sparePartBeanBULF_qty.r12MarketSalesModel}" style="height:500px;" responsive="true"/>
                 </div>           
             </div>
@@ -80,7 +80,7 @@
             <!-- CUSTOMER GROUP COMPONENTS -->
             <div class="w3-row">
                 <div class="w3-half w3-container">
-                    <h2>Sales Top-10 Customer Groups</h2> 
+                    <h2>Sales Volume Top-10 Customer Groups</h2> 
 
                     <p:dataTable value="#{sparePartBeanBULF_qty.custGrpTableList}" var="data"
                                  paginator="false" rows="15" draggableColumns="true" liveResize="true" style="font-size:12px">
@@ -94,7 +94,7 @@
                         </p:column>
                         <p:column style="text-align:right">
                             <f:facet name="header">
-                                <h:outputText value="Sales (kPcs)"></h:outputText>
+                                <h:outputText value="Sales Volume (kPcs)"></h:outputText>
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer">
@@ -114,7 +114,7 @@
                     (Including Global Accounts) 
                 </div>
                 <div class="w3-half w3-container">
-                    <h2>R12 Sales Top-5 Customer Groups</h2>
+                    <h2>R12 Sales Volume Top-5 Customer Groups</h2>
                     <p:chart type="line" model="#{sparePartBeanBULF_qty.r12CustGrpSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
             </div>
@@ -122,7 +122,7 @@
             <!-- ASSORTMENT GROUP COMPONENTS -->
             <div class="w3-row">
                 <div class="w3-half w3-container">
-                    <h2>Sales Top-10 Assortment Groups</h2> 
+                    <h2>Sales Volume Top-10 Assortment Groups</h2> 
 
                     <p:dataTable value="#{sparePartBeanBULF_qty.assortmentTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true" style="font-size:12px">
@@ -136,7 +136,7 @@
                         </p:column>
                         <p:column style="text-align:right">
                             <f:facet name="header">
-                                <h:outputText value="Sales (kPcs)"></h:outputText>
+                                <h:outputText value="Sales Volume (kPcs)"></h:outputText>
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer">
@@ -155,13 +155,13 @@
                     </p:dataTable>    
                 </div>
                 <div class="w3-half w3-container">
-                    <h2>R12 Sales Top-5 Assortment Grps</h2>
+                    <h2>R12 Sales Volume Top-5 Assortment Grps</h2>
                     <p:chart type="line" model="#{sparePartBeanBULF_qty.r12AssortmentSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
             </div>
             <p></p>
             <footer class="w3-container w3-light-grey">
-                <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report</h5>
+                <h5>Data sources: Sales Volume compiled from BO 'Special Ledger' and 'Invoice' reports.</h5>
             </footer>
             <h:form>
                 <p></p>

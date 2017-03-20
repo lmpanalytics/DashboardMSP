@@ -300,7 +300,7 @@ public class SparePartBeanBULF_qty implements Serializable {
             Double netSalesR12 = salesMap.values().stream().filter(
                     m -> Utility.isWithinRange(date, m.getDate())).
                     collect(Collectors.summingDouble(
-                            GlobalChartData::getNetSales));
+                            GlobalChartData::getQuantity));
 
 //                System.out.printf("%s -> %s, %s", date, date.plusMonths(11).with(TemporalAdjusters.lastDayOfMonth()), netSalesR12);
             String chartDate = date.plusMonths(11).with(
@@ -320,13 +320,13 @@ public class SparePartBeanBULF_qty implements Serializable {
         Double r12h12 = salesMap.values().stream().filter(
                 m -> Utility.isWithinRange(dateH12, m.getDate())).
                 collect(Collectors.summingDouble(
-                        GlobalChartData::getNetSales));
+                        GlobalChartData::getQuantity));
 
 //                Collect and sum sales from one year ago for growth calculation
         Double r12t0 = salesMap.values().stream().filter(
                 m -> Utility.isWithinRange(dateT0, m.getDate())).
                 collect(Collectors.summingDouble(
-                        GlobalChartData::getNetSales));
+                        GlobalChartData::getQuantity));
 
         //            Calculate the growth
         double r12GrowthRate = Utility.calcGrowthRate(r12t0, r12h12);
@@ -493,7 +493,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                                     m -> m.getCategory().equals(mkt)
                                     && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
-                                    CategoryChartData::getNetSales));
+                                    CategoryChartData::getQuantity));
 
                     String chartDate = date.plusMonths(11).with(
                             TemporalAdjusters.
@@ -511,7 +511,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                         isWithinRange(
                                 dateH12, m.getDate())).collect(Collectors.
                                 summingDouble(
-                                        CategoryChartData::getNetSales));
+                                        CategoryChartData::getQuantity));
 
 //                Collect and sum sales from one year ago for growth calculation
                 Double r12SalesT0 = marketSalesMap.values().stream().filter(
@@ -519,7 +519,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                         isWithinRange(
                                 dateT0, m.getDate())).collect(Collectors.
                                 summingDouble(
-                                        CategoryChartData::getNetSales));
+                                        CategoryChartData::getQuantity));
 
 //            Calculate the growth
                 double growthRate = Utility.calcGrowthRate(r12SalesT0,
@@ -732,7 +732,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                             filter(m -> m.getCategory().equals(cgr)
                             && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
-                                    CategoryChartData::getNetSales));
+                                    CategoryChartData::getQuantity));
 
                     String chartDate = date.plusMonths(11).with(
                             TemporalAdjusters.lastDayOfMonth()).format(
@@ -748,7 +748,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                         isWithinRange(
                                 dateH12, m.getDate())).collect(Collectors.
                                 summingDouble(
-                                        CategoryChartData::getNetSales));
+                                        CategoryChartData::getQuantity));
 
 //                Collect and sum sales from one year ago for growth calculation
                 Double r12SalesT0 = custGrpSalesMap.values().stream().filter(
@@ -756,7 +756,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                         isWithinRange(
                                 dateT0, m.getDate())).collect(Collectors.
                                 summingDouble(
-                                        CategoryChartData::getNetSales));
+                                        CategoryChartData::getQuantity));
 
 //            Calculate the growth
                 double growthRate = Utility.calcGrowthRate(r12SalesT0,
@@ -962,7 +962,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                             filter(m -> m.getCategory().equals(asg)
                             && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
-                                    CategoryChartData::getNetSales));
+                                    CategoryChartData::getQuantity));
 
                     String chartDate = date.plusMonths(11).with(
                             TemporalAdjusters.lastDayOfMonth()).format(
@@ -981,7 +981,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                                         dateH12, m.getDate())).collect(
                                 Collectors.
                                         summingDouble(
-                                                CategoryChartData::getNetSales));
+                                                CategoryChartData::getQuantity));
 
 //                Collect and sum sales from one year ago for growth calculation
                 Double r12SalesT0 = assortmentSalesMap.values().stream().filter(
@@ -989,7 +989,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                         isWithinRange(
                                 dateT0, m.getDate())).collect(Collectors.
                                 summingDouble(
-                                        CategoryChartData::getNetSales));
+                                        CategoryChartData::getQuantity));
 
 //            Calculate the growth
                 double growthRate = Utility.calcGrowthRate(r12SalesT0,
