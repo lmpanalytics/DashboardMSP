@@ -19,25 +19,25 @@
     <h:body>
         <f:view contentType="text/html">
             <header class="w3-container w3-red">
-                <h1>BULF Spare Parts</h1>
+                <h1>BULF Spare Parts (Euro)</h1>
             </header>
             <div class="w3-row">
                 <div class="w3-third w3-container">
-                    <h2>R12 Growth #{sparePartBeanBULF.globalGrowth}%</h2>
+                    <h2>R12 Growth #{sparePartBeanBULF_eur.globalGrowth}%</h2>
                     Global TS&amp;S TG 7.2%
-                    <p:chart type="metergauge" model="#{sparePartBeanBULF.r12GrowthModel}"  responsive="true"/>
+                    <p:chart type="metergauge" model="#{sparePartBeanBULF_eur.r12GrowthModel}"  responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
 
-                    <h2>R12 Sales #{sparePartBeanBULF.globalSales} MEur</h2>
+                    <h2>R12 Sales #{sparePartBeanBULF_eur.globalSales} MEur</h2>
                     Global BU TG 125 MEur
-                    <p:chart type="line" model="#{sparePartBeanBULF.r12SalesModel}" style="height:400px;" responsive="true"/>
+                    <p:chart type="line" model="#{sparePartBeanBULF_eur.r12SalesModel}" style="height:400px;" responsive="true"/>
 
                 </div>
                 <div class="w3-third w3-container">
-                    <h2>R12 Net Margin #{sparePartBeanBULF.globalMargin}%</h2>
+                    <h2>R12 Net Margin #{sparePartBeanBULF_eur.globalMargin}%</h2>
                     Global TS&amp;S TG 49.4%
-                    <p:chart type="line" model="#{sparePartBeanBULF.r12MarginModel}" style="height:400px;" responsive="true"/>
+                    <p:chart type="line" model="#{sparePartBeanBULF_eur.r12MarginModel}" style="height:400px;" responsive="true"/>
                 </div>
             </div>
             <p:separator />
@@ -46,7 +46,7 @@
                 <div class="w3-third w3-container">
                     <h2>Sales Top-10 Markets</h2> 
 
-                    <p:dataTable value="#{sparePartBeanBULF.marketTableList}" var="data"
+                    <p:dataTable value="#{sparePartBeanBULF_eur.marketTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true" style="font-size:12px">
                         <p:column>
                             <f:facet name="header">
@@ -62,7 +62,7 @@
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10MarketSales}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10MarketSales}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -71,7 +71,7 @@
                             </f:facet>
                             <h:outputText value="#{data.growth}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10MarketGrowth}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10MarketGrowth}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -80,7 +80,7 @@
                             </f:facet>
                             <h:outputText value="#{data.margin}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10MarketMargin}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10MarketMargin}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -89,18 +89,18 @@
                             </f:facet>
                             <h:outputText value="#{data.potential}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10MarketPotential}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10MarketPotential}"></h:outputText>
                             </f:facet>
                         </p:column>
                     </p:dataTable>    
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Markets</h2>
-                    <p:chart type="line" model="#{sparePartBeanBULF.r12MarketSalesModel}" style="height:500px;" responsive="true"/>
+                    <p:chart type="line" model="#{sparePartBeanBULF_eur.r12MarketSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Markets</h2>
-                    <p:chart type="line" model="#{sparePartBeanBULF.r12MarketMarginModel}" style="height:500px;" responsive="true"/>
+                    <p:chart type="line" model="#{sparePartBeanBULF_eur.r12MarketMarginModel}" style="height:500px;" responsive="true"/>
                 </div>              
             </div>
             <p:separator />
@@ -109,7 +109,7 @@
                 <div class="w3-third w3-container">
                     <h2>Sales Top-10 Customer Groups</h2> 
 
-                    <p:dataTable value="#{sparePartBeanBULF.custGrpTableList}" var="data"
+                    <p:dataTable value="#{sparePartBeanBULF_eur.custGrpTableList}" var="data"
                                  paginator="false" rows="15" draggableColumns="true" liveResize="true" style="font-size:12px">
                         <p:column>
                             <f:facet name="header">
@@ -125,7 +125,7 @@
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10CustGrpSales}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10CustGrpSales}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -134,7 +134,7 @@
                             </f:facet>
                             <h:outputText value="#{data.growth}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10CustGrpGrowth}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10CustGrpGrowth}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -143,7 +143,7 @@
                             </f:facet>
                             <h:outputText value="#{data.margin}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10CustGrpMargin}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10CustGrpMargin}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -152,7 +152,7 @@
                             </f:facet>
                             <h:outputText value="#{data.potential}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10CustGrpPotential}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10CustGrpPotential}"></h:outputText>
                             </f:facet>
                         </p:column>
                     </p:dataTable>  
@@ -160,11 +160,11 @@
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Customer Groups</h2>
-                    <p:chart type="line" model="#{sparePartBeanBULF.r12CustGrpSalesModel}" style="height:500px;" responsive="true"/>
+                    <p:chart type="line" model="#{sparePartBeanBULF_eur.r12CustGrpSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Customer Groups</h2>
-                    <p:chart type="line" model="#{sparePartBeanBULF.r12CustGrpMarginModel}" style="height:500px;" responsive="true"/>
+                    <p:chart type="line" model="#{sparePartBeanBULF_eur.r12CustGrpMarginModel}" style="height:500px;" responsive="true"/>
                 </div>
             </div>
             <p:separator />
@@ -173,7 +173,7 @@
                 <div class="w3-third w3-container">
                     <h2>Sales Top-10 Assortment Groups</h2> 
 
-                    <p:dataTable value="#{sparePartBeanBULF.assortmentTableList}" var="data"
+                    <p:dataTable value="#{sparePartBeanBULF_eur.assortmentTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true" style="font-size:12px">
                         <p:column>
                             <f:facet name="header">
@@ -189,7 +189,7 @@
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10AssortmentSales}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10AssortmentSales}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -198,7 +198,7 @@
                             </f:facet>
                             <h:outputText value="#{data.growth}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10AssortmentGrowth}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10AssortmentGrowth}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -207,7 +207,7 @@
                             </f:facet>
                             <h:outputText value="#{data.margin}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10AssortmentMargin}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10AssortmentMargin}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -216,18 +216,18 @@
                             </f:facet>
                             <h:outputText value="#{data.potential}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{sparePartBeanBULF.totTop10AssortmentPotential}"></h:outputText>
+                                <h:outputText value="#{sparePartBeanBULF_eur.totTop10AssortmentPotential}"></h:outputText>
                             </f:facet>
                         </p:column>
                     </p:dataTable>    
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Assortment Grps</h2>
-                    <p:chart type="line" model="#{sparePartBeanBULF.r12AssortmentSalesModel}" style="height:500px;" responsive="true"/>
+                    <p:chart type="line" model="#{sparePartBeanBULF_eur.r12AssortmentSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Margin Top-5 Assortment Grps</h2>
-                    <p:chart type="line" model="#{sparePartBeanBULF.r12AssortmentMarginModel}" style="height:500px;" responsive="true"/>
+                    <p:chart type="line" model="#{sparePartBeanBULF_eur.r12AssortmentMarginModel}" style="height:500px;" responsive="true"/>
                 </div>
             </div>
             <p></p>

@@ -50,14 +50,14 @@ import utility.Utility;
  *
  * @author SEPALMM
  */
-@Named(value = "sparePartBeanBULF")
+@Named(value = "sparePartBeanBULF_eur")
 @Stateful
 @ViewScoped
 
 @DeclareRoles(
         {"CENTRAL_TEAM", "TPPC", "BUIC", "ECA", "GC", "GMEA", "NCSA", "SAEAO"})
 @RolesAllowed({"CENTRAL_TEAM"})
-public class SparePartBeanBULF implements Serializable {
+public class SparePartBeanBULF_eur implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -129,7 +129,7 @@ public class SparePartBeanBULF implements Serializable {
         "Dbf parts"
     };
 
-    public SparePartBeanBULF() {
+    public SparePartBeanBULF_eur() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
         this.SERVICE_CATEGORY = "Parts";
 
