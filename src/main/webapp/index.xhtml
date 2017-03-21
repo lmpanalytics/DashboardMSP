@@ -17,11 +17,11 @@
         <h:form>
             <h:panelGrid columns="3" cellpadding="5">              
                 <p:selectCheckboxMenu id="cluster" value="#{checkboxViewCluster.selectedClusters}" label="Clusters"
-                                      filter="true" filterMatchMode="startsWith" panelStyle="width:300px">
-                    <f:selectItems value="#{checkboxViewCluster.clusters}" />
+                                      filter="true" filterMatchMode="startsWith" panelStyle="width:300px" rendered="true" >
+                    <f:selectItems value="#{checkboxViewCluster.clusters}"/>
                 </p:selectCheckboxMenu>
 
-                <p:commandButton value="Submit" update="displayClusters" oncomplete="PF('clusterDialog').show()" />
+                <p:commandButton value="Submit" update="displayClusters" oncomplete="PF('clusterDialog').show()" rendered="true" />
                 <h:outputLabel for="cluster" value="" />
             </h:panelGrid>
             <p:dialog header="Selected" modal="true" showEffect="fade" hideEffect="fade" widgetVar="clusterDialog" width="250">
@@ -36,7 +36,7 @@
                 </p:outputPanel>
             </p:dialog>
         </h:form>
-        <p:separator />
+        <p:separator rendered="true"/>
         <h3>Global Service Categories</h3>
         <h:form>
             <h:panelGrid columns="2" cellpadding="5">             
@@ -57,13 +57,13 @@
         <h:form>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="spSalesBULFeur" value="BULF (Eur.)"
-                                 action="dashboardSP_BULF_eur">
+                                 action="dashboardSP_BULF_eur" rendered="#{sparePartBeanBULF_eur.renderBULF_DB}">
                 </h:commandButton>
-                <h:outputLabel for="dashboardSP_BULF_eur" value="" />
+                <h:outputLabel for="spSalesBULFeur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="spSalesBULFqty" value="BULF (Qty.)"
-                                 action="dashboardSP_BULF_qty">
+                                 action="dashboardSP_BULF_qty" rendered="#{sparePartBeanBULF_qty.renderBULF_DB}">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBULFqty" value="" />
             </h:panelGrid>

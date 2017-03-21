@@ -54,7 +54,7 @@ import utility.Utility;
 @ViewScoped
 
 @DeclareRoles(
-        {"CENTRAL_TEAM", "TPPC", "BUIC", "ECA", "GC", "GMEA", "NCSA", "SAEAO"})
+        {"CENTRAL_TEAM", "BULF_DB", "BUICF_DB", "CPS_DB", "ALF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
 @RolesAllowed({"CENTRAL_TEAM"})
 public class MaintenanceBean implements Serializable {
 

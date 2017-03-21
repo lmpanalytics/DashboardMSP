@@ -37,13 +37,15 @@
         <auth-constraint>
             <description/>
             <role-name>CENTRAL_TEAM</role-name>
-            <role-name>TPPC</role-name>
-            <role-name>BUIC</role-name>
-            <role-name>ECA</role-name>
-            <role-name>GC</role-name>
-            <role-name>GMEA</role-name>
-            <role-name>NCSA</role-name>
-            <role-name>SAEAO</role-name>
+            <role-name>BULF_DB</role-name>
+            <role-name>BUICF_DB</role-name>
+            <role-name>CPS_DB</role-name>
+            <role-name>ALF_DB</role-name>
+            <role-name>ECA_DB</role-name>
+            <role-name>GC_DB</role-name>
+            <role-name>GMEA_DB</role-name>
+            <role-name>NCSA_DB</role-name>
+            <role-name>SAEAO_DB</role-name>
         </auth-constraint>
     </security-constraint>
     <login-config>

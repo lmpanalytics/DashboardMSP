@@ -5,6 +5,7 @@
  */
 package com.tetrapak.dashboard.beans;
 
+import java.sql.Timestamp;
 import javax.annotation.PreDestroy;
 import javax.ejb.LocalBean;
 import javax.ejb.Singleton;
@@ -38,14 +39,17 @@ public class Neo4jBean {
     public void destroyMe() {
         DRIVER.session().close();
         DRIVER.close();
-        System.out.println("Neo4jDriver in Neo4jBean has been disposed of.");
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        System.out.println(
+                timestamp + ": Neo4jDriver in Neo4jBean has been disposed of.");
     }
 
     /**
      * @return the driver
      */
     public Driver getDriver() {
-        System.out.println("Aquire Neo4jDriver.");
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        System.out.println(timestamp + ": Aquire Neo4jDriver.");
         return DRIVER;
     }
 
@@ -54,6 +58,7 @@ public class Neo4jBean {
      */
     public void closeNeo4jDriver() {
         DRIVER.close();
-        System.out.println("Closed Neo4jDriver.");
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        System.out.println(timestamp + ": Closed Neo4jDriver.");
     }
 }
