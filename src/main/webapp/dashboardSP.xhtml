@@ -20,6 +20,7 @@
         <f:view contentType="text/html">
             <header class="w3-container w3-indigo">
                 <h1>Spare Parts Dashboard</h1>
+                <h6>#{sparePartBean.selectedClustersInfo}</h6>
             </header>
             <div class="w3-row">
                 <div class="w3-third w3-container">
@@ -36,7 +37,7 @@
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Net Margin #{sparePartBean.globalMargin}%</h2>
-                     Global TG 49.4%
+                    Global TG 49.4%
                     <p:chart type="line" model="#{sparePartBean.r12MarginModel}" style="height:400px;" responsive="true"/>
                 </div>
             </div>
@@ -232,6 +233,7 @@
             </div>
             <p></p>
             <footer class="w3-container w3-light-grey">
+                <h6>#{sparePartBean.selectedClustersInfo}</h6>
                 <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report.</h5>
             </footer>
             <h:form>

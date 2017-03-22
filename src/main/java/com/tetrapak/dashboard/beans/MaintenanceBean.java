@@ -56,7 +56,7 @@ import utility.Utility;
 @DeclareRoles(
         {"CENTRAL_TEAM", "BULF_DB", "BUICF_DB", "CPS_DB", "ALF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
 @RolesAllowed(
-            {"CENTRAL_TEAM", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
+        {"CENTRAL_TEAM", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
 public class MaintenanceBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -104,6 +104,7 @@ public class MaintenanceBean implements Serializable {
     private final String CHART_COLORS;
     private String[] clusters;
     private final String SERVICE_CATEGORY;
+    private String selectedClustersInfo;
 
     public MaintenanceBean() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
@@ -173,7 +174,8 @@ public class MaintenanceBean implements Serializable {
     }
 
     private void initiateClusterSelection() {
-        //        Initiate Array of clusters
+        //        Initiate String builder and Array of clusters
+        StringBuilder sb = new StringBuilder("Viewing ");
         List<String> clusterList = cc.getClusters();
         this.clusters = new String[clusterList.size()];
         clusterList.toArray(clusters);
@@ -182,9 +184,25 @@ public class MaintenanceBean implements Serializable {
         if (testArray.length > 0 && !testArray[0].equals("0")) {
             this.clusters = cc.getSelectedClusters();
 
+//            Add selected cluster(s) to Info string
+            for (String c : this.clusters) {
+                sb.append(c);
+                sb.append(", ");
+            }
+
         } else {
 //            System.out.println("No cluster selection, using all clusters...");
+//            Add selected cluster(s) to Info string
+            for (String c : this.clusters) {
+                sb.append(c);
+                sb.append(", ");
+            }
         }
+        String s = sb.toString();
+        if (s.endsWith(", ")) {
+            s = s.substring(0, s.length() - 2);
+        }
+        this.selectedClustersInfo = s;
     }
 
     @PreDestroy
@@ -1028,8 +1046,12 @@ public class MaintenanceBean implements Serializable {
         }
 
     }
-
 //    GETTERS & SETTERS
+
+    public String getSelectedClustersInfo() {
+        return selectedClustersInfo;
+    }
+
     public LineChartModel getR12SalesModel() {
         return r12SalesModel;
     }

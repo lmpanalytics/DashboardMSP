@@ -20,6 +20,7 @@
         <f:view contentType="text/html">
             <header class="w3-container w3-cyan">
                 <h1>Maintenance Dashboard</h1>
+                <h6>#{maintenanceBean.selectedClustersInfo}</h6>
             </header>
             <div class="w3-row">
                 <div class="w3-third w3-container">
@@ -170,6 +171,7 @@
 
             <p></p>
             <footer class="w3-container w3-light-grey">
+                <h6>#{maintenanceBean.selectedClustersInfo}</h6>
                 <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report.</h5>
             </footer>
             <h:form>

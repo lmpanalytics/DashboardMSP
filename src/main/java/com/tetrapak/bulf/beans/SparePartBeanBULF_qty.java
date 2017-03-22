@@ -113,6 +113,7 @@ public class SparePartBeanBULF_qty implements Serializable {
         "Dbf components",
         "Dbf parts"
     };
+    private String selectedClustersInfo;
 
     public SparePartBeanBULF_qty() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
@@ -191,7 +192,8 @@ public class SparePartBeanBULF_qty implements Serializable {
     }
 
     private void initiateClusterSelection() {
-        //        Initiate Array of clusters
+        //        Initiate String builder and Array of clusters
+        StringBuilder sb = new StringBuilder("Viewing ");
         List<String> clusterList = cc.getClusters();
         this.clusters = new String[clusterList.size()];
         clusterList.toArray(clusters);
@@ -200,9 +202,25 @@ public class SparePartBeanBULF_qty implements Serializable {
         if (testArray.length > 0 && !testArray[0].equals("0")) {
             this.clusters = cc.getSelectedClusters();
 
+//            Add selected cluster(s) to Info string
+            for (String c : this.clusters) {
+                sb.append(c);
+                sb.append(", ");
+            }
+
         } else {
 //            System.out.println("No cluster selection, using all clusters...");
+//            Add selected cluster(s) to Info string
+            for (String c : this.clusters) {
+                sb.append(c);
+                sb.append(", ");
+            }
         }
+        String s = sb.toString();
+        if (s.endsWith(", ")) {
+            s = s.substring(0, s.length() - 2);
+        }
+        this.selectedClustersInfo = s;
     }
 
     @PreDestroy
@@ -1053,6 +1071,10 @@ public class SparePartBeanBULF_qty implements Serializable {
     }
 
 //    GETTERS & SETTERS
+    public String getSelectedClustersInfo() {
+        return selectedClustersInfo;
+    }
+
     public LineChartModel getR12SalesModel() {
         return r12SalesModel;
     }
