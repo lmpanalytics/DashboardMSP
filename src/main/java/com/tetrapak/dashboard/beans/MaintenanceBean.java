@@ -29,7 +29,7 @@ import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateful;
-import javax.faces.view.ViewScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import org.neo4j.driver.v1.Record;
@@ -51,7 +51,7 @@ import utility.Utility;
  */
 @Named(value = "maintenanceBean")
 @Stateful
-@ViewScoped
+@RequestScoped
 
 @DeclareRoles(
         {"CENTRAL_TEAM", "BULF_DB", "BUICF_DB", "CPS_DB", "ALF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
