@@ -70,6 +70,12 @@
                 </h:commandButton>
                 <h:outputLabel for="spSalesBULFqty" value="" />
             </h:panelGrid>
+                        <h:panelGrid columns="4" cellpadding="5">             
+                <h:commandButton id="rpHomogeniserEur" value="Homogeniser RP (Eur.)"
+                                 action="dashboardRP_Homogeniser_eur" rendered="#{user.renderBULF_DB}">
+                </h:commandButton>
+                <h:outputLabel for="rpHomogeniserEur" value="" />
+            </h:panelGrid>
         </h:form>
         <p:separator />
         All dashboards based on data from clusters only. Sales data booked on Business Units is excluded.
