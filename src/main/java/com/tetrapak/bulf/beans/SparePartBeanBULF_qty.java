@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.tetrapak.dashboard.beans;
+package com.tetrapak.bulf.beans;
 
+import com.tetrapak.dashboard.beans.CheckboxViewCluster;
+import com.tetrapak.dashboard.beans.Neo4jBean;
 import com.tetrapak.dashboard.model.CategoryTableData;
 import com.tetrapak.dashboard.model.GlobalChartData;
 import com.tetrapak.dashboard.model.CategoryChartData;
