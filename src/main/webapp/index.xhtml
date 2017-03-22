@@ -14,14 +14,14 @@
     </h:head>
     <h:body>
         <h1>Dashboard Selections</h1>
-        <h:form>
+        <h:form rendered="#{user.renderCluster_DB}">
             <h:panelGrid columns="3" cellpadding="5">              
                 <p:selectCheckboxMenu id="cluster" value="#{checkboxViewCluster.selectedClusters}" label="Clusters"
-                                      filter="true" filterMatchMode="startsWith" panelStyle="width:300px" rendered="true" >
+                                      filter="true" filterMatchMode="startsWith" panelStyle="width:300px" >
                     <f:selectItems value="#{checkboxViewCluster.clusters}"/>
                 </p:selectCheckboxMenu>
 
-                <p:commandButton value="Submit" update="displayClusters" oncomplete="PF('clusterDialog').show()" rendered="true" />
+                <p:commandButton value="Submit" update="displayClusters" oncomplete="PF('clusterDialog').show()" />
                 <h:outputLabel for="cluster" value="" />
             </h:panelGrid>
             <p:dialog header="Selected" modal="true" showEffect="fade" hideEffect="fade" widgetVar="clusterDialog" width="250">
@@ -35,35 +35,38 @@
                     </p:dataList>
                 </p:outputPanel>
             </p:dialog>
+            <p:separator/>
         </h:form>
-        <p:separator rendered="true"/>
-        <h3>Global Service Categories</h3>
-        <h:form>
+
+        <h:form rendered="#{user.renderCategory_DB}">
+
+            <h3>Global Service Categories</h3>
             <h:panelGrid columns="2" cellpadding="5">             
                 <h:commandLink action="dashboardSP">
                     <h:graphicImage 
                         url="#{resource['images:PartsIcon.png']}"
-                        alt="Parts Icon pic" />
+                        alt="Parts Icon pic"/>
                 </h:commandLink>
                 <h:commandLink action="dashboardMS">
                     <h:graphicImage 
                         url="#{resource['images:MaintenanceIcon.png']}"
-                        alt="Maintenance Icon pic" />
+                        alt="Maintenance Icon pic"/>
                 </h:commandLink>
             </h:panelGrid>
+            <p:separator />
         </h:form>
-        <p:separator />
+
         <h3>BU Reports</h3>
         <h:form>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="spSalesBULFeur" value="BULF (Eur.)"
-                                 action="dashboardSP_BULF_eur" rendered="#{sparePartBeanBULF_eur.renderBULF_DB}">
+                                 action="dashboardSP_BULF_eur" rendered="#{user.renderBULF_DB}">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBULFeur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="spSalesBULFqty" value="BULF (Qty.)"
-                                 action="dashboardSP_BULF_qty" rendered="#{sparePartBeanBULF_qty.renderBULF_DB}">
+                                 action="dashboardSP_BULF_qty" rendered="#{user.renderBULF_DB}">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBULFqty" value="" />
             </h:panelGrid>

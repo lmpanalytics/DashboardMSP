@@ -56,7 +56,8 @@ import utility.Utility;
 
 @DeclareRoles(
         {"CENTRAL_TEAM", "BULF_DB", "BUICF_DB", "CPS_DB", "ALF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
-@RolesAllowed({"CENTRAL_TEAM"})
+@RolesAllowed(
+        {"CENTRAL_TEAM", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
 public class SparePartBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -214,7 +215,7 @@ public class SparePartBean implements Serializable {
             this.clusters = cc.getSelectedClusters();
 
         } else {
-            System.out.println("No cluster selection, using all clusters...");
+//            System.out.println("No cluster selection, using all clusters...");
         }
     }
 

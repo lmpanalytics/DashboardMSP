@@ -56,7 +56,8 @@ import utility.Utility;
 
 @DeclareRoles(
         {"CENTRAL_TEAM", "BULF_DB", "BUICF_DB", "CPS_DB", "ALF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
-@RolesAllowed({"CENTRAL_TEAM", "BULF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
+@RolesAllowed(
+        {"CENTRAL_TEAM", "BULF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
 public class SparePartBeanBULF_eur implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -128,17 +129,6 @@ public class SparePartBeanBULF_eur implements Serializable {
         "Dbf components",
         "Dbf parts"
     };
-    private boolean isCentralTeamUser;
-    private boolean isBULF_DB_User;
-    private boolean isBUICF_DB_User;
-    private boolean isCPS_DB_User;
-    private boolean isALF_DB_User;
-    private boolean isECA_DB_User;
-    private boolean isGC_DB_User;
-    private boolean isGMEA_DB_User;
-    private boolean isNCSA_DB_User;
-    private boolean isSAEAO_DB_User;
-    private boolean isRenderBULF_DB;
 
     public SparePartBeanBULF_eur() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
@@ -151,19 +141,6 @@ public class SparePartBeanBULF_eur implements Serializable {
         System.out.println("I'm in the 'SparePartBeanBULF_eur.init()' method.");
 
 // INITIALIZE CLASS SPECIFIC MAPS AND FIELDS HERE
-// Initiate user group classifiers
-        isCentralTeamUser();
-        isBULF_DB_User();
-        isBUICF_DB_User();
-        isECA_DB_User();
-        isGC_DB_User();
-        isGMEA_DB_User();
-        isNCSA_DB_User();
-        isSAEAO_DB_User();
-
-        // Initiate rendering of jsf components
-        isRenderBULF_DB();
-
 //      Initialize driver
         this.session = neo4jBean.getDriver().session();
 
@@ -249,7 +226,7 @@ public class SparePartBeanBULF_eur implements Serializable {
             this.clusters = cc.getSelectedClusters();
 
         } else {
-            System.out.println("No cluster selection, using all clusters...");
+//            System.out.println("No cluster selection, using all clusters...");
         }
     }
 
@@ -1463,54 +1440,6 @@ public class SparePartBeanBULF_eur implements Serializable {
                 new PotentialData(totPotSpareParts * 0.3,
                         totPotMaintenanceHrs * 0.06,
                         totPotMaintenance * 0.06));
-    }
-
-//    DETERMINE USER
-    public boolean isCentralTeamUser() {
-        return isCentralTeamUser = ctx.isCallerInRole("CENTRAL_TEAM");
-    }
-
-    public boolean isBULF_DB_User() {
-        return isBULF_DB_User = ctx.isCallerInRole("BULF_DB");
-    }
-
-    public boolean isBUICF_DB_User() {
-        return isBUICF_DB_User = ctx.isCallerInRole("BUICF_DB");
-    }
-
-    public boolean isCPS_DB_User() {
-        return isCPS_DB_User = ctx.isCallerInRole("CPS_DB");
-    }
-
-    public boolean isALF_DB_User() {
-        return isALF_DB_User = ctx.isCallerInRole("ALF_DB");
-    }
-
-    public boolean isECA_DB_User() {
-        return isECA_DB_User = ctx.isCallerInRole("ECA_DB");
-    }
-
-    public boolean isGC_DB_User() {
-        return isGC_DB_User = ctx.isCallerInRole("GC_DB");
-    }
-
-    public boolean isGMEA_DB_User() {
-        return isGMEA_DB_User = ctx.isCallerInRole("GMEA_DB");
-    }
-
-    public boolean isNCSA_DB_User() {
-        return isNCSA_DB_User = ctx.isCallerInRole("NCSA_DB");
-    }
-
-    public boolean isSAEAO_DB_User() {
-        return isSAEAO_DB_User = ctx.isCallerInRole("SAEAO_DB");
-    }
-
-    public boolean isRenderBULF_DB() {
-        if (isCentralTeamUser || isBULF_DB_User || isECA_DB_User || isGC_DB_User || isGMEA_DB_User || isNCSA_DB_User || isSAEAO_DB_User) {
-            isRenderBULF_DB = true;
-        }
-        return isRenderBULF_DB;
     }
 
 //    GETTERS & SETTERS
