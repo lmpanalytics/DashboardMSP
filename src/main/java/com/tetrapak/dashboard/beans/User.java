@@ -13,7 +13,6 @@ import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.PermitAll;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateful;
-import javax.enterprise.context.ApplicationScoped;
 import javax.faces.bean.SessionScoped;
 
 import javax.inject.Named;
@@ -25,7 +24,7 @@ import javax.inject.Named;
  */
 @Named(value = "user")
 @Stateful
-@ApplicationScoped
+@SessionScoped
 
 @DeclareRoles(
         {"CENTRAL_TEAM", "BULF_DB", "BUICF_DB", "CPS_DB", "ALF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
