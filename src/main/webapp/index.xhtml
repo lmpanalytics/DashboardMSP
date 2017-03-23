@@ -82,6 +82,18 @@
                 </h:commandButton>
                 <h:outputLabel for="rpHomogeniserQty" value="" />
             </h:panelGrid>
+            <h:panelGrid columns="4" cellpadding="5">             
+                <h:commandButton id="rpSeparatorEur" value="Separator RP (Eur.)"
+                                 action="dashboardRP_Separator_eur" rendered="#{user.renderBULF_DB}">
+                </h:commandButton>
+                <h:outputLabel for="rpSeparatorEur" value="" />
+            </h:panelGrid>
+            <h:panelGrid columns="4" cellpadding="5">             
+                <h:commandButton id="rpSeparatorQty" value="Separator RP (Qty.)"
+                                 action="dashboardRP_Separator_qty" rendered="#{user.renderBULF_DB}">
+                </h:commandButton>
+                <h:outputLabel for="rpSeparatorQty" value="" />
+            </h:panelGrid>
         </h:form>
         <p:separator />
         All dashboards based on data from clusters only. Sales data booked on Business Units is excluded.
