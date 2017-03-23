@@ -151,16 +151,16 @@
                 </div>
             </div>
             <p:separator />
-            <!-- ASSORTMENT GROUP COMPONENTS -->
+            <!-- REFERENCE PARTS COMPONENTS -->
             <div class="w3-row">
                 <div class="w3-third w3-container">
-                    <h2>Sales Top-10 Assortment Groups</h2> 
+                    <h2>Sales Top-10 Reference Parts</h2> 
 
-                    <p:dataTable value="#{rp_HomogeniserBean_eur.assortmentTableList}" var="data"
+                    <p:dataTable value="#{rp_HomogeniserBean_eur.referencePartTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true" style="font-size:12px">
                         <p:column>
                             <f:facet name="header">
-                                <h:outputText value="Assortment Group"></h:outputText>
+                                <h:outputText value="Reference Part"></h:outputText>
                             </f:facet>
                             <h:outputText value="#{data.category}"></h:outputText>
                             <f:facet name="footer"> Summary
@@ -172,7 +172,7 @@
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{rp_HomogeniserBean_eur.totTop10AssortmentSales}"></h:outputText>
+                                <h:outputText value="#{rp_HomogeniserBean_eur.totTop10ReferencePartSales}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -181,7 +181,7 @@
                             </f:facet>
                             <h:outputText value="#{data.growth}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{rp_HomogeniserBean_eur.totTop10AssortmentGrowth}"></h:outputText>
+                                <h:outputText value="#{rp_HomogeniserBean_eur.totTop10ReferencePartGrowth}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -190,18 +190,18 @@
                             </f:facet>
                             <h:outputText value="#{data.margin}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{rp_HomogeniserBean_eur.totTop10AssortmentMargin}"></h:outputText>
+                                <h:outputText value="#{rp_HomogeniserBean_eur.totTop10ReferencePartMargin}"></h:outputText>
                             </f:facet>
                         </p:column>
                     </p:dataTable>    
                 </div>
                 <div class="w3-third w3-container">
-                    <h2>R12 Sales Top-5 Assortment Grps</h2>
-                    <p:chart type="line" model="#{rp_HomogeniserBean_eur.r12AssortmentSalesModel}" style="height:500px;" responsive="true"/>
+                    <h2>R12 Sales Top-5 Reference Parts</h2>
+                    <p:chart type="line" model="#{rp_HomogeniserBean_eur.r12ReferencePartSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
                 <div class="w3-third w3-container">
-                    <h2>R12 Margin Top-5 Assortment Grps</h2>
-                    <p:chart type="line" model="#{rp_HomogeniserBean_eur.r12AssortmentMarginModel}" style="height:500px;" responsive="true"/>
+                    <h2>R12 Margin Top-5 Reference Parts</h2>
+                    <p:chart type="line" model="#{rp_HomogeniserBean_eur.r12ReferencePartMarginModel}" style="height:500px;" responsive="true"/>
                 </div>
             </div>
             <p></p>

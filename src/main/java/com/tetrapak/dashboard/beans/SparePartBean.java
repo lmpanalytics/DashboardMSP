@@ -1089,7 +1089,7 @@ public class SparePartBean implements Serializable {
     private void populateAssortmentGrpSalesMap() {
         System.out.
                 println(" I'm in the 'populateAssortmentGrpSalesMap' method.");
-//        Accumulate sales from this date to find the largest customers grps
+//        Accumulate sales from this date to find the largest assortment grps
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
         try {
@@ -1172,7 +1172,7 @@ public class SparePartBean implements Serializable {
     }
 
     /**
-     * Populate the Customer Group Sales & Margin Line Charts and Data Table
+     * Populate the Assortment Group Sales & Margin Line Charts and Data Table
      * with Rolling 12 data.
      */
     private void populateR12AssortmentGrpLineChartsAndTable() {
