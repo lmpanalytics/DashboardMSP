@@ -125,7 +125,7 @@
                 <div class="w3-half w3-container">
                     <h2>Sales Volume Top-10 Reference Parts</h2> 
 
-                    <p:dataTable value="#{rp_HomogeniserBean_qty.assortmentTableList}" var="data"
+                    <p:dataTable value="#{rp_HomogeniserBean_qty.referencePartTableList}" var="data"
                                  paginator="false" rows="10" draggableColumns="true" liveResize="true" style="font-size:12px">
                         <p:column>
                             <f:facet name="header">
@@ -141,7 +141,7 @@
                             </f:facet>                            
                             <h:outputText value="#{data.sales}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{rp_HomogeniserBean_qty.totTop10AssortmentSales}"></h:outputText>
+                                <h:outputText value="#{rp_HomogeniserBean_qty.totTop10ReferencePartSales}"></h:outputText>
                             </f:facet>
                         </p:column>
                         <p:column style="text-align:right">
@@ -150,14 +150,14 @@
                             </f:facet>
                             <h:outputText value="#{data.growth}"></h:outputText>
                             <f:facet name="footer">
-                                <h:outputText value="#{rp_HomogeniserBean_qty.totTop10AssortmentGrowth}"></h:outputText>
+                                <h:outputText value="#{rp_HomogeniserBean_qty.totTop10ReferencePartGrowth}"></h:outputText>
                             </f:facet>
                         </p:column>
                     </p:dataTable>    
                 </div>
                 <div class="w3-half w3-container">
                     <h2>R12 Sales Volume Top-5 Reference Parts</h2>
-                    <p:chart type="line" model="#{rp_HomogeniserBean_qty.r12AssortmentSalesModel}" style="height:500px;" responsive="true"/>
+                    <p:chart type="line" model="#{rp_HomogeniserBean_qty.r12ReferencePartSalesModel}" style="height:500px;" responsive="true"/>
                 </div>
             </div>
             <p></p>

@@ -74,45 +74,35 @@ public class RP_HomogeniserBean_qty implements Serializable {
     // ADD CLASS SPECIFIC MAPS AND FIELDS HERE
     private List<Object> top10Markets;
     private List<Object> top10CustomerGrps;
-    private List<Object> top10AssortmentGrps;
+    private List<Object> top10ReferenceParts;
     private Map<LocalDate, GlobalChartData> salesMap;
     private Map<String, CategoryChartData> marketSalesMap;
     private Map<String, CategoryChartData> custGrpSalesMap;
-    private Map<String, CategoryChartData> assortmentSalesMap;
+    private Map<String, CategoryChartData> referencePartSalesMap;
     private LineChartModel r12SalesModel;
     private LineChartModel r12MarketSalesModel;
     private LineChartModel r12CustGrpSalesModel;
-    private LineChartModel r12AssortmentSalesModel;
+    private LineChartModel r12ReferencePartSalesModel;
     private MeterGaugeChartModel r12GrowthModel;
     private List<CategoryTableData> marketTableList;
     private List<CategoryTableData> custGrpTableList;
-    private List<CategoryTableData> assortmentTableList;
+    private List<CategoryTableData> referencePartTableList;
     private int marketCounter;
-    private int assortmentCounter;
+    private int referencePartCounter;
     private Double globalGrowth;
     private Double globalSales;
     private Double totTop10MarketSales;
     private Double totTop10MarketGrowth;
     private Double totTop10CustGrpSales;
     private Double totTop10CustGrpGrowth;
-    private Double totTop10AssortmentSales;
-    private Double totTop10AssortmentGrowth;
+    private Double totTop10ReferencePartSales;
+    private Double totTop10ReferencePartGrowth;
     private Session session;
     private Set<String> setOfCustGrps;
     private final String CHART_COLORS;
     private String[] clusters;
     private final String SERVICE_CATEGORY;
-    private final String[] ASSORTMENT_GRPS_BU = {
-        "Homogeniser parts",
-        "Separator parts",
-        "Plate heat exchanger parts",
-        "Tubular heat exchanger parts",
-        "Scraped-surface heat exchanger parts",
-        "System equipment parts",
-        "Brazed heat exchangers",
-        "Dbf components",
-        "Dbf parts"
-    };
+    private final String[] ASSORTMENT_GRPS_BU = {"Homogeniser parts"};
     private String selectedClustersInfo;
 
     public RP_HomogeniserBean_qty() {
@@ -138,8 +128,8 @@ public class RP_HomogeniserBean_qty implements Serializable {
 //        Initialize the set of Customer group list   
         this.setOfCustGrps = new LinkedHashSet<>();
 
-//        Initialize the top-10 Assortment group list
-        this.top10AssortmentGrps = new LinkedList<>();
+//        Initialize the top-10 Reference Parts list
+        this.top10ReferenceParts = new LinkedList<>();
 
 //        Initialize the Sales map
         this.salesMap = new LinkedHashMap<>();
@@ -150,8 +140,8 @@ public class RP_HomogeniserBean_qty implements Serializable {
 //        Initialize the custGrpSalesMap
         this.custGrpSalesMap = new LinkedHashMap<>();
 
-//        Initialize the assortmentSalesMap
-        this.assortmentSalesMap = new LinkedHashMap<>();
+//        Initialize the referencePartSalesMap
+        this.referencePartSalesMap = new LinkedHashMap<>();
 
 //        Initialize the Market Table List
         this.marketTableList = new LinkedList<>();
@@ -159,8 +149,8 @@ public class RP_HomogeniserBean_qty implements Serializable {
 //        Initialize the Customer Group Table List
         this.custGrpTableList = new LinkedList<>();
 
-//        Initialize the Assortment Table List
-        this.assortmentTableList = new LinkedList<>();
+//        Initialize the Reference Part Table List
+        this.referencePartTableList = new LinkedList<>();
 
 //        Initialize and get cluster selections from the index page
         initiateClusterSelection();
@@ -177,8 +167,8 @@ public class RP_HomogeniserBean_qty implements Serializable {
 //        Populate Customer Group Map
         populateCustomerGrpSalesMap();
 
-//        Populate Assortment Group Map
-        populateAssortmentGrpSalesMap();
+//        Populate Reference Part Map
+        populateReferencePartSalesMap();
 
 //        Populate the Market Sales Volume Line Charts with Rolling 12 data
         populateR12MarketLineChartsAndTable();
@@ -186,8 +176,8 @@ public class RP_HomogeniserBean_qty implements Serializable {
 //        Populate the Customer Group Sales Volume Line Charts with Rolling 12 data
         populateR12CustomerGrpLineChartsAndTable();
 
-//        Populate the Assortment Group Sales Volume Line Charts with Rolling 12 data
-        populateR12AssortmentGrpLineChartsAndTable();
+//        Populate the Reference Part Sales Volume Line Charts with Rolling 12 data
+        populateR12ReferencePartLineChartsAndTable();
 
     }
 
@@ -243,8 +233,9 @@ public class RP_HomogeniserBean_qty implements Serializable {
 //  Speed up query if all 5 clusters are selected
                 tx = "MATCH (t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
                         + " (a:Assortment)-[:IN]->(t),"
+                        + " (ref:RefMaterial)-[:IN]->(t),"
                         + " q = (t)-[r:FOR]->(:Customer)"
-                        + " WHERE a.name IN {assortmentGrpsBU}"
+                        + " WHERE a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'"
                         + " WITH DISTINCT q AS q, r, t"
                         + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
@@ -252,8 +243,9 @@ public class RP_HomogeniserBean_qty implements Serializable {
 
                 tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
                         + " (a:Assortment)-[:IN]->(t),"
+                        + " (ref:RefMaterial)-[:IN]->(t),"
                         + " q = (t)-[r:FOR]->(:Customer)"
-                        + " WHERE c.name IN {Clusters} AND a.name IN {assortmentGrpsBU}"
+                        + " WHERE c.name IN {Clusters} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'"
                         + " WITH DISTINCT q AS q, r, t"
                         + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
@@ -407,8 +399,9 @@ public class RP_HomogeniserBean_qty implements Serializable {
 
                 tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                         + " (m:MarketDB)-[:MADE]->(t),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
+                        + " (a:Assortment)-[:IN]->(t),"
+                        + " (ref:RefMaterial)-[:IN]->(t)"
+                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Model based on Special Ledger */
                         + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
                         /* Collect the markets in a list */
@@ -416,8 +409,9 @@ public class RP_HomogeniserBean_qty implements Serializable {
             } else {
                 tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                         + " (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
+                        + " (a:Assortment)-[:IN]->(t),"
+                        + " (ref:RefMaterial)-[:IN]->(t)"
+                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Model based on Special Ledger */
                         + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
                         /* Collect the markets in a list */
@@ -436,8 +430,9 @@ public class RP_HomogeniserBean_qty implements Serializable {
 
             String tx1 = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                     + " (m:MarketDB)-[:MADE]->(t),"
-                    + " (a:Assortment)-[:IN]->(t)"
-                    + " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}" /* Use Top10 markets and model based on Special Ledger */
+                    + " (a:Assortment)-[:IN]->(t),"
+                    + " (ref:RefMaterial)-[:IN]->(t)"
+                    + " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Use Top10 markets and model based on Special Ledger */
                     + " RETURN t.year AS Year, t.month AS Month, m.mktName AS Market, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
@@ -621,8 +616,9 @@ public class RP_HomogeniserBean_qty implements Serializable {
                 //  Speed up query if all 5 clusters are selected
 
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU}"
+                        + " (a:Assortment)-[:IN]->(t),"
+                        + " (ref:RefMaterial)-[:IN]->(t)"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'"
                         + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                         /* Collect the customer groups in a list */
@@ -630,8 +626,9 @@ public class RP_HomogeniserBean_qty implements Serializable {
             } else {
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                         + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
+                        + " (a:Assortment)-[:IN]->(t),"
+                        + " (ref:RefMaterial)-[:IN]->(t)"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Model based on Special Ledger */
                         + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
                         + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                         /* Collect the customer groups in a list */
@@ -653,15 +650,17 @@ public class RP_HomogeniserBean_qty implements Serializable {
                 //  Speed up query if all 5 clusters are selected
 
                 tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND a.name IN {assortmentGrpsBU}" /* Include all Global Accounts as well */
+                        + " (a:Assortment)-[:IN]->(t),"
+                        + " (ref:RefMaterial)-[:IN]->(t)"
+                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Include all Global Accounts as well */
                         + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             } else {
                 tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                         + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Include all Global Accounts as well, and Model based on Special Ledger */
+                        + " (a:Assortment)-[:IN]->(t),"
+                        + " (ref:RefMaterial)-[:IN]->(t)"
+                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Include all Global Accounts as well, and Model based on Special Ledger */
                         + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             }
@@ -847,39 +846,42 @@ public class RP_HomogeniserBean_qty implements Serializable {
     }
 
     /**
-     * ================= ASSORTMENT GROUP CONTROLS =================
+     * ================= REFEREENCE PART CONTROLS =================
      *
-     * Populate AssortmentGrp Map with data from database. The data is limited
-     * to the Top-10 Assortment Groups based on Sales Volume in the last
-     * 12-Month period.
+     * Populate Reference Part Map with data from database. The data is limited
+     * to the Top-10 Reference Parts based on Sales Volume in the last 12-Month
+     * period.
      */
-    private void populateAssortmentGrpSalesMap() {
+    private void populateReferencePartSalesMap() {
         System.out.
-                println(" I'm in the 'populateAssortmentGrpSalesMap' method.");
+                println(" I'm in the 'populateReferencePartSalesMap' method.");
 //        Accumulate sales volume from this date to find the largest assortment grps
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
         try {
-            /* Query the ten biggest assortment groups in terms of sales volume 
+            /* Query the ten biggest Reference Parts in terms of net sales 
             over the last 12 months */
 
             String tx = "";
             if (this.clusters.length == 5) {
                 //  Speed up query if all 5 clusters are selected
-                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (t)<-[:IN]-(a:Assortment)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU}"
-                        + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
-                        /* Collect the assortment groups in a list */
-                        + " RETURN collect(assortment) AS Assortments";
+                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (t)<-[:IN]-(a:Assortment),"
+                        + " (ref:RefMaterial)-[:IN]->(t)"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'"
+                        + " WITH ref.refMtrlName AS refPart, SUM(r.netSales) AS TNetSales"
+                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top Reference Parts */
+                        /* Collect the Reference Parts in a list */
+                        + " RETURN collect(refPart) AS ReferenceParts";
             } else {
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
-                        /* Collect the assortment groups in a list */
-                        + " RETURN collect(assortment) AS Assortments";
+                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment),"
+                        + " (ref:RefMaterial)-[:IN]->(t)"
+                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Model based on Special Ledger */
+                        + " WITH ref.refMtrlName AS refPart, SUM(r.netSales) AS TNetSales"
+                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top Reference Parts */
+                        /* Collect the Reference Parts in a list */
+                        + " RETURN collect(refPart) AS ReferenceParts";
             }
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
@@ -889,26 +891,27 @@ public class RP_HomogeniserBean_qty implements Serializable {
             while (result.hasNext()) {
                 Record r = result.next();
 
-                this.top10AssortmentGrps = r.get("Assortments").asList();
+                this.top10ReferenceParts = r.get("ReferenceParts").asList();
             }
             String tx1 = "";
             if (this.clusters.length == 5) {
                 //  Speed up query if all 5 clusters are selected
-                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (t)<-[:IN]-(a:Assortment)"
-                        + " WHERE a.name IN {Assortments}"
-                        + " RETURN t.year AS Year, t.month AS Month, a.name AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (t)<-[:IN]-(ref:RefMaterial)"
+                        + " WHERE ref.refMtrlName IN {ReferenceParts}"
+                        + " RETURN t.year AS Year, t.month AS Month, ref.refMtrlName AS RefPrts, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             } else {
                 tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)" /* Model based on Special Ledger */
-                        + " WHERE a.name IN {Assortments} AND m.mktName = m.countryName AND cl.name IN {Clusters}"
-                        + " RETURN t.year AS Year, t.month AS Month, a.name AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(ref:RefMaterial)" /* Model based on Special Ledger */
+                        + " WHERE ref.refMtrlName IN {ReferenceParts} AND m.mktName = m.countryName AND cl.name IN {Clusters}"
+                        + " RETURN t.year AS Year, t.month AS Month, ref.refMtrlName AS RefPrts, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
 
             }
             StatementResult result1 = this.session.run(tx1, Values.parameters(
                     "name", this.SERVICE_CATEGORY,
-                    "Assortments", this.top10AssortmentGrps,
+                    "ReferenceParts", this.top10ReferenceParts,
                     "Clusters", this.clusters));
 
             while (result1.hasNext()) {
@@ -916,7 +919,7 @@ public class RP_HomogeniserBean_qty implements Serializable {
 
                 int year = r.get("Year").asInt();
                 int month = r.get("Month").asInt();
-                String assortmentGrp = r.get("Asg").asString();
+                String referenceParts = r.get("RefPrts").asString();
                 double netSales = r.get("NetSales").asDouble();
                 double directCost = r.get("DirectCost").asDouble();
                 double quantity = r.get("Quantity").asDouble();
@@ -924,34 +927,34 @@ public class RP_HomogeniserBean_qty implements Serializable {
 //                Make date
                 LocalDate d = Utility.makeDate(year, month);
 //                Make composite key
-                String key = d + assortmentGrp;
+                String key = d + referenceParts;
 
 //            Add results to Map
-                assortmentSalesMap.put(key, new CategoryChartData(d,
-                        assortmentGrp, netSales, directCost, quantity));
+                referencePartSalesMap.put(key, new CategoryChartData(d,
+                        referenceParts, netSales, directCost, quantity));
             }
 
 //            Print Map contents
-//        assortmentSalesMap.entrySet().stream().map((entry) -> entry.getValue()).forEachOrdered((v) -> {System.out.printf("%s;%s;%s;%s;%s\n", v.getDate(), v.getCategory(), v.getNetSales(), v.getDirectCost(), v.getQuantity());});
+//        referencePartSalesMap.entrySet().stream().map((entry) -> entry.getValue()).forEachOrdered((v) -> {System.out.printf("%s;%s;%s;%s;%s\n", v.getDate(), v.getCategory(), v.getNetSales(), v.getDirectCost(), v.getQuantity());});
         } catch (ClientException e) {
             System.err.println(
-                    "Exception in 'populateAssortmentGrpSalesMap':" + e);
+                    "Exception in 'populateReferencePartSalesMap':" + e);
         }
     }
 
     /**
-     * Populate the Assortment Group Sales Line Charts and Data Table with
-     * Rolling 12 data.
+     * Populate the Reference Part Sales Line Charts and Data Table with Rolling
+     * 12 data.
      */
-    private void populateR12AssortmentGrpLineChartsAndTable() {
+    private void populateR12ReferencePartLineChartsAndTable() {
         System.out.println(
-                "I'm in the 'populateR12AssortmentGrpLineChartsAndTable' method.");
+                "I'm in the 'populateR12ReferencePartLineChartsAndTable' method.");
 
-//        Initiate totTop10AssortmentSales
-        totTop10AssortmentSales = 0d;
+//        Initiate totTop10ReferencePartSales
+        totTop10ReferencePartSales = 0d;
 
-//        Initiate r12AssortmentSalesModel
-        r12AssortmentSalesModel = new LineChartModel();
+//        Initiate r12ReferencePartSalesModel
+        r12ReferencePartSalesModel = new LineChartModel();
 
         //        Calculate historical sales volume start dates to use in Growth calculation
         LocalDate dateT0 = Utility.makeDate(LocalDate.now().minusYears(1).
@@ -962,25 +965,26 @@ public class RP_HomogeniserBean_qty implements Serializable {
         );
 
 //       R12 algorithm based on dates
-//        Accumulate sales volume for each assortment group over rolling 12 periods
+//        Accumulate sales volume for each Reference Part over rolling 12 periods
         int rollingPeriod = 12;
-        assortmentCounter = 0;
+        referencePartCounter = 0;
         double totR12SalesT0 = 0d;
         double totR12SalesH12 = 0d;
         double totR12Growth = 0d;
 
         try {
-            for (Object asg : top10AssortmentGrps) {
+            for (Object ref : top10ReferenceParts) {
 //                Initiate chart series and variables
-                ChartSeries r12Sales = new ChartSeries(asg.toString());
+                ChartSeries r12Sales = new ChartSeries(ref.toString());
 
                 for (int i = 0; i <= (Utility.calcMonthsFromStart() - rollingPeriod + 1); i++) {
                     LocalDate date = Utility.calcStartDate().plusMonths(i).with(
                             TemporalAdjusters.lastDayOfMonth());
 
 //                Collect and sum sales volume
-                    Double salesVolumeR12 = assortmentSalesMap.values().stream().
-                            filter(m -> m.getCategory().equals(asg)
+                    Double salesVolumeR12 = referencePartSalesMap.values().
+                            stream().
+                            filter(m -> m.getCategory().equals(ref)
                             && Utility.isWithinRange(date, m.getDate())).
                             collect(Collectors.summingDouble(
                                     CategoryChartData::getQuantity));
@@ -995,9 +999,9 @@ public class RP_HomogeniserBean_qty implements Serializable {
                 }
                 /* *************** TABLE CALCULATIONS *************** */
 //                Collect and sum sales volume from two years ago for growth calculation
-                Double r12SalesH12 = assortmentSalesMap.values().stream().
+                Double r12SalesH12 = referencePartSalesMap.values().stream().
                         filter(
-                                m -> m.getCategory().equals(asg) && Utility.
+                                m -> m.getCategory().equals(ref) && Utility.
                                 isWithinRange(
                                         dateH12, m.getDate())).collect(
                                 Collectors.
@@ -1005,12 +1009,14 @@ public class RP_HomogeniserBean_qty implements Serializable {
                                                 CategoryChartData::getQuantity));
 
 //                Collect and sum sales volume from one year ago for growth calculation
-                Double r12SalesT0 = assortmentSalesMap.values().stream().filter(
-                        m -> m.getCategory().equals(asg) && Utility.
-                        isWithinRange(
-                                dateT0, m.getDate())).collect(Collectors.
-                                summingDouble(
-                                        CategoryChartData::getQuantity));
+                Double r12SalesT0 = referencePartSalesMap.values().stream().
+                        filter(
+                                m -> m.getCategory().equals(ref) && Utility.
+                                isWithinRange(
+                                        dateT0, m.getDate())).collect(
+                                Collectors.
+                                        summingDouble(
+                                                CategoryChartData::getQuantity));
 
 //            Calculate the growth
                 double growthRate = Utility.calcGrowthRate(r12SalesT0,
@@ -1020,7 +1026,7 @@ public class RP_HomogeniserBean_qty implements Serializable {
                 double r12SalesT0Rounded = Utility.roundDouble(r12SalesT0, 3);
                 double growthRateRounded = Utility.roundDouble(growthRate, 3);
 
-                assortmentTableList.add(new CategoryTableData(asg.toString(),
+                referencePartTableList.add(new CategoryTableData(ref.toString(),
                         r12SalesT0Rounded, growthRateRounded, 0d,
                         0d)
                 );
@@ -1032,41 +1038,43 @@ public class RP_HomogeniserBean_qty implements Serializable {
                 totR12Growth = Utility.calcGrowthRate(totR12SalesT0,
                         totR12SalesH12);
 
-                //        Set number of assortment groups in the charts
-                if (assortmentCounter < 5) {
-                    //        Populate r12AssortmentSalesModel             
-                    r12AssortmentSalesModel.addSeries(r12Sales);
-                    r12Sales.setLabel(asg.toString());
+                //        Set number of Reference Parts in the charts
+                if (referencePartCounter < 5) {
+                    //        Populate r12ReferencePartSalesModel             
+                    r12ReferencePartSalesModel.addSeries(r12Sales);
+                    r12Sales.setLabel(ref.toString());
 
-                    assortmentCounter++;
+                    referencePartCounter++;
                 }
             }
             /* *************** TABLE SUMMARY CALCULATIONS *************** */
 //  Sort category list in decending order based on sales volume
-            Collections.sort(assortmentTableList,
+            Collections.sort(referencePartTableList,
                     (CategoryTableData a, CategoryTableData b) -> b.getSales().
                             compareTo(a.getSales()));
 
             /*  Round total R12 Sales and Growth to 3 significant figures and
             assign to class field. */
-            this.totTop10AssortmentSales = Utility.roundDouble(totR12SalesT0, 3);
-            this.totTop10AssortmentGrowth = Utility.roundDouble(totR12Growth, 3);
+            this.totTop10ReferencePartSales = Utility.roundDouble(totR12SalesT0,
+                    3);
+            this.totTop10ReferencePartGrowth = Utility.roundDouble(totR12Growth,
+                    3);
 
             /* *************** CHART PARAMETERS *************** */
 //        Set chart parameters for the sales volume chart
-            r12AssortmentSalesModel.setLegendPosition("nw");
-            r12AssortmentSalesModel.getAxis(AxisType.Y).setLabel("kPcs");
-            r12AssortmentSalesModel.setSeriesColors(this.CHART_COLORS);
+            r12ReferencePartSalesModel.setLegendPosition("nw");
+            r12ReferencePartSalesModel.getAxis(AxisType.Y).setLabel("kPcs");
+            r12ReferencePartSalesModel.setSeriesColors(this.CHART_COLORS);
             DateAxis axis = new DateAxis("Dates");
             axis.setTickAngle(-50);
             axis.setMax(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             axis.setTickFormat("%y-%b-%#d");
-            r12AssortmentSalesModel.getAxes().put(AxisType.X, axis);
-            r12AssortmentSalesModel.setAnimate(true);
+            r12ReferencePartSalesModel.getAxes().put(AxisType.X, axis);
+            r12ReferencePartSalesModel.setAnimate(true);
 
         } catch (ClientException e) {
             System.err.println(
-                    "Exception in 'populateR12AssortmentGrpLineChartsAndTable method':" + e);
+                    "Exception in 'populateR12ReferencePartLineChartsAndTable method':" + e);
         }
     }
 
@@ -1123,20 +1131,20 @@ public class RP_HomogeniserBean_qty implements Serializable {
         return custGrpTableList;
     }
 
-    public LineChartModel getR12AssortmentSalesModel() {
-        return r12AssortmentSalesModel;
+    public LineChartModel getR12ReferencePartSalesModel() {
+        return r12ReferencePartSalesModel;
     }
 
-    public List<CategoryTableData> getAssortmentTableList() {
-        return assortmentTableList;
+    public List<CategoryTableData> getReferencePartTableList() {
+        return referencePartTableList;
     }
 
-    public Double getTotTop10AssortmentSales() {
-        return totTop10AssortmentSales;
+    public Double getTotTop10ReferencePartSales() {
+        return totTop10ReferencePartSales;
     }
 
-    public Double getTotTop10AssortmentGrowth() {
-        return totTop10AssortmentGrowth;
+    public Double getTotTop10ReferencePartGrowth() {
+        return totTop10ReferencePartGrowth;
     }
 
 }
