@@ -106,6 +106,18 @@
                 </h:commandButton>
                 <h:outputLabel for="rpPHE_Qty" value="" />
             </h:panelGrid>
+            <h:panelGrid columns="4" cellpadding="5">             
+                <h:commandButton id="rpTHE_Eur" value="THE RP (Eur.)"
+                                 action="dashboardRP_THE_eur" rendered="#{user.renderBULF_DB}">
+                </h:commandButton>
+                <h:outputLabel for="rpTHE_Eur" value="" />
+            </h:panelGrid>
+            <h:panelGrid columns="4" cellpadding="5">             
+                <h:commandButton id="rpTHE_Qty" value="THE RP (Qty.)"
+                                 action="dashboardRP_THE_qty" rendered="#{user.renderBULF_DB}">
+                </h:commandButton>
+                <h:outputLabel for="rpTHE_Qty" value="" />
+            </h:panelGrid>
         </h:form>
         <p:separator />
         All dashboards based on data from clusters only. Sales data booked on Business Units is excluded.
