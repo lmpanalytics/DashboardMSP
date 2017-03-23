@@ -993,7 +993,11 @@ public class RP_HomogeniserBean_qty implements Serializable {
                             TemporalAdjusters.lastDayOfMonth()).format(
                             DateTimeFormatter.ISO_DATE);
 
-                    //        Add data to r12Sales series        
+                    /* Add data to r12Sales series, and do factor adjustments 
+                    for chart readability if needed */
+                    if (r12Sales.getLabel().equals("Piston Seal")) {
+                        salesVolumeR12 = salesVolumeR12 / 10d;
+                    }
                     r12Sales.set(chartDate, salesVolumeR12);
 
                 }
