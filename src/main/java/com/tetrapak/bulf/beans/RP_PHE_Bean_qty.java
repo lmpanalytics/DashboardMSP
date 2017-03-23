@@ -846,7 +846,7 @@ public class RP_PHE_Bean_qty implements Serializable {
     }
 
     /**
-     * ================= REFEREENCE PART CONTROLS =================
+     * ================= REFERENCE PART CONTROLS =================
      *
      * Populate Reference Part Map with data from database. The data is limited
      * to the Top-10 Reference Parts based on Sales Volume in the last 12-Month
@@ -855,7 +855,7 @@ public class RP_PHE_Bean_qty implements Serializable {
     private void populateReferencePartSalesMap() {
         System.out.
                 println(" I'm in the 'populateReferencePartSalesMap' method.");
-//        Accumulate sales volume from this date to find the largest assortment grps
+//        Accumulate sales volume from this date to find the largest Reference part grps
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
         try {
@@ -897,14 +897,16 @@ public class RP_PHE_Bean_qty implements Serializable {
             if (this.clusters.length == 5) {
                 //  Speed up query if all 5 clusters are selected
                 tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                        + " (t)<-[:IN]-(a:Assortment),"
                         + " (t)<-[:IN]-(ref:RefMaterial)"
-                        + " WHERE ref.refMtrlName IN {ReferenceParts}"
+                        + " WHERE a.name IN {assortmentGrpsBU} AND ref.refMtrlName IN {ReferenceParts}"
                         + " RETURN t.year AS Year, t.month AS Month, ref.refMtrlName AS RefPrts, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
             } else {
                 tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(ref:RefMaterial)" /* Model based on Special Ledger */
-                        + " WHERE ref.refMtrlName IN {ReferenceParts} AND m.mktName = m.countryName AND cl.name IN {Clusters}"
+                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)," /* Model based on Special Ledger */
+                        + " (t)<-[:IN]-(ref:RefMaterial)"
+                        + " WHERE a.name IN {assortmentGrpsBU} AND ref.refMtrlName IN {ReferenceParts} AND m.mktName = m.countryName AND cl.name IN {Clusters}"
                         + " RETURN t.year AS Year, t.month AS Month, ref.refMtrlName AS RefPrts, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                         + " ORDER BY Year, Month";
 
@@ -912,7 +914,8 @@ public class RP_PHE_Bean_qty implements Serializable {
             StatementResult result1 = this.session.run(tx1, Values.parameters(
                     "name", this.SERVICE_CATEGORY,
                     "ReferenceParts", this.top10ReferenceParts,
-                    "Clusters", this.clusters));
+                    "Clusters", this.clusters,
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
             while (result1.hasNext()) {
                 Record r = result1.next();
