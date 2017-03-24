@@ -106,7 +106,7 @@ public class RP_WrapperBean_qty implements Serializable {
     private String selectedClustersInfo;
     private final String[] REFERENCE_PARTS = {
         "Heating Elements",
-        "Knife And Jaw",};
+        "Knife And Jaw"};
 
     public RP_WrapperBean_qty() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";

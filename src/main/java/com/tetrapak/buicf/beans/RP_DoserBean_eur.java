@@ -50,7 +50,7 @@ import utility.Utility;
  *
  * @author SEPALMM
  */
-@Named(value = "rp_WrapperBean_eur")
+@Named(value = "rp_DoserBean_eur")
 @Stateful
 @RequestScoped
 
@@ -58,7 +58,7 @@ import utility.Utility;
         {"CENTRAL_TEAM", "BULF_DB", "BUICF_DB", "CPS_DB", "ALF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
 @RolesAllowed(
         {"CENTRAL_TEAM", "BUICF_DB", "ECA_DB", "GC_DB", "GMEA_DB", "NCSA_DB", "SAEAO_DB"})
-public class RP_WrapperBean_eur implements Serializable {
+public class RP_DoserBean_eur implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -114,10 +114,10 @@ public class RP_WrapperBean_eur implements Serializable {
     private final String[] ASSORTMENT_GRPS_BU = {"Ice cream equipment parts"};
     private String selectedClustersInfo;
     private final String[] REFERENCE_PARTS = {
-        "Heating Elements",
-        "Knife And Jaw"};
+        "ID_Lamella Set",
+        "ID_Service Kits"};
 
-    public RP_WrapperBean_eur() {
+    public RP_DoserBean_eur() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
         this.SERVICE_CATEGORY = "Parts";
 
@@ -125,7 +125,7 @@ public class RP_WrapperBean_eur implements Serializable {
 
     @PostConstruct
     public void init() {
-        System.out.println("I'm in the 'RP_WrapperBean_eur.init()' method.");
+        System.out.println("I'm in the 'RP_DoserBean_eur.init()' method.");
 
 // INITIALIZE CLASS SPECIFIC MAPS AND FIELDS HERE
 //      Initialize driver
