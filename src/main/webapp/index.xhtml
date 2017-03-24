@@ -91,6 +91,11 @@
                                  style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpHomogeniserEur" value="" />
+                <h:commandButton id="rpFreezerEur" value="Freezer RP (Eur.)"
+                                 action="dashboardRP_Freezer_eur" rendered="#{user.renderBUICF_DB}" 
+                                 style="width: 175px; text-align: center">
+                </h:commandButton>
+                <h:outputLabel for="rpFreezerEur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpHomogeniserQty" value="Homogeniser RP (Qty.)"
@@ -98,6 +103,11 @@
                                  style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpHomogeniserQty" value="" />
+                <h:commandButton id="rpFreezerQty" value="Freezer RP (Qty.)"
+                                 action="dashboardRP_Freezer_qty" rendered="#{user.renderBUICF_DB}" 
+                                 style="width: 175px; text-align: center">
+                </h:commandButton>
+                <h:outputLabel for="rpFreezerQty" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpSeparatorEur" value="Separator RP (Eur.)"
