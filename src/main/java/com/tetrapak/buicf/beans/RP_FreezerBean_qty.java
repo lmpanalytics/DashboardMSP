@@ -1015,7 +1015,13 @@ public class RP_FreezerBean_qty implements Serializable {
 
                     /* Add data to r12Sales series, and do factor adjustments 
                     for chart readability if needed */
-                    // if (r12Sales.getLabel().equals("*** insert ref part name here ***")) {salesVolumeR12 = salesVolumeR12 / 10d;}
+                    if (r12Sales.getLabel().equals("Scraper Blade")) {
+                        salesVolumeR12 = salesVolumeR12 / 10d;
+                    }
+                    if (r12Sales.getLabel().equals("FP_Pump Kit Ext")
+                            || r12Sales.getLabel().equals("FI_Cooling Parts")) {
+                        salesVolumeR12 = salesVolumeR12 / 5d;
+                    }
                     r12Sales.set(chartDate, salesVolumeR12);
 
                 }
