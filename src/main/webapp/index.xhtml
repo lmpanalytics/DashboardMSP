@@ -60,79 +60,105 @@
         <h:form>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="spSalesBULFeur" value="BULF (Eur.)"
-                                 action="dashboardSP_BULF_eur" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardSP_BULF_eur" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBULFeur" value="" />
+                <h:commandButton id="spSalesBUICFeur" value="BUICF (Eur.)"
+                                 action="dashboardSP_BUICF_eur" rendered="#{user.renderBUICF_DB}" 
+                                 style="width: 175px; text-align: center">
+                </h:commandButton>
+                <h:outputLabel for="spSalesBUICFeur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="spSalesBULFqty" value="BULF (Qty.)"
-                                 action="dashboardSP_BULF_qty" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardSP_BULF_qty" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBULFqty" value="" />
+                <h:commandButton id="spSalesBUICFqty" value="BUICF (Qty.)"
+                                 action="dashboardSP_BUICF_qty" rendered="#{user.renderBUICF_DB}" 
+                                 style="width: 175px; text-align: center">
+                </h:commandButton>
+                <h:outputLabel for="spSalesBUICFqty" value="" />
             </h:panelGrid>
+
+            <h4>BU Reference Parts</h4>
+
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpHomogeniserEur" value="Homogeniser RP (Eur.)"
-                                 action="dashboardRP_Homogeniser_eur" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_Homogeniser_eur" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpHomogeniserEur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpHomogeniserQty" value="Homogeniser RP (Qty.)"
-                                 action="dashboardRP_Homogeniser_qty" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_Homogeniser_qty" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpHomogeniserQty" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpSeparatorEur" value="Separator RP (Eur.)"
-                                 action="dashboardRP_Separator_eur" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_Separator_eur" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSeparatorEur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpSeparatorQty" value="Separator RP (Qty.)"
-                                 action="dashboardRP_Separator_qty" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_Separator_qty" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSeparatorQty" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpPHE_Eur" value="PHE RP (Eur.)"
-                                 action="dashboardRP_PHE_eur" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_PHE_eur" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpPHE_Eur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpPHE_Qty" value="PHE RP (Qty.)"
-                                 action="dashboardRP_PHE_qty" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_PHE_qty" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpPHE_Qty" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpTHE_Eur" value="THE RP (Eur.)"
-                                 action="dashboardRP_THE_eur" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_THE_eur" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpTHE_Eur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpTHE_Qty" value="THE RP (Qty.)"
-                                 action="dashboardRP_THE_qty" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_THE_qty" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpTHE_Qty" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpSSHE_Eur" value="SSHE RP (Eur.)"
-                                 action="dashboardRP_SSHE_eur" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_SSHE_eur" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSSHE_Eur" value="" />
             </h:panelGrid>
             <h:panelGrid columns="4" cellpadding="5">             
                 <h:commandButton id="rpSSHE_Qty" value="SSHE RP (Qty.)"
-                                 action="dashboardRP_SSHE_qty" rendered="#{user.renderBULF_DB}">
+                                 action="dashboardRP_SSHE_qty" rendered="#{user.renderBULF_DB}" 
+                                 style="width: 175px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSSHE_Qty" value="" />
             </h:panelGrid>
         </h:form>
         <p:separator />
-        All dashboards based on data from clusters only. Sales data booked on Business Units is excluded.
+        All dashboards based on data from clusters only. 
+        Sales data booked on Business Units is excluded.
     </h:body>
 </html>
 

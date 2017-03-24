@@ -51,6 +51,7 @@ public class User implements Serializable {
     private boolean isRenderCategory_DB;
 
     private boolean isRenderBULF_DB;
+    private boolean isRenderBUICF_DB;
 
 //    Constructor
     public User() {
@@ -74,6 +75,7 @@ public class User implements Serializable {
         isRenderCluster_DB();
         isRenderCategory_DB();
         isRenderBULF_DB();
+        isRenderBUICF_DB();
 
     }
 
@@ -145,5 +147,13 @@ public class User implements Serializable {
             isRenderBULF_DB = true;
         }
         return isRenderBULF_DB;
+    }
+
+    //    Condition to render BUICF Report selections on index page    
+    public boolean isRenderBUICF_DB() {
+        if (isCentralTeamUser || isBUICF_DB_User || isECA_DB_User || isGC_DB_User || isGMEA_DB_User || isNCSA_DB_User || isSAEAO_DB_User) {
+            isRenderBUICF_DB = true;
+        }
+        return isRenderBUICF_DB;
     }
 }
