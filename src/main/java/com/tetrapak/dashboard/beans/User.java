@@ -53,6 +53,7 @@ public class User implements Serializable {
     private boolean isRenderBULF_DB;
     private boolean isRenderBUICF_DB;
     private boolean isRenderCPS_DB;
+    private boolean isRenderALF_DB;
 
 //    Constructor
     public User() {
@@ -78,6 +79,7 @@ public class User implements Serializable {
         isRenderBULF_DB();
         isRenderBUICF_DB();
         isRenderCPS_DB();
+        isRenderALF_DB();
 
     }
 
@@ -165,5 +167,13 @@ public class User implements Serializable {
             isRenderCPS_DB = true;
         }
         return isRenderCPS_DB;
+    }
+
+    //    Condition to render ALF Report selections on index page    
+    public boolean isRenderALF_DB() {
+        if (isCentralTeamUser || isALF_DB_User || isECA_DB_User || isGC_DB_User || isGMEA_DB_User || isNCSA_DB_User || isSAEAO_DB_User) {
+            isRenderALF_DB = true;
+        }
+        return isRenderALF_DB;
     }
 }
