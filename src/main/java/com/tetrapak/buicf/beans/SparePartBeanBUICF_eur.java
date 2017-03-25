@@ -120,7 +120,7 @@ public class SparePartBeanBUICF_eur implements Serializable {
     private final String CHART_COLORS;
     private String[] clusters;
     private final String SERVICE_CATEGORY;
-    private final String[] ASSORTMENT_GRPS_BU = {"Ice cream equipment parts"};
+    private final String[] ASSORTMENT_GRPS_BU = {"Ice cream equipment parts", "Cosmetics"};
     private String selectedClustersInfo;
 
     public SparePartBeanBUICF_eur() {
