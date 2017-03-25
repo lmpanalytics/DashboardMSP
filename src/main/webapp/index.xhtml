@@ -61,17 +61,17 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="spSalesBULFeur" value="BULF (Eur.)"
                                  action="dashboardSP_BULF_eur" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBULFeur" value="" />
                 <h:commandButton id="spSalesBUICFeur" value="BUICF (Eur.)"
                                  action="dashboardSP_BUICF_eur" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBUICFeur" value="" />
                 <h:commandButton id="spSalesCPSeur" value="CPS (Eur.)"
                                  action="dashboardSP_CPS_eur" rendered="#{user.renderCPS_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesCPSeur" value="" />
             </h:panelGrid>
@@ -79,17 +79,17 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="spSalesBULFqty" value="BULF (Qty.)"
                                  action="dashboardSP_BULF_qty" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBULFqty" value="" />
                 <h:commandButton id="spSalesBUICFqty" value="BUICF (Qty.)"
                                  action="dashboardSP_BUICF_qty" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBUICFqty" value="" />
                 <h:commandButton id="spSalesCPSqty" value="CPS (Qty.)"
                                  action="dashboardSP_CPS_qty" rendered="#{user.renderCPS_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesCPSqty" value="" />
             </h:panelGrid>
@@ -99,42 +99,52 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpHomogeniserEur" value="Homogeniser RP (Eur.)"
                                  action="dashboardRP_Homogeniser_eur" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpHomogeniserEur" value="" />
 
                 <h:commandButton id="rpFreezerEur" value="Freezer RP (Eur.)"
                                  action="dashboardRP_Freezer_eur" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpFreezerEur" value="" />
+                <h:commandButton id="rpCPSEur" value="CPS RP (Eur.)"
+                                 action="dashboardRP_CPS_eur" rendered="#{user.renderBUICF_DB}" 
+                                 style="width: 200px; text-align: center">
+                </h:commandButton>
+                <h:outputLabel for="rpCPSEur" value="" />
             </h:panelGrid>
 
 
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpHomogeniserQty" value="Homogeniser RP (Qty.)"
                                  action="dashboardRP_Homogeniser_qty" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpHomogeniserQty" value="" />
 
                 <h:commandButton id="rpFreezerQty" value="Freezer RP (Qty.)"
                                  action="dashboardRP_Freezer_qty" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpFreezerQty" value="" />
+                <h:commandButton id="rpCPSQty" value="CPS RP (Qty.)"
+                                 action="dashboardRP_CPS_qty" rendered="#{user.renderBUICF_DB}" 
+                                 style="width: 200px; text-align: center">
+                </h:commandButton>
+                <h:outputLabel for="rpCPSQty" value="" />
             </h:panelGrid>
 
 
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpSeparatorEur" value="Separator RP (Eur.)"
                                  action="dashboardRP_Separator_eur" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSeparatorEur" value="" />
                 <h:commandButton id="rpWrapperEur" value="Wrapper RP (Eur.)"
                                  action="dashboardRP_Wrapper_eur" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpWrapperEur" value="" />    
             </h:panelGrid>                         
@@ -143,12 +153,12 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpSeparatorQty" value="Separator RP (Qty.)"
                                  action="dashboardRP_Separator_qty" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSeparatorQty" value="" />
                 <h:commandButton id="rpWrapperQty" value="Wrapper RP (Qty.)"
                                  action="dashboardRP_Wrapper_qty" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpWrapperQty" value="" />
             </h:panelGrid>
@@ -156,12 +166,12 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpPHE_Eur" value="PHE RP (Eur.)"
                                  action="dashboardRP_PHE_eur" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpPHE_Eur" value="" />
                 <h:commandButton id="rpDoserEur" value="Ingredient Doser RP (Eur.)"
                                  action="dashboardRP_Doser_eur" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpDoserEur" value="" />
             </h:panelGrid>
@@ -170,12 +180,12 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpPHE_Qty" value="PHE RP (Qty.)"
                                  action="dashboardRP_PHE_qty" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpPHE_Qty" value="" />
                 <h:commandButton id="rpDoserQty" value="Ingredient Doser RP (Qty.)"
                                  action="dashboardRP_Doser_qty" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpDoserQty" value="" />
             </h:panelGrid>
@@ -184,12 +194,12 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpTHE_Eur" value="THE RP (Eur.)"
                                  action="dashboardRP_THE_eur" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpTHE_Eur" value="" />
                 <h:commandButton id="rpIC_LinesEur" value="IC Lines RP (Eur.)"
                                  action="dashboardRP_IC_Lines_eur" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpIC_LinesEur" value="" />
             </h:panelGrid>
@@ -198,12 +208,12 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpTHE_Qty" value="THE RP (Qty.)"
                                  action="dashboardRP_THE_qty" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpTHE_Qty" value="" />
                 <h:commandButton id="rpIC_LinesQty" value="IC Lines RP (Qty.)"
                                  action="dashboardRP_IC_Lines_qty" rendered="#{user.renderBUICF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpIC_LinesQty" value="" />
             </h:panelGrid>
@@ -212,7 +222,7 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpSSHE_Eur" value="SSHE RP (Eur.)"
                                  action="dashboardRP_SSHE_eur" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSSHE_Eur" value="" />
             </h:panelGrid>
@@ -221,7 +231,7 @@
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpSSHE_Qty" value="SSHE RP (Qty.)"
                                  action="dashboardRP_SSHE_qty" rendered="#{user.renderBULF_DB}" 
-                                 style="width: 175px; text-align: center">
+                                 style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSSHE_Qty" value="" />
             </h:panelGrid>
