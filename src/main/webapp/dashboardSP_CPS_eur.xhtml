@@ -1,0 +1,249 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions">
+    <h:head>
+        <h:head>
+            <f:facet name="first">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+                <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+                <title>Dashboard CPS Eur</title>
+                <link rel="stylesheet" href="resources/css/w3.css"/>
+            </f:facet>
+        </h:head>
+    </h:head>
+    <h:body>
+        <f:view contentType="text/html">
+            <header class="w3-container w3-red">
+                <h1>CPS Spare Parts (Euro)</h1>
+                <h6>#{sparePartBeanCPS_eur.selectedClustersInfo}</h6>
+            </header>
+            <div class="w3-row">
+                <div class="w3-third w3-container">
+                    <h2>R12 Growth #{sparePartBeanCPS_eur.globalGrowth}%</h2>
+                    Global TS&amp;S TG 7.2%
+                    <p:chart type="metergauge" model="#{sparePartBeanCPS_eur.r12GrowthModel}"  responsive="true"/>
+                </div>
+                <div class="w3-third w3-container">
+
+                    <h2>R12 Sales #{sparePartBeanCPS_eur.globalSales} MEur</h2>
+                    Global BU TG 125 MEur
+                    <p:chart type="line" model="#{sparePartBeanCPS_eur.r12SalesModel}" style="height:400px;" responsive="true"/>
+
+                </div>
+                <div class="w3-third w3-container">
+                    <h2>R12 Net Margin #{sparePartBeanCPS_eur.globalMargin}%</h2>
+                    Global TS&amp;S TG 49.4%
+                    <p:chart type="line" model="#{sparePartBeanCPS_eur.r12MarginModel}" style="height:400px;" responsive="true"/>
+                </div>
+            </div>
+            <p:separator />
+            <!-- MARKET COMPONENTS -->
+            <div class="w3-row">
+                <div class="w3-third w3-container">
+                    <h2>Sales Top-10 Markets</h2> 
+
+                    <p:dataTable value="#{sparePartBeanCPS_eur.marketTableList}" var="data"
+                                 paginator="false" rows="10" draggableColumns="true" liveResize="true" style="font-size:12px">
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Market"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.category}"></h:outputText>
+                            <f:facet name="footer"> Summary
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Sales (MEur)"></h:outputText>
+                            </f:facet>                            
+                            <h:outputText value="#{data.sales}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10MarketSales}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Growth (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.growth}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10MarketGrowth}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Margin (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.margin}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10MarketMargin}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Potential (MEur)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.potential}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10MarketPotential}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                    </p:dataTable>    
+                </div>
+                <div class="w3-third w3-container">
+                    <h2>R12 Sales Top-5 Markets</h2>
+                    <p:chart type="line" model="#{sparePartBeanCPS_eur.r12MarketSalesModel}" style="height:500px;" responsive="true"/>
+                </div>
+                <div class="w3-third w3-container">
+                    <h2>R12 Margin Top-5 Markets</h2>
+                    <p:chart type="line" model="#{sparePartBeanCPS_eur.r12MarketMarginModel}" style="height:500px;" responsive="true"/>
+                </div>              
+            </div>
+            <p:separator />
+            <!-- CUSTOMER GROUP COMPONENTS -->
+            <div class="w3-row">
+                <div class="w3-third w3-container">
+                    <h2>Sales Top-10 Customer Groups</h2> 
+
+                    <p:dataTable value="#{sparePartBeanCPS_eur.custGrpTableList}" var="data"
+                                 paginator="false" rows="15" draggableColumns="true" liveResize="true" style="font-size:12px">
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Customer Group"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.category}"></h:outputText>
+                            <f:facet name="footer"> Summary
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Sales (MEur)"></h:outputText>
+                            </f:facet>                            
+                            <h:outputText value="#{data.sales}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10CustGrpSales}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Growth (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.growth}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10CustGrpGrowth}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Margin (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.margin}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10CustGrpMargin}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Potential (MEur)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.potential}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10CustGrpPotential}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                    </p:dataTable>  
+                    (Including Global Accounts) 
+                </div>
+                <div class="w3-third w3-container">
+                    <h2>R12 Sales Top-5 Customer Groups</h2>
+                    <p:chart type="line" model="#{sparePartBeanCPS_eur.r12CustGrpSalesModel}" style="height:500px;" responsive="true"/>
+                </div>
+                <div class="w3-third w3-container">
+                    <h2>R12 Margin Top-5 Customer Groups</h2>
+                    <p:chart type="line" model="#{sparePartBeanCPS_eur.r12CustGrpMarginModel}" style="height:500px;" responsive="true"/>
+                </div>
+            </div>
+            <p:separator />
+            <!-- ASSORTMENT GROUP COMPONENTS -->
+            <div class="w3-row">
+                <div class="w3-third w3-container">
+                    <h2>Sales Top-10 Assortment Groups</h2> 
+
+                    <p:dataTable value="#{sparePartBeanCPS_eur.assortmentTableList}" var="data"
+                                 paginator="false" rows="10" draggableColumns="true" liveResize="true" style="font-size:12px">
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="Assortment Group"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.category}"></h:outputText>
+                            <f:facet name="footer"> Summary
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Sales (MEur)"></h:outputText>
+                            </f:facet>                            
+                            <h:outputText value="#{data.sales}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10AssortmentSales}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Growth (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.growth}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10AssortmentGrowth}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Margin (%)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.margin}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10AssortmentMargin}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                        <p:column style="text-align:right">
+                            <f:facet name="header">
+                                <h:outputText value="Potential (MEur)"></h:outputText>
+                            </f:facet>
+                            <h:outputText value="#{data.potential}"></h:outputText>
+                            <f:facet name="footer">
+                                <h:outputText value="#{sparePartBeanCPS_eur.totTop10AssortmentPotential}"></h:outputText>
+                            </f:facet>
+                        </p:column>
+                    </p:dataTable>    
+                </div>
+                <div class="w3-third w3-container">
+                    <h2>R12 Sales Top-5 Assortment Grps</h2>
+                    <p:chart type="line" model="#{sparePartBeanCPS_eur.r12AssortmentSalesModel}" style="height:500px;" responsive="true"/>
+                </div>
+                <div class="w3-third w3-container">
+                    <h2>R12 Margin Top-5 Assortment Grps</h2>
+                    <p:chart type="line" model="#{sparePartBeanCPS_eur.r12AssortmentMarginModel}" style="height:500px;" responsive="true"/>
+                </div>
+            </div>
+            <p></p>
+            <footer class="w3-container w3-light-grey">
+                <h6>#{sparePartBeanCPS_eur.selectedClustersInfo}</h6>
+                <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report.</h5>
+            </footer>
+            <h:form>
+                <p></p>
+                <h:commandButton id="index" value="Return to Index"
+                                 action="index">
+                </h:commandButton>
+                <p></p>
+            </h:form>
+        </f:view>
+    </h:body>
+</html>
+

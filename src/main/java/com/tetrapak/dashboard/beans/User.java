@@ -52,6 +52,7 @@ public class User implements Serializable {
 
     private boolean isRenderBULF_DB;
     private boolean isRenderBUICF_DB;
+    private boolean isRenderCPS_DB;
 
 //    Constructor
     public User() {
@@ -76,6 +77,7 @@ public class User implements Serializable {
         isRenderCategory_DB();
         isRenderBULF_DB();
         isRenderBUICF_DB();
+        isRenderCPS_DB();
 
     }
 
@@ -155,5 +157,13 @@ public class User implements Serializable {
             isRenderBUICF_DB = true;
         }
         return isRenderBUICF_DB;
+    }
+
+    //    Condition to render CPS Report selections on index page    
+    public boolean isRenderCPS_DB() {
+        if (isCentralTeamUser || isCPS_DB_User || isECA_DB_User || isGC_DB_User || isGMEA_DB_User || isNCSA_DB_User || isSAEAO_DB_User) {
+            isRenderCPS_DB = true;
+        }
+        return isRenderCPS_DB;
     }
 }
