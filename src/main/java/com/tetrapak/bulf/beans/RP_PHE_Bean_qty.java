@@ -402,8 +402,8 @@ public class RP_PHE_Bean_qty implements Serializable {
                         + " (a:Assortment)-[:IN]->(t),"
                         + " (ref:RefMaterial)-[:IN]->(t)"
                         + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Model based on Special Ledger */
-                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                        + " WITH m.mktName AS Market, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top markets */
                         /* Collect the markets in a list */
                         + " RETURN collect(Market) AS Markets";
             } else {
@@ -412,8 +412,8 @@ public class RP_PHE_Bean_qty implements Serializable {
                         + " (a:Assortment)-[:IN]->(t),"
                         + " (ref:RefMaterial)-[:IN]->(t)"
                         + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Model based on Special Ledger */
-                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                        + " WITH m.mktName AS Market, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top markets */
                         /* Collect the markets in a list */
                         + " RETURN collect(Market) AS Markets";
             }
@@ -619,8 +619,8 @@ public class RP_PHE_Bean_qty implements Serializable {
                         + " (a:Assortment)-[:IN]->(t),"
                         + " (ref:RefMaterial)-[:IN]->(t)"
                         + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'"
-                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
+                        + " WITH c.custGroup AS CustGroup, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                         /* Collect the customer groups in a list */
                         + " RETURN collect(CustGroup) AS CustGroups";
             } else {
@@ -629,8 +629,8 @@ public class RP_PHE_Bean_qty implements Serializable {
                         + " (a:Assortment)-[:IN]->(t),"
                         + " (ref:RefMaterial)-[:IN]->(t)"
                         + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Model based on Special Ledger */
-                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
+                        + " WITH c.custGroup AS CustGroup, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                         /* Collect the customer groups in a list */
                         + " RETURN collect(CustGroup) AS CustGroups";
             }
@@ -869,8 +869,8 @@ public class RP_PHE_Bean_qty implements Serializable {
                         + " (t)<-[:IN]-(a:Assortment),"
                         + " (ref:RefMaterial)-[:IN]->(t)"
                         + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'"
-                        + " WITH ref.refMtrlName AS refPart, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top Reference Parts */
+                        + " WITH ref.refMtrlName AS refPart, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top Reference Parts */
                         /* Collect the Reference Parts in a list */
                         + " RETURN collect(refPart) AS ReferenceParts";
             } else {
@@ -878,8 +878,8 @@ public class RP_PHE_Bean_qty implements Serializable {
                         + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment),"
                         + " (ref:RefMaterial)-[:IN]->(t)"
                         + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU} AND ref.refMtrlName <> 'Other'" /* Model based on Special Ledger */
-                        + " WITH ref.refMtrlName AS refPart, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top Reference Parts */
+                        + " WITH ref.refMtrlName AS refPart, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top Reference Parts */
                         /* Collect the Reference Parts in a list */
                         + " RETURN collect(refPart) AS ReferenceParts";
             }

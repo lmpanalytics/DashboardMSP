@@ -399,8 +399,8 @@ public class SparePartBeanCPS_qty implements Serializable {
                         + " (m:MarketDB)-[:MADE]->(t),"
                         + " (a:Assortment)-[:IN]->(t)"
                         + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                        + " WITH m.mktName AS Market, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top markets */
                         /* Collect the markets in a list */
                         + " RETURN collect(Market) AS Markets";
             } else {
@@ -408,8 +408,8 @@ public class SparePartBeanCPS_qty implements Serializable {
                         + " (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
                         + " (a:Assortment)-[:IN]->(t)"
                         + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                        + " WITH m.mktName AS Market, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top markets */
                         /* Collect the markets in a list */
                         + " RETURN collect(Market) AS Markets";
             }
@@ -613,8 +613,8 @@ public class SparePartBeanCPS_qty implements Serializable {
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                         + " (a:Assortment)-[:IN]->(t)"
                         + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU}"
-                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
+                        + " WITH c.custGroup AS CustGroup, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                         /* Collect the customer groups in a list */
                         + " RETURN collect(CustGroup) AS CustGroups";
             } else {
@@ -622,8 +622,8 @@ public class SparePartBeanCPS_qty implements Serializable {
                         + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
                         + " (a:Assortment)-[:IN]->(t)"
                         + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
+                        + " WITH c.custGroup AS CustGroup, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                         /* Collect the customer groups in a list */
                         + " RETURN collect(CustGroup) AS CustGroups";
             }
@@ -858,16 +858,16 @@ public class SparePartBeanCPS_qty implements Serializable {
                 //  Speed up query if all 5 clusters are selected
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (t)<-[:IN]-(a:Assortment)"
                         + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU}"
-                        + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
+                        + " WITH a.name AS assortment, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
                         /* Collect the assortment groups in a list */
                         + " RETURN collect(assortment) AS Assortments";
             } else {
                 tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                         + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)"
                         + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
+                        + " WITH a.name AS assortment, SUM(r.quantity) AS TVolSales"
+                        + " ORDER BY TVolSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
                         /* Collect the assortment groups in a list */
                         + " RETURN collect(assortment) AS Assortments";
             }
