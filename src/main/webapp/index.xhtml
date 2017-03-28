@@ -186,7 +186,7 @@
 
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpPHE_Eur" value="PHE RP (Eur.)"
-                                 action="dashboardRP_PHE_eur" rendered="false" 
+                                 action="dashboardRP_PHE_eur" rendered="#{user.renderBULF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpPHE_Eur" value="" />
@@ -201,7 +201,7 @@
 
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpPHE_Qty" value="PHE RP (Qty.)"
-                                 action="dashboardRP_PHE_qty" rendered="false" 
+                                 action="dashboardRP_PHE_qty" rendered="#{user.renderBULF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpPHE_Qty" value="" />

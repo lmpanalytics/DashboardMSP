@@ -107,6 +107,7 @@ public class SparePartBeanBULF_qty implements Serializable {
         "Separator parts",
         "Plate heat exchanger parts",
         "Tubular heat exchanger parts",
+        "Scanima parts",
         "Scraped-surface heat exchanger parts",
         "System equipment parts",
         "Brazed heat exchangers",
