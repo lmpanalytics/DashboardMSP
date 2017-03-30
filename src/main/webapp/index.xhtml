@@ -37,6 +37,30 @@
             </p:dialog>
             <p:separator/>
         </h:form>
+        
+        <h:form rendered="#{user.renderCustGrp_DB}">
+            <h:panelGrid columns="3" cellpadding="5">              
+                <p:selectCheckboxMenu id="customerGroup" value="#{checkboxViewCustGroup.selectedCustGroups}" label="Customer Groups"
+                                      filter="true" filterMatchMode="startsWith" panelStyle="width:300px" >
+                    <f:selectItems value="#{checkboxViewCustGroup.customerGroups}"/>
+                </p:selectCheckboxMenu>
+
+                <p:commandButton value="Submit" update="displayClusters" oncomplete="PF('customerGroupDialog').show()" />
+                <h:outputLabel for="customerGroup" value="" />
+            </h:panelGrid>
+            <p:dialog header="Selected" modal="true" showEffect="fade" hideEffect="fade" widgetVar="customerGroupDialog" width="250">
+                <p:outputPanel id="displayClusters">
+
+                    <p:dataList value="#{checkboxViewCustGroup.selectedCustGroups}" var="customerGroup" emptyMessage="No customer groups selected" style="margin-bottom: 10px;">
+                        <f:facet name="header">
+                            Customer Groups
+                        </f:facet>
+                        #{customerGroup}
+                    </p:dataList>
+                </p:outputPanel>
+            </p:dialog>
+            <p:separator/>
+        </h:form>
 
         <h:form rendered="#{user.renderCategory_DB}">
 
