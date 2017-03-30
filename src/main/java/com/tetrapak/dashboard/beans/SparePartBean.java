@@ -68,6 +68,9 @@ public class SparePartBean implements Serializable {
     @Inject
     CheckboxViewCluster cc;
 
+    @Inject
+    CheckboxViewCustGroup cg;
+
     @Resource
     SessionContext ctx;
 
@@ -117,8 +120,10 @@ public class SparePartBean implements Serializable {
     private Set<String> setOfCustGrps;
     private final String CHART_COLORS;
     private String[] clusters;
+    private String[] customerGroups;
     private final String SERVICE_CATEGORY;
     private String selectedClustersInfo;
+    private String selectedCustomerGroupInfo;
 
     public SparePartBean() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
@@ -179,6 +184,9 @@ public class SparePartBean implements Serializable {
 //        Initialize and get cluster selections from the index page
         initiateClusterSelection();
 
+//        Initialize and get customer group selections from the index page
+        initiateCustomerGroupSelection();
+
 //        Populate sales map with data from database
         populateSalesMap();
 
@@ -235,6 +243,38 @@ public class SparePartBean implements Serializable {
             s = s.substring(0, s.length() - 2);
         }
         this.selectedClustersInfo = s;
+    }
+
+    private void initiateCustomerGroupSelection() {
+        //        Initiate String builder and Array of customer groups
+        StringBuilder sb = new StringBuilder("Viewing ");
+        List<String> custGroupList = cg.getCustomerGroups();
+        this.customerGroups = new String[custGroupList.size()];
+        custGroupList.toArray(customerGroups);
+//           Get Array of selected customer groups and Handle skipped selection
+        String[] testArray = cg.getSelectedCustGroups();
+        if (testArray.length > 0 && !testArray[0].equals("0")) {
+            this.customerGroups = cg.getSelectedCustGroups();
+
+//            Add selected customer group(s) to Info string
+            for (String c : this.customerGroups) {
+                sb.append(c);
+                sb.append(", ");
+            }
+
+        } else {
+//            System.out.println("No customer group selection, using all customer groups...");
+//            Add selected customer group(s) to Info string
+            for (String c : this.customerGroups) {
+                sb.append(c);
+                sb.append(", ");
+            }
+        }
+        String s = sb.toString();
+        if (s.endsWith(", ")) {
+            s = s.substring(0, s.length() - 2);
+        }
+        this.selectedCustomerGroupInfo = s;
     }
 
     @PreDestroy
@@ -1427,6 +1467,10 @@ public class SparePartBean implements Serializable {
 //    GETTERS & SETTERS
     public String getSelectedClustersInfo() {
         return selectedClustersInfo;
+    }
+
+    public String getSelectedCustomerGroupInfo() {
+        return selectedCustomerGroupInfo;
     }
 
     public LineChartModel getR12SalesModel() {
