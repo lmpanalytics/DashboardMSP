@@ -216,7 +216,7 @@
 
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpTHE_Eur" value="THE RP (Eur.)"
-                                 action="dashboardRP_THE_eur" rendered="false" 
+                                 action="dashboardRP_THE_eur" rendered="#{user.renderBULF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpTHE_Eur" value="" />
@@ -231,7 +231,7 @@
 
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpTHE_Qty" value="THE RP (Qty.)"
-                                 action="dashboardRP_THE_qty" rendered="false" 
+                                 action="dashboardRP_THE_qty" rendered="#{user.renderBULF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpTHE_Qty" value="" />

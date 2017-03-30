@@ -25,9 +25,9 @@ public class Neo4jBean {
     private static final String HOSTNAME = "localhost:7687";
     // 'For most use cases it is recommended to use a single driver instance
     // throughout an application.'
-    private final Driver DRIVER = GraphDatabase.driver(
-            "bolt://" + HOSTNAME + "", AuthTokens.basic("neo4j", "Tokyo2000"));
-//private static final Driver DRIVER = GraphDatabase.driver("bolt://" + HOSTNAME + "", AuthTokens.basic("neo4j", "s7asTaba"));
+//    private final Driver DRIVER = GraphDatabase.driver(
+//            "bolt://" + HOSTNAME + "", AuthTokens.basic("neo4j", "Tokyo2000"));
+private static final Driver DRIVER = GraphDatabase.driver("bolt://" + HOSTNAME + "", AuthTokens.basic("neo4j", "s7asTaba"));
 
     /**
      * Default constructor.
