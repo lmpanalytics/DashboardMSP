@@ -66,7 +66,7 @@
                 <h:outputLabel for="spSalesBULFeur" value="" />
 
                 <h:commandButton id="spSalesBUICFeur" value="BUICF (Eur.)"
-                                 action="dashboardSP_BUICF_eur" rendered="false" 
+                                 action="dashboardSP_BUICF_eur" rendered="#{user.renderBUICF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBUICFeur" value="" />
@@ -92,7 +92,7 @@
                 <h:outputLabel for="spSalesBULFqty" value="" />
 
                 <h:commandButton id="spSalesBUICFqty" value="BUICF (Qty.)"
-                                 action="dashboardSP_BUICF_qty" rendered="false" 
+                                 action="dashboardSP_BUICF_qty" rendered="#{user.renderBUICF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="spSalesBUICFqty" value="" />
