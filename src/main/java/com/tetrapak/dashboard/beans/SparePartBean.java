@@ -250,10 +250,9 @@ public class SparePartBean implements Serializable {
         StringBuilder sb = new StringBuilder("Viewing ");
         List<String> custGroupList = cg.getCustomerGroups();
         this.customerGroups = new String[custGroupList.size()];
-        custGroupList.toArray(customerGroups);
 //           Get Array of selected customer groups and Handle skipped selection
         String[] testArray = cg.getSelectedCustGroups();
-        if (testArray.length > 0 && !testArray[0].equals("0")) {
+        if (testArray.length > 0) {
             this.customerGroups = cg.getSelectedCustGroups();
 
 //            Add selected customer group(s) to Info string
@@ -264,11 +263,13 @@ public class SparePartBean implements Serializable {
 
         } else {
 //            System.out.println("No customer group selection, using all customer groups...");
-//            Add selected customer group(s) to Info string
-            for (String c : this.customerGroups) {
-                sb.append(c);
-                sb.append(", ");
-            }
+//            NPE handling
+            this.customerGroups[0] = "";
+            this.customerGroups[1] = "";
+            this.customerGroups[2] = "";
+            this.customerGroups[3] = "";
+            this.customerGroups[4] = "";
+            sb.append("ALL CUSTOMER GROUPS");
         }
         String s = sb.toString();
         if (s.endsWith(", ")) {
@@ -282,6 +283,22 @@ public class SparePartBean implements Serializable {
 
     }
 
+    private String makeCypherWhereStatement() {
+        String whereStatement = "";
+        if (this.clusters.length == 5 && (this.customerGroups[0].equals("") || this.customerGroups[0].
+                equals("ALL CUSTOMER GROUPS"))) {
+//                Use all clusters and customer groups
+            whereStatement = "";
+        } else if (this.customerGroups[0].equals("") || this.customerGroups[0].
+                equals(
+                        "ALL CUSTOMER GROUPS")) {
+            whereStatement = " WHERE c.name IN {Clusters}";
+        } else {
+            whereStatement = " WHERE c.name IN {Clusters} AND cg.custGroup IN {CustGrps}";
+        }
+        return whereStatement;
+    }
+
     /**
      * Populate sales map with data from database
      */
@@ -292,26 +309,18 @@ public class SparePartBean implements Serializable {
         try {
 
             String tx = "";
+            String whereStatement = makeCypherWhereStatement();
 
-            if (this.clusters.length == 5) {
-//  Speed up query if all 5 clusters are selected
-                tx = "MATCH (t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
-                        + " q = (t)-[r:FOR]->(:Customer)"
-                        + " WITH DISTINCT q AS q, r, t"
-                        + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            } else {
-
-                tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
-                        + " q = (t)-[r:FOR]->(:Customer)"
-                        + " WHERE c.name IN {Clusters}"
-                        + " WITH DISTINCT q AS q, r, t"
-                        + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            }
+            tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
+                    + " q = (t)-[r:FOR]->(cg:Customer)"
+                    + whereStatement
+                    + " WITH DISTINCT q AS q, r, t"
+                    + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                    + " ORDER BY Year, Month";
 
             StatementResult result = this.session.run(tx, Values.parameters(
-                    "name", this.SERVICE_CATEGORY, "Clusters", this.clusters));
+                    "name", this.SERVICE_CATEGORY, "Clusters", this.clusters,
+                    "CustGrps", this.customerGroups));
 
             while (result.hasNext()) {
                 Record r = result.next();

@@ -37,7 +37,7 @@ public class CheckboxViewCustGroup implements Serializable {
     SessionContext ctx;
 
     //        Avoid NPE
-    private String[] selectedCustGroups = {"0"};
+    private String[] selectedCustGroups = {"ALL CUSTOMER GROUPS"};
     private List<String> customerGroups;
 
     @PostConstruct

@@ -105,7 +105,7 @@ public class UtilityTest {
     @Test
     public void testCalcMonthsFromStart() {
         System.out.println("calcMonthsFromStart");
-        long expResult = 25L;
+        long expResult = 26L;
         long result = Utility.calcMonthsFromStart();
         assertEquals(expResult, result);
     }
