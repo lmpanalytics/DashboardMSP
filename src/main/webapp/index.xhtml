@@ -246,7 +246,7 @@
 
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpSSHE_Eur" value="SSHE RP (Eur.)"
-                                 action="dashboardRP_SSHE_eur" rendered="false" 
+                                 action="dashboardRP_SSHE_eur" rendered="#{user.renderBULF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSSHE_Eur" value="" />
@@ -255,7 +255,7 @@
 
             <h:panelGrid columns="8" cellpadding="5">             
                 <h:commandButton id="rpSSHE_Qty" value="SSHE RP (Qty.)"
-                                 action="dashboardRP_SSHE_qty" rendered="false" 
+                                 action="dashboardRP_SSHE_qty" rendered="#{user.renderBULF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpSSHE_Qty" value="" />
@@ -264,6 +264,7 @@
         <p:separator />
         All dashboards based on data from clusters only. 
         Sales data booked on Business Units is excluded.
+        Data is refreshed after book closing.
     </h:body>
 </html>
 
