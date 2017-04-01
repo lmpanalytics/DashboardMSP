@@ -255,7 +255,9 @@ public class SparePartBean implements Serializable {
 //           Get Array of selected customer groups and Handle skipped selection
         String[] testArray = cg.getSelectedCustGroups();
         if (testArray.length > 0) {
-            isCustGrpSelected = true;
+            if (!testArray[0].equals("ALL CUSTOMER GROUPS")) {
+                isCustGrpSelected = true;
+            }
             this.customerGroups = cg.getSelectedCustGroups();
 
 //            Add selected customer group(s) to Info string
@@ -310,9 +312,9 @@ public class SparePartBean implements Serializable {
     }
 
     /**
-     * Makes cypher 'WHERE statement' used in method
-     * 'populateCustomerGrpSalesMap' to select among combinations of Clusters
-     * and Customer groups.
+     * Makes cypher 'WHERE statement' used in methods 'populateMarketSalesMap'
+     * and 'populateCustomerGrpSalesMap' to select among combinations of
+     * Clusters and Customer groups.
      *
      * @return statement
      */
@@ -335,6 +337,26 @@ public class SparePartBean implements Serializable {
     }
 
     /**
+     * Makes cypher 'WHERE statement' used in method 'populateMarketSalesMap' to
+     * select among combinations of Clusters and Customer groups. An active
+     * selection of Customer groups turns off the compulsory viewing of customer
+     * types of type 'Global Accounts'.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType2b() {
+        String whereStatement = "";
+        if (this.isCustGrpSelected) {
+//           Use Top10 markets, Include all selected customer groups, and model based on Special Ledger
+            whereStatement = " WHERE c.custGroup IN {CustGrps} AND m.mktName IN {Markets} AND m.mktName = m.countryName";
+        } else {
+//        Use Top10 markets and model based on Special Ledger
+            whereStatement = " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName";
+        }
+        return whereStatement;
+    }
+
+    /**
      * Makes cypher 'WHERE statement' used in method
      * 'populateCustomerGrpSalesMap' to select among combinations of Clusters
      * and Customer groups. An active selection of Customer groups turns off the
@@ -342,7 +364,7 @@ public class SparePartBean implements Serializable {
      *
      * @return statement
      */
-    private String makeCypherWhereStatementType2b() {
+    private String makeCypherWhereStatementType2c() {
         String whereStatement = "";
         if (this.isCustGrpSelected) {
 //            Model based on Special Ledger
@@ -544,42 +566,35 @@ public class SparePartBean implements Serializable {
         try {
 //  Query the ten biggest markets in terms of net sales over the last 12 months
             String tx = "";
+            String whereStatement = makeCypherWhereStatementType2a();
 
-            if (this.clusters.length == 5) {
-//  Speed up query if all 5 clusters are selected
-
-                tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
-                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName" /* Model based on Special Ledger */
-                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
-                        /* Collect the markets in a list */
-                        + " RETURN collect(Market) AS Markets";
-            } else {
-                tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
-                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters}" /* Model based on Special Ledger */
-                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
-                        /* Collect the markets in a list */
-                        + " RETURN collect(Market) AS Markets";
-            }
+            tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
+                    + whereStatement
+                    + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
+                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                    /* Collect the markets in a list */
+                    + " RETURN collect(Market) AS Markets";
 
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
-                    "Clusters", this.clusters));
+                    "Clusters", this.clusters,
+                    "CustGrps", this.customerGroups));
 
             while (result.hasNext()) {
                 Record r = result.next();
                 this.top10Markets = r.get("Markets").asList();
             }
+            String whereStatement1 = makeCypherWhereStatementType2b();
 
-            String tx1 = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
-                    + " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName" /* Use Top10 markets and model based on Special Ledger */
+            String tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (m:MarketDB)-[:MADE]->(t)"
+                    + whereStatement1
                     + " RETURN t.year AS Year, t.month AS Month, m.mktName AS Market, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
             StatementResult result1 = this.session.run(tx1, Values.parameters(
-                    "name", this.SERVICE_CATEGORY, "Markets", this.top10Markets));
+                    "name", this.SERVICE_CATEGORY, "Markets", this.top10Markets,
+                    "CustGrps", this.customerGroups));
 
             while (result1.hasNext()) {
                 Record r = result1.next();
@@ -872,7 +887,7 @@ public class SparePartBean implements Serializable {
             }
 
             String tx1 = "";
-            String whereStatement1 = makeCypherWhereStatementType2b();
+            String whereStatement1 = makeCypherWhereStatementType2c();
 
             tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                     + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
