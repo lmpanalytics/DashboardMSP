@@ -158,7 +158,10 @@
                             </f:facet>
                         </p:column>
                     </p:dataTable>  
-                    (Including Global Accounts) 
+                    <ui:fragment rendered="#{!sparePartBean.isCustGrpSelected}">
+                        <tr> (Includes Global Accounts) </tr>
+                    </ui:fragment>
+
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Customer Groups</h2>

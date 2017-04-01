@@ -124,6 +124,7 @@ public class SparePartBean implements Serializable {
     private final String SERVICE_CATEGORY;
     private String selectedClustersInfo;
     private String selectedCustomerGroupInfo;
+    private boolean isCustGrpSelected;
 
     public SparePartBean() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
@@ -246,6 +247,7 @@ public class SparePartBean implements Serializable {
     }
 
     private void initiateCustomerGroupSelection() {
+        isCustGrpSelected = false;
         //        Initiate String builder and Array of customer groups
         StringBuilder sb = new StringBuilder("Viewing ");
         List<String> custGroupList = cg.getCustomerGroups();
@@ -253,6 +255,7 @@ public class SparePartBean implements Serializable {
 //           Get Array of selected customer groups and Handle skipped selection
         String[] testArray = cg.getSelectedCustGroups();
         if (testArray.length > 0) {
+            isCustGrpSelected = true;
             this.customerGroups = cg.getSelectedCustGroups();
 
 //            Add selected customer group(s) to Info string
@@ -262,6 +265,7 @@ public class SparePartBean implements Serializable {
             }
 
         } else {
+            isCustGrpSelected = false;
 //            System.out.println("No customer group selection, using all customer groups...");
 //            NPE handling
             this.customerGroups[0] = "";
@@ -283,7 +287,13 @@ public class SparePartBean implements Serializable {
 
     }
 
-    private String makeCypherWhereStatement() {
+    /**
+     * Makes cypher 'WHERE statement' used in method 'populateSalesMap' to
+     * select among combinations of Clusters and Customer groups.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType1() {
         String whereStatement = "";
         if (this.clusters.length == 5 && (this.customerGroups[0].equals("") || this.customerGroups[0].
                 equals("ALL CUSTOMER GROUPS"))) {
@@ -300,6 +310,51 @@ public class SparePartBean implements Serializable {
     }
 
     /**
+     * Makes cypher 'WHERE statement' used in method
+     * 'populateCustomerGrpSalesMap' to select among combinations of Clusters
+     * and Customer groups.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType2a() {
+        String whereStatement = "";
+        if (this.clusters.length == 5
+                && (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS"))) {
+//                Use all clusters and all customer groups
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01 ) >= {date}";
+        } else if (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS")) {
+//            Use specific clusters but all customer groups
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters}";
+        } else {
+//            Use specific clusters and specific customer groups
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND c.custGroup IN {CustGrps}";
+        }
+        return whereStatement;
+    }
+
+    /**
+     * Makes cypher 'WHERE statement' used in method
+     * 'populateCustomerGrpSalesMap' to select among combinations of Clusters
+     * and Customer groups. An active selection of Customer groups turns off the
+     * compulsory viewing of customer types of type 'Global Accounts'.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType2b() {
+        String whereStatement = "";
+        if (this.isCustGrpSelected) {
+//            Model based on Special Ledger
+            whereStatement = " WHERE c.custGroup IN {CustGroups} AND m.mktName = m.countryName AND cl.name IN {Clusters}";
+        } else {
+//       Include all Global Accounts as well, and Model based on Special Ledger
+            whereStatement = " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters}";
+        }
+        return whereStatement;
+    }
+
+    /**
      * Populate sales map with data from database
      */
     private void populateSalesMap() {
@@ -309,7 +364,7 @@ public class SparePartBean implements Serializable {
         try {
 
             String tx = "";
-            String whereStatement = makeCypherWhereStatement();
+            String whereStatement = makeCypherWhereStatementType1();
 
             tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
                     + " q = (t)-[r:FOR]->(cg:Customer)"
@@ -795,27 +850,20 @@ public class SparePartBean implements Serializable {
             /* Query the ten biggest customer groups in terms of net sales 
             over the last 12 months */
             String tx = "";
-            if (this.clusters.length == 5) {
-                //  Speed up query if all 5 clusters are selected
+            String whereStatement = makeCypherWhereStatementType2a();
 
-                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date}"
-                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
-                        /* Collect the customer groups in a list */
-                        + " RETURN collect(CustGroup) AS CustGroups";
-            } else {
-                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters}" /* Model based on Special Ledger */
-                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
-                        /* Collect the customer groups in a list */
-                        + " RETURN collect(CustGroup) AS CustGroups";
-            }
+            tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
+                    + whereStatement
+                    + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
+                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
+                    /* Collect the customer groups in a list */
+                    + " RETURN collect(CustGroup) AS CustGroups";
+//            }
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
-                    "Clusters", this.clusters));
+                    "Clusters", this.clusters,
+                    "CustGrps", this.customerGroups));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -824,23 +872,17 @@ public class SparePartBean implements Serializable {
             }
 
             String tx1 = "";
-            if (this.clusters.length == 5) {
-                //  Speed up query if all 5 clusters are selected
+            String whereStatement1 = makeCypherWhereStatementType2b();
 
-                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}})"
-                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account')" /* Include all Global Accounts as well */
-                        + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            } else {
-                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
-                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters}" /* Include all Global Accounts as well, and Model based on Special Ledger */
-                        + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            }
+            tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)"
+                    + whereStatement1
+                    + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                    + " ORDER BY Year, Month";
+
             StatementResult result1 = this.session.run(tx1, Values.parameters(
-                    "name", this.SERVICE_CATEGORY, "CustGroups",
-                    this.top10CustomerGrps,
+                    "name", this.SERVICE_CATEGORY,
+                    "CustGroups", this.top10CustomerGrps,
                     "Clusters", this.clusters));
 
             while (result1.hasNext()) {
@@ -1476,6 +1518,10 @@ public class SparePartBean implements Serializable {
 //    GETTERS & SETTERS
     public String getSelectedClustersInfo() {
         return selectedClustersInfo;
+    }
+
+    public boolean isIsCustGrpSelected() {
+        return isCustGrpSelected;
     }
 
     public String getSelectedCustomerGroupInfo() {
