@@ -290,8 +290,9 @@ public class SparePartBean implements Serializable {
     }
 
     /**
-     * Makes cypher 'WHERE statement' used in method 'populateSalesMap' to
-     * select among combinations of Clusters and Customer groups.
+     * Makes cypher 'WHERE statement' used in methods 'populateSalesMap',
+     * mapMarketPotentials, and mapAssortmentGrpPotentials to select among
+     * combinations of Clusters and Customer groups.
      *
      * @return statement
      */
@@ -1489,19 +1490,15 @@ public class SparePartBean implements Serializable {
      */
     private void mapAssortmentGrpPotentials() {
 //  Query Potentials by assortment group
+        String whereStatement = makeCypherWhereStatementType1();
 
-        String tx = "";
-        if (this.clusters.length == 5) {
-            //  Speed up query if all 5 clusters are selected
-            tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)"
-                    + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
-        } else {
-            tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
-                    + " WHERE cl.name IN {Clusters}"
-                    + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
-        }
+        String tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+                + whereStatement
+                + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+
         StatementResult result = this.session.run(tx, Values.parameters(
-                "Clusters", this.clusters));
+                "Clusters", this.clusters,
+                "CustGrps", this.customerGroups));
 
         while (result.hasNext()) {
             Record r = result.next();
