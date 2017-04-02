@@ -297,16 +297,15 @@ public class SparePartBean implements Serializable {
      */
     private String makeCypherWhereStatementType1() {
         String whereStatement = "";
-        if (this.clusters.length == 5 && (this.customerGroups[0].equals("") || this.customerGroups[0].
-                equals("ALL CUSTOMER GROUPS"))) {
+        if (this.clusters.length == 5 && (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS"))) {
 //                Use all clusters and customer groups
             whereStatement = "";
-        } else if (this.customerGroups[0].equals("") || this.customerGroups[0].
-                equals(
-                        "ALL CUSTOMER GROUPS")) {
-            whereStatement = " WHERE c.name IN {Clusters}";
+        } else if (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS")) {
+            whereStatement = " WHERE cl.name IN {Clusters}";
         } else {
-            whereStatement = " WHERE c.name IN {Clusters} AND cg.custGroup IN {CustGrps}";
+            whereStatement = " WHERE cl.name IN {Clusters} AND c.custGroup IN {CustGrps}";
         }
         return whereStatement;
     }
@@ -406,8 +405,8 @@ public class SparePartBean implements Serializable {
         try {
             String whereStatement = makeCypherWhereStatementType1();
 
-            String tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
-                    + " q = (t)-[r:FOR]->(cg:Customer)"
+            String tx = "MATCH (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
+                    + " q = (t)-[r:FOR]->(c:Customer)"
                     + whereStatement
                     + " WITH DISTINCT q AS q, r, t"
                     + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
@@ -839,11 +838,15 @@ public class SparePartBean implements Serializable {
      * @param market to group by
      */
     private void mapMarketPotentials() {
+        String whereStatement = makeCypherWhereStatementType1();
 //  Query Potentials by market
-        String tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(m:MarketDB)"
+        String tx = "MATCH (:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(m:MarketDB)-[:MEMBER_OF]->(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+                + whereStatement
                 + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
-        StatementResult result = this.session.run(tx);
+        StatementResult result = this.session.run(tx, Values.parameters(
+                "Clusters", this.clusters,
+                "CustGrps", this.customerGroups));
 
         while (result.hasNext()) {
             Record r = result.next();
