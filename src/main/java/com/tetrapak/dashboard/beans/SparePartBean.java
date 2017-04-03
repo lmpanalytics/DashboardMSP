@@ -894,7 +894,7 @@ public class SparePartBean implements Serializable {
                     + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
                     /* Collect the customer groups in a list */
                     + " RETURN collect(CustGroup) AS CustGroups";
-//            }
+
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
                     "Clusters", this.clusters,
