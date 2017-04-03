@@ -120,7 +120,7 @@
                 <h:outputLabel for="rpHomogeniserEur" value="" />
 
                 <h:commandButton id="rpFreezerEur" value="Freezer RP (Eur.)"
-                                 action="dashboardRP_Freezer_eur" rendered="false" 
+                                 action="dashboardRP_Freezer_eur" rendered="#{user.renderBUICF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpFreezerEur" value="" />
@@ -141,7 +141,7 @@
                 <h:outputLabel for="rpHomogeniserQty" value="" />
 
                 <h:commandButton id="rpFreezerQty" value="Freezer RP (Qty.)"
-                                 action="dashboardRP_Freezer_qty" rendered="false" 
+                                 action="dashboardRP_Freezer_qty" rendered="#{user.renderBUICF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpFreezerQty" value="" />
