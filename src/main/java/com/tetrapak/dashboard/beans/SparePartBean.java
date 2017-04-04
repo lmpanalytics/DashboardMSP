@@ -1249,7 +1249,6 @@ public class SparePartBean implements Serializable {
                     + " RETURN t.year AS Year, t.month AS Month, a.name AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
-//            }
             StatementResult result1 = this.session.run(tx1, Values.parameters(
                     "name", this.SERVICE_CATEGORY,
                     "Assortments", this.top10AssortmentGrps,
