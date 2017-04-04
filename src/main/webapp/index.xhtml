@@ -162,7 +162,7 @@
                 <h:outputLabel for="rpSeparatorEur" value="" />
 
                 <h:commandButton id="rpWrapperEur" value="Wrapper RP (Eur.)"
-                                 action="dashboardRP_Wrapper_eur" rendered="false" 
+                                 action="dashboardRP_Wrapper_eur" rendered="#{user.renderBUICF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpWrapperEur" value="" />    
@@ -177,7 +177,7 @@
                 <h:outputLabel for="rpSeparatorQty" value="" />
 
                 <h:commandButton id="rpWrapperQty" value="Wrapper RP (Qty.)"
-                                 action="dashboardRP_Wrapper_qty" rendered="false" 
+                                 action="dashboardRP_Wrapper_qty" rendered="#{user.renderBUICF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpWrapperQty" value="" />
