@@ -324,14 +324,14 @@ public class SparePartBean implements Serializable {
                 && (this.customerGroups[0].equals("")
                 || this.customerGroups[0].equals("ALL CUSTOMER GROUPS"))) {
 //                Use all clusters and all customer groups
-            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01 ) >= {date}";
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01) >= {date}";
         } else if (this.customerGroups[0].equals("")
                 || this.customerGroups[0].equals("ALL CUSTOMER GROUPS")) {
 //            Use specific clusters but all customer groups
-            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters}";
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters}";
         } else {
 //            Use specific clusters and specific customer groups
-            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND c.custGroup IN {CustGrps}";
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND c.custGroup IN {CustGrps}";
         }
         return whereStatement;
     }
@@ -1229,7 +1229,7 @@ public class SparePartBean implements Serializable {
                     + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
                     /* Collect the assortment groups in a list */
                     + " RETURN collect(assortment) AS Assortments";
-//            }
+
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
                     "Clusters", this.clusters,
