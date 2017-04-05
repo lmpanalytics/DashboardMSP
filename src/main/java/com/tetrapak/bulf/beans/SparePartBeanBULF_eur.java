@@ -938,7 +938,6 @@ public class SparePartBeanBULF_eur implements Serializable {
                     + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
                     + " (a:Assortment)-[:IN]->(t)"
                     + whereStatement1
-                    //                    + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Include all Global Accounts as well, and Model based on Special Ledger */
                     + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
