@@ -957,7 +957,7 @@ public class RP_HomogeniserBean_qty implements Serializable {
     }
 
     /**
-     * ================= REFEREENCE PART CONTROLS =================
+     * ================= REFERENCE PART CONTROLS =================
      *
      * Populate Reference Part Map with data from database. The data is limited
      * to the Top-10 Reference Parts based on Sales Volume in the last 12-Month
@@ -966,7 +966,7 @@ public class RP_HomogeniserBean_qty implements Serializable {
     private void populateReferencePartSalesMap() {
         System.out.
                 println(" I'm in the 'populateReferencePartSalesMap' method.");
-//        Accumulate sales volume from this date to find the largest assortment grps
+//        Accumulate sales volume from this date to find the largest Reference Part grps
         String startDate = Utility.makeStartDateLast12MonthSales();
         // code query here
         try {
