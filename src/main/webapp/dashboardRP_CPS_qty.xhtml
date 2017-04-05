@@ -21,6 +21,7 @@
             <header class="w3-container w3-yellow">
                 <h1>CPS Reference Parts (Quantity)</h1>
                 <h6>#{rp_CPSBean_qty.selectedClustersInfo}</h6>
+                <h6>#{rp_CPSBean_qty.selectedCustomerGroupInfo}</h6>
             </header>
             <div class="w3-row">
                 <div class="w3-half w3-container">
@@ -112,7 +113,10 @@
                             </f:facet>
                         </p:column>
                     </p:dataTable>  
-                    (Including Global Accounts) 
+                    <ui:fragment rendered="#{!rp_CPSBean_qty.isCustGrpSelected}">
+                        <tr> (Includes Global Accounts) </tr>
+                    </ui:fragment>
+
                 </div>
                 <div class="w3-half w3-container">
                     <h2>R12 Sales Volume Top-5 Customer Groups</h2>
@@ -163,6 +167,7 @@
             <p></p>
             <footer class="w3-container w3-light-grey">
                 <h6>#{rp_CPSBean_qty.selectedClustersInfo}</h6>
+                <h6>#{rp_CPSBean_qty.selectedCustomerGroupInfo}</h6>
                 <h5>Data sources: Sales Volume compiled from BO 'Special Ledger' and 'Invoice' reports, and Reference Part mapping from BU.</h5>
             </footer>
             <h:form>
