@@ -21,6 +21,7 @@
             <header class="w3-container w3-red">
                 <h1>Alfa Laval Flow Spare Parts (Euro)</h1>
                 <h6>#{sparePartBeanALF_eur.selectedClustersInfo}</h6>
+                <h6>#{sparePartBeanALF_eur.selectedCustomerGroupInfo}</h6>
             </header>
             <div class="w3-row">
                 <div class="w3-third w3-container">
@@ -157,7 +158,10 @@
                             </f:facet>
                         </p:column>
                     </p:dataTable>  
-                    (Including Global Accounts) 
+                    <ui:fragment rendered="#{!sparePartBeanALF_eur.isCustGrpSelected}">
+                        <tr> (Includes Global Accounts) </tr>
+                    </ui:fragment>
+
                 </div>
                 <div class="w3-third w3-container">
                     <h2>R12 Sales Top-5 Customer Groups</h2>
@@ -234,6 +238,7 @@
             <p></p>
             <footer class="w3-container w3-light-grey">
                 <h6>#{sparePartBeanALF_eur.selectedClustersInfo}</h6>
+                <h6>#{sparePartBeanALF_eur.selectedCustomerGroupInfo}</h6>
                 <h5>Data sources: Sales compiled from BO 'Special Ledger' and 'Invoice' reports, and Potential Sales from TecBase 'SOS' report.</h5>
             </footer>
             <h:form>
