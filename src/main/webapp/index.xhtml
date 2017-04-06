@@ -222,7 +222,7 @@
                 <h:outputLabel for="rpTHE_Eur" value="" />
 
                 <h:commandButton id="rpIC_LinesEur" value="IC Lines RP (Eur.)"
-                                 action="dashboardRP_IC_Lines_eur" rendered="false" 
+                                 action="dashboardRP_IC_Lines_eur" rendered="#{user.renderBUICF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpIC_LinesEur" value="" />
@@ -237,7 +237,7 @@
                 <h:outputLabel for="rpTHE_Qty" value="" />
 
                 <h:commandButton id="rpIC_LinesQty" value="IC Lines RP (Qty.)"
-                                 action="dashboardRP_IC_Lines_qty" rendered="false" 
+                                 action="dashboardRP_IC_Lines_qty" rendered="#{user.renderBUICF_DB}" 
                                  style="width: 200px; text-align: center">
                 </h:commandButton>
                 <h:outputLabel for="rpIC_LinesQty" value="" />
