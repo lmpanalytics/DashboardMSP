@@ -68,6 +68,8 @@ public class User implements Serializable {
         isCentralTeamUser();
         isBULF_DB_User();
         isBUICF_DB_User();
+        isCPS_DB_User();
+        isALF_DB_User();
         isECA_DB_User();
         isGC_DB_User();
         isGMEA_DB_User();
