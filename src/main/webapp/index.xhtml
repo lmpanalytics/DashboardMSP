@@ -14,6 +14,7 @@
     </h:head>
     <h:body>
         <h1>M&amp;SP Dashboards</h1>
+        <p>Allow for query times up to 2.5 minutes</p>
         <p:layout style="min-width:600px;min-height:700px;">
             <p:layoutUnit position="west" resizable="true" size="40" minSize="300" maxSize="350">
                 <h2>Filters</h2>
@@ -63,7 +64,7 @@
                     </p:dialog>
                 </h:form>               
             </p:layoutUnit>
-            
+
             <p:layoutUnit position="center" resizable="true" size="100" minSize="40" maxSize="200">                
                 <h:form rendered="#{user.renderCategory_DB}">
                     <h2>Global Service Categories</h2>
@@ -292,6 +293,8 @@
                 <p>Listed reference parts are used to track sales using a representative 
                     subset of material numbers selected by Business units. 
                     The sales value and volume correspond to this subset only.</p>
+                <p>SOS calculation scope: Homogenisers, Ice cream equipments,
+                    Separators, PHE, THE, Contherm, and Plant Components</p>
                 <p>Data is refreshed manually after approximately 10 working 
                     days in current month i.e., after book closing. Consequently, dashboards 
                     will process zero sales and cost in previous time period before refresh of data.</p>
