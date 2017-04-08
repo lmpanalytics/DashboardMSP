@@ -48,6 +48,7 @@ public class User implements Serializable {
     private boolean isSAEAO_DB_User;
 
     private boolean isRenderCluster_DB;
+    private boolean isRenderCustGrp_DB;
     private boolean isRenderCategory_DB;
 
     private boolean isRenderBULF_DB;
@@ -67,6 +68,8 @@ public class User implements Serializable {
         isCentralTeamUser();
         isBULF_DB_User();
         isBUICF_DB_User();
+        isCPS_DB_User();
+        isALF_DB_User();
         isECA_DB_User();
         isGC_DB_User();
         isGMEA_DB_User();
@@ -75,6 +78,7 @@ public class User implements Serializable {
 
         // Initiate rendering of jsf components
         isRenderCluster_DB();
+        isRenderCustGrp_DB();
         isRenderCategory_DB();
         isRenderBULF_DB();
         isRenderBUICF_DB();
@@ -135,6 +139,14 @@ public class User implements Serializable {
             isRenderCluster_DB = true;
         }
         return isRenderCluster_DB;
+    }
+
+    //    Condition to render Customer Group selections on index page
+    public boolean isRenderCustGrp_DB() {
+        if (isCentralTeamUser) {
+            isRenderCustGrp_DB = true;
+        }
+        return isRenderCustGrp_DB;
     }
 
 //    Condition to render Service Category selections on index page

@@ -6,6 +6,7 @@
 package com.tetrapak.alf.beans;
 
 import com.tetrapak.dashboard.beans.CheckboxViewCluster;
+import com.tetrapak.dashboard.beans.CheckboxViewCustGroup;
 import com.tetrapak.dashboard.beans.Neo4jBean;
 import com.tetrapak.dashboard.model.CategoryTableData;
 import com.tetrapak.dashboard.model.GlobalChartData;
@@ -70,6 +71,9 @@ public class SparePartBeanALF_eur implements Serializable {
     @Inject
     CheckboxViewCluster cc;
 
+    @Inject
+    CheckboxViewCustGroup cg;
+
     @Resource
     SessionContext ctx;
 
@@ -119,9 +123,12 @@ public class SparePartBeanALF_eur implements Serializable {
     private Set<String> setOfCustGrps;
     private final String CHART_COLORS;
     private String[] clusters;
+    private String[] customerGroups;
     private final String SERVICE_CATEGORY;
     private final String[] ASSORTMENT_GRPS_BU = {"Al flow parts", "Al flow"};
     private String selectedClustersInfo;
+    private String selectedCustomerGroupInfo;
+    private boolean isCustGrpSelected;
 
     public SparePartBeanALF_eur() {
         this.CHART_COLORS = "d7191c,fdae61,ffffbf,abd9e9,2c7bb6";
@@ -182,6 +189,9 @@ public class SparePartBeanALF_eur implements Serializable {
 //        Initialize and get cluster selections from the index page
         initiateClusterSelection();
 
+//        Initialize and get customer group selections from the index page
+        initiateCustomerGroupSelection();
+
 //        Populate sales map with data from database
         populateSalesMap();
 
@@ -240,9 +250,175 @@ public class SparePartBeanALF_eur implements Serializable {
         this.selectedClustersInfo = s;
     }
 
+    private void initiateCustomerGroupSelection() {
+        isCustGrpSelected = false;
+        //        Initiate String builder and Array of customer groups
+        StringBuilder sb = new StringBuilder("Viewing ");
+        List<String> custGroupList = cg.getCustomerGroups();
+        this.customerGroups = new String[custGroupList.size()];
+//           Get Array of selected customer groups and Handle skipped selection
+        String[] testArray = cg.getSelectedCustGroups();
+        if (testArray.length > 0) {
+            if (!testArray[0].equals("ALL CUSTOMER GROUPS")) {
+                isCustGrpSelected = true;
+            }
+            this.customerGroups = cg.getSelectedCustGroups();
+
+//            Add selected customer group(s) to Info string
+            for (String c : this.customerGroups) {
+                sb.append(c);
+                sb.append(", ");
+            }
+
+        } else {
+            isCustGrpSelected = false;
+//            System.out.println("No customer group selection, using all customer groups...");
+//            NPE handling
+            this.customerGroups[0] = "";
+            this.customerGroups[1] = "";
+            this.customerGroups[2] = "";
+            this.customerGroups[3] = "";
+            this.customerGroups[4] = "";
+            sb.append("ALL CUSTOMER GROUPS");
+        }
+        String s = sb.toString();
+        if (s.endsWith(", ")) {
+            s = s.substring(0, s.length() - 2);
+        }
+        this.selectedCustomerGroupInfo = s;
+    }
+
     @PreDestroy
     public void destroyMe() {
 
+    }
+
+    /**
+     * Makes cypher 'WHERE statement' used in method 'populateSalesMap' to
+     * select among combinations of Clusters and Customer groups.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType1() {
+        String whereStatement = "";
+        if (this.clusters.length == 5 && (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS"))) {
+//                Use all clusters and customer groups
+            whereStatement = "where a.name IN {assortmentGrpsBU}";
+        } else if (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS")) {
+            whereStatement = " WHERE cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}";
+        } else {
+            whereStatement = " WHERE cl.name IN {Clusters} AND c.custGroup IN {CustGrps} AND a.name IN {assortmentGrpsBU}";
+        }
+        return whereStatement;
+    }
+
+    /**
+     * Makes cypher 'WHERE statement' used in methods mapMarketPotentials, and
+     * mapAssortmentGrpPotentials to select among combinations of Clusters and
+     * Customer groups.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType1b() {
+        String whereStatement = "";
+        if (this.clusters.length == 5 && (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS"))) {
+//                Use all clusters and customer groups
+            whereStatement = "";
+        } else if (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS")) {
+            whereStatement = " WHERE cl.name IN {Clusters}";
+        } else {
+            whereStatement = " WHERE cl.name IN {Clusters} AND c.custGroup IN {CustGrps}";
+        }
+        return whereStatement;
+    }
+
+    /**
+     * Makes cypher 'WHERE statement' used in methods 'populateMarketSalesMap',
+     * 'populateCustomerGrpSalesMap', and populateAssortmentGrpSalesMap to
+     * select among combinations of Clusters and Customer groups.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType2a() {
+        String whereStatement = "";
+        if (this.clusters.length == 5
+                && (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS"))) {
+//                Use all clusters and all customer groups
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01) >= {date} AND a.name IN {assortmentGrpsBU}";
+        } else if (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS")) {
+//            Use specific clusters but all customer groups
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}";
+        } else {
+//            Use specific clusters and specific customer groups
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND c.custGroup IN {CustGrps} AND a.name IN {assortmentGrpsBU}";
+        }
+        return whereStatement;
+    }
+
+    /**
+     * Makes cypher 'WHERE statement' used in method 'populateMarketSalesMap' to
+     * select among combinations of Clusters and Customer groups. An active
+     * selection of Customer groups turns off the compulsory viewing of customer
+     * types of type 'Global Accounts'.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType2b() {
+        String whereStatement = "";
+        if (this.isCustGrpSelected) {
+//           Use Top10 markets, Include all selected customer groups, and model based on Special Ledger
+            whereStatement = " WHERE c.custGroup IN {CustGrps} AND m.mktName IN {Markets} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}";
+        } else {
+//        Use Top10 markets and model based on Special Ledger
+            whereStatement = " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}";
+        }
+        return whereStatement;
+    }
+
+    /**
+     * Makes cypher 'WHERE statement' used in method
+     * 'populateCustomerGrpSalesMap' to select among combinations of Clusters
+     * and Customer groups. An active selection of Customer groups turns off the
+     * compulsory viewing of customer types of type 'Global Accounts'.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType2c() {
+        String whereStatement = "";
+        if (this.isCustGrpSelected) {
+//            Model based on Special Ledger
+            whereStatement = " WHERE c.custGroup IN {CustGroups} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}";
+        } else {
+//       Include all Global Accounts as well, and Model based on Special Ledger
+            whereStatement = " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}";
+        }
+        return whereStatement;
+    }
+
+    /**
+     * Makes cypher 'WHERE statement' used in method
+     * 'populateAssortmentGrpSalesMap' to select among combinations of Clusters
+     * and Customer groups. An active selection of Customer groups turns off the
+     * compulsory viewing of customer types of type 'Global Accounts'.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType2d() {
+        String whereStatement = "";
+        if (this.isCustGrpSelected) {
+//           Use Top10 clusters, Include all selected customer groups, and model based on Special Ledger
+            whereStatement = " WHERE c.custGroup IN {CustGrps} AND a.name IN {Assortments} AND m.mktName = m.countryName AND cl.name IN {Clusters}";
+        } else {
+//        Use Top10 markets and model based on Special Ledger
+            whereStatement = " WHERE a.name IN {Assortments} AND m.mktName = m.countryName AND cl.name IN {Clusters}";
+        }
+        return whereStatement;
     }
 
     /**
@@ -253,32 +429,20 @@ public class SparePartBeanALF_eur implements Serializable {
 
         // code query here
         try {
+            String whereStatement = makeCypherWhereStatementType1();
 
-            String tx = "";
-
-            if (this.clusters.length == 5) {
-//  Speed up query if all 5 clusters are selected
-                tx = "MATCH (t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
-                        + " (a:Assortment)-[:IN]->(t),"
-                        + " q = (t)-[r:FOR]->(:Customer)"
-                        + " WHERE a.name IN {assortmentGrpsBU}"
-                        + " WITH DISTINCT q AS q, r, t"
-                        + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            } else {
-
-                tx = "MATCH (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
-                        + " (a:Assortment)-[:IN]->(t),"
-                        + " q = (t)-[r:FOR]->(:Customer)"
-                        + " WHERE c.name IN {Clusters} AND a.name IN {assortmentGrpsBU}"
-                        + " WITH DISTINCT q AS q, r, t"
-                        + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            }
+            String tx = "MATCH (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(:MarketDB)-[:MADE]->(t:Transaction)-[:BOOKED_AS]->(s:ServiceCategory {name: {name}}),"
+                    + " (a:Assortment)-[:IN]->(t),"
+                    + " q = (t)-[r:FOR]->(c:Customer)"
+                    + whereStatement
+                    + " WITH DISTINCT q AS q, r, t"
+                    + " RETURN t.year AS Year, t.month AS Month, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                    + " ORDER BY Year, Month";
 
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "Clusters", this.clusters,
-                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU,
+                    "CustGrps", this.customerGroups));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -447,50 +611,40 @@ public class SparePartBeanALF_eur implements Serializable {
         // code query here
         try {
 //  Query the ten biggest markets in terms of net sales over the last 12 months
-            String tx = "";
+            String whereStatement = makeCypherWhereStatementType2a();
 
-            if (this.clusters.length == 5) {
-//  Speed up query if all 5 clusters are selected
-
-                tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (m:MarketDB)-[:MADE]->(t),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
-                        /* Collect the markets in a list */
-                        + " RETURN collect(Market) AS Markets";
-            } else {
-                tx = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (c:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE (t.year + \"\" + t.month + \"01\") >= {date} AND m.mktName = m.countryName AND c.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
-                        /* Collect the markets in a list */
-                        + " RETURN collect(Market) AS Markets";
-            }
+            String tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
+                    + " (a:Assortment)-[:IN]->(t)"
+                    + whereStatement
+                    + " WITH m.mktName AS Market, SUM(r.netSales) AS TNetSales"
+                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top markets */
+                    /* Collect the markets in a list */
+                    + " RETURN collect(Market) AS Markets";
 
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
                     "Clusters", this.clusters,
-                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU,
+                    "CustGrps", this.customerGroups));
 
             while (result.hasNext()) {
                 Record r = result.next();
                 this.top10Markets = r.get("Markets").asList();
             }
+            String whereStatement1 = makeCypherWhereStatementType2b();
 
-            String tx1 = "MATCH (:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+            String tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
                     + " (m:MarketDB)-[:MADE]->(t),"
                     + " (a:Assortment)-[:IN]->(t)"
-                    + " WHERE m.mktName IN {Markets} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}" /* Use Top10 markets and model based on Special Ledger */
+                    + whereStatement1
                     + " RETURN t.year AS Year, t.month AS Month, m.mktName AS Market, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
                     + " ORDER BY Year, Month";
 
             StatementResult result1 = this.session.run(tx1, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "Markets", this.top10Markets,
-                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU,
+                    "CustGrps", this.customerGroups));
 
             while (result1.hasNext()) {
                 Record r = result1.next();
@@ -718,13 +872,16 @@ public class SparePartBeanALF_eur implements Serializable {
      * @param market to group by
      */
     private void mapMarketPotentials() {
+        String whereStatement = makeCypherWhereStatementType1b();
 //  Query Potentials by market
-        String tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(m:MarketDB)"
-                + " WHERE a.name IN {assortmentGrpsBU}"
+        String tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(m:MarketDB)-[:MEMBER_OF]->(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+                + whereStatement
                 + " RETURN m.mktName AS MktName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
 
         StatementResult result = this.session.run(tx, Values.parameters(
-                "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
+                "Clusters", this.clusters,
+                "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU,
+                "CustGrps", this.customerGroups));
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -737,11 +894,11 @@ public class SparePartBeanALF_eur implements Serializable {
 //                Make key
             String key = marketName;
 
-//            Add results to Map and factor in AL Flow Parts effect
+//            Add results to Map and calculate AL Flow Parts potential as a share of total potential
             this.marketPotentialMap.put(key,
-                    new PotentialData(potSpareParts * 1.3,
-                            potMaintenanceHrs * 1.06,
-                            potMaintenance * 1.06));
+                    new PotentialData(potSpareParts * 0.3,
+                            potMaintenanceHrs * 0.06,
+                            potMaintenance * 0.06));
         }
 
     }
@@ -762,31 +919,22 @@ public class SparePartBeanALF_eur implements Serializable {
         try {
             /* Query the ten biggest customer groups in terms of net sales 
             over the last 12 months */
-            String tx = "";
-            if (this.clusters.length == 5) {
-                //  Speed up query if all 5 clusters are selected
+            String whereStatement = makeCypherWhereStatementType2a();
 
-                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU}"
-                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
-                        /* Collect the customer groups in a list */
-                        + " RETURN collect(CustGroup) AS CustGroups";
-            } else {
-                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
-                        /* Collect the customer groups in a list */
-                        + " RETURN collect(CustGroup) AS CustGroups";
-            }
+            String tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
+                    + " (a:Assortment)-[:IN]->(t)"
+                    + whereStatement
+                    + " WITH c.custGroup AS CustGroup, SUM(r.netSales) AS TNetSales"
+                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top customer groups */
+                    /* Collect the customer groups in a list */
+                    + " RETURN collect(CustGroup) AS CustGroups";
+
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
                     "Clusters", this.clusters,
-                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU,
+                    "CustGrps", this.customerGroups));
 
             while (result.hasNext()) {
                 Record r = result.next();
@@ -794,26 +942,18 @@ public class SparePartBeanALF_eur implements Serializable {
                 this.top10CustomerGrps = r.get("CustGroups").asList();
             }
 
-            String tx1 = "";
-            if (this.clusters.length == 5) {
-                //  Speed up query if all 5 clusters are selected
+            String whereStatement1 = makeCypherWhereStatementType2c();
 
-                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND a.name IN {assortmentGrpsBU}" /* Include all Global Accounts as well */
-                        + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            } else {
-                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
-                        + " (a:Assortment)-[:IN]->(t)"
-                        + " WHERE (c.custGroup IN {CustGroups} OR c.custType = 'Global Account') AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Include all Global Accounts as well, and Model based on Special Ledger */
-                        + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            }
+            String tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t),"
+                    + " (a:Assortment)-[:IN]->(t)"
+                    + whereStatement1
+                    + " RETURN t.year AS Year, t.month AS Month, c.custGroup AS CustGroup, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                    + " ORDER BY Year, Month";
+
             StatementResult result1 = this.session.run(tx1, Values.parameters(
-                    "name", this.SERVICE_CATEGORY, "CustGroups",
-                    this.top10CustomerGrps,
+                    "name", this.SERVICE_CATEGORY,
+                    "CustGroups", this.top10CustomerGrps,
                     "Clusters", this.clusters,
                     "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
 
@@ -1072,11 +1212,10 @@ public class SparePartBeanALF_eur implements Serializable {
         if (this.clusters.length == 5) {
             //  Speed up query if all 5 clusters are selected
             tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)"
-                    + " WHERE a.name IN {assortmentGrpsBU}"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         } else {
             tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
-                    + " WHERE cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}"
+                    + " WHERE cl.name IN {Clusters}"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         }
 
@@ -1095,11 +1234,11 @@ public class SparePartBeanALF_eur implements Serializable {
 //                Make key
             String key = custGroupName;
 
-//            Add results to Map and factor in AL Flow Parts effect
+//            Add results to Map and calculate AL Flow Parts potential as a share of total potential
             this.custGrpPotentialMap.put(key,
-                    new PotentialData(potSpareParts * 1.3,
-                            potMaintenanceHrs * 1.06,
-                            potMaintenance * 1.06));
+                    new PotentialData(potSpareParts * 0.3,
+                            potMaintenanceHrs * 0.06,
+                            potMaintenance * 0.06));
         }
 
     }
@@ -1120,54 +1259,41 @@ public class SparePartBeanALF_eur implements Serializable {
         try {
             /* Query the ten biggest assortment groups in terms of net sales 
             over the last 12 months */
+            String whereStatement = makeCypherWhereStatementType2a();
 
-            String tx = "";
-            if (this.clusters.length == 5) {
-                //  Speed up query if all 5 clusters are selected
-                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (t)<-[:IN]-(a:Assortment)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND a.name IN {assortmentGrpsBU}"
-                        + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
-                        /* Collect the assortment groups in a list */
-                        + " RETURN collect(assortment) AS Assortments";
-            } else {
-                tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)"
-                        + " WHERE ( t.year + \"\" + t.month + \"\" + 01 ) >= {date} AND m.mktName = m.countryName AND cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}" /* Model based on Special Ledger */
-                        + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
-                        + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
-                        /* Collect the assortment groups in a list */
-                        + " RETURN collect(assortment) AS Assortments";
-            }
+            String tx = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)"
+                    + whereStatement
+                    + " WITH a.name AS assortment, SUM(r.netSales) AS TNetSales"
+                    + " ORDER BY TNetSales DESC LIMIT 10" /* Here, set the number of top assortment groups */
+                    /* Collect the assortment groups in a list */
+                    + " RETURN collect(assortment) AS Assortments";
+
             StatementResult result = this.session.run(tx, Values.parameters(
                     "name", this.SERVICE_CATEGORY, "date", startDate,
                     "Clusters", this.clusters,
-                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
+                    "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU,
+                    "CustGrps", this.customerGroups));
 
             while (result.hasNext()) {
                 Record r = result.next();
 
                 this.top10AssortmentGrps = r.get("Assortments").asList();
             }
-            String tx1 = "";
-            if (this.clusters.length == 5) {
-                //  Speed up query if all 5 clusters are selected
-                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}), (t)<-[:IN]-(a:Assortment)"
-                        + " WHERE a.name IN {Assortments}"
-                        + " RETURN t.year AS Year, t.month AS Month, a.name AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
-            } else {
-                tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
-                        + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)" /* Model based on Special Ledger */
-                        + " WHERE a.name IN {Assortments} AND m.mktName = m.countryName AND cl.name IN {Clusters}"
-                        + " RETURN t.year AS Year, t.month AS Month, a.name AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
-                        + " ORDER BY Year, Month";
 
-            }
+            String whereStatement1 = makeCypherWhereStatementType2d();
+
+            String tx1 = "MATCH (c:Customer)<-[r:FOR]-(t:Transaction)-[:BOOKED_AS]->(:ServiceCategory {name: {name}}),"
+                    + " (cl:ClusterDB)<-[:MEMBER_OF]-(:MarketGroup)<-[:MEMBER_OF]-(m:MarketDB)-[:MADE]->(t)<-[:IN]-(a:Assortment)" /* Model based on Special Ledger */
+                    + whereStatement1
+                    + " RETURN t.year AS Year, t.month AS Month, a.name AS Asg, SUM(r.netSales)/1E6 AS NetSales, SUM(r.directCost)/1E6 AS DirectCost, SUM(r.quantity)/1E3 AS Quantity"
+                    + " ORDER BY Year, Month";
+
             StatementResult result1 = this.session.run(tx1, Values.parameters(
                     "name", this.SERVICE_CATEGORY,
                     "Assortments", this.top10AssortmentGrps,
-                    "Clusters", this.clusters));
+                    "Clusters", this.clusters,
+                    "CustGrps", this.customerGroups));
 
             while (result1.hasNext()) {
                 Record r = result1.next();
@@ -1403,21 +1529,16 @@ public class SparePartBeanALF_eur implements Serializable {
      */
     private void mapAssortmentGrpPotentials() {
 //  Query Potentials by assortment group
+        String whereStatement = makeCypherWhereStatementType1b();
 
-        String tx = "";
-        if (this.clusters.length == 5) {
-            //  Speed up query if all 5 clusters are selected
-            tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)"
-                    + " WHERE a.name IN {assortmentGrpsBU}"
-                    + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
-        } else {
-            tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
-                    + " WHERE cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}"
-                    + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
-        }
+        String tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
+                + whereStatement
+                + " RETURN a.name AS Assortment, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
+
         StatementResult result = this.session.run(tx, Values.parameters(
                 "Clusters", this.clusters,
-                "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU));
+                "assortmentGrpsBU", this.ASSORTMENT_GRPS_BU,
+                "CustGrps", this.customerGroups));
 
         while (result.hasNext()) {
             Record r = result.next();
@@ -1445,7 +1566,7 @@ public class SparePartBeanALF_eur implements Serializable {
         Double totPotMaintenance = potCollection.stream().collect(Collectors.
                 summingDouble(PotentialData::getPotMaintenance));
 
-//            Calc AL Flow Parts potentials and add results to Map
+//            Add results to Map and calculate AL Flow Parts potential as a share of total potential
         this.assortmentPotentialMap.put("Al flow parts",
                 new PotentialData(totPotSpareParts * 0.3,
                         totPotMaintenanceHrs * 0.06,
@@ -1455,6 +1576,14 @@ public class SparePartBeanALF_eur implements Serializable {
 //    GETTERS & SETTERS
     public String getSelectedClustersInfo() {
         return selectedClustersInfo;
+    }
+
+    public boolean isIsCustGrpSelected() {
+        return isCustGrpSelected;
+    }
+
+    public String getSelectedCustomerGroupInfo() {
+        return selectedCustomerGroupInfo;
     }
 
     public LineChartModel getR12SalesModel() {
