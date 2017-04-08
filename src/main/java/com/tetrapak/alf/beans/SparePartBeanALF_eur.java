@@ -294,9 +294,8 @@ public class SparePartBeanALF_eur implements Serializable {
     }
 
     /**
-     * Makes cypher 'WHERE statement' used in methods 'populateSalesMap',
-     * mapMarketPotentials, and mapAssortmentGrpPotentials to select among
-     * combinations of Clusters and Customer groups.
+     * Makes cypher 'WHERE statement' used in method 'populateSalesMap' to
+     * select among combinations of Clusters and Customer groups.
      *
      * @return statement
      */
@@ -311,6 +310,28 @@ public class SparePartBeanALF_eur implements Serializable {
             whereStatement = " WHERE cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}";
         } else {
             whereStatement = " WHERE cl.name IN {Clusters} AND c.custGroup IN {CustGrps} AND a.name IN {assortmentGrpsBU}";
+        }
+        return whereStatement;
+    }
+
+    /**
+     * Makes cypher 'WHERE statement' used in methods mapMarketPotentials, and
+     * mapAssortmentGrpPotentials to select among combinations of Clusters and
+     * Customer groups.
+     *
+     * @return statement
+     */
+    private String makeCypherWhereStatementType1b() {
+        String whereStatement = "";
+        if (this.clusters.length == 5 && (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS"))) {
+//                Use all clusters and customer groups
+            whereStatement = "";
+        } else if (this.customerGroups[0].equals("")
+                || this.customerGroups[0].equals("ALL CUSTOMER GROUPS")) {
+            whereStatement = " WHERE cl.name IN {Clusters}";
+        } else {
+            whereStatement = " WHERE cl.name IN {Clusters} AND c.custGroup IN {CustGrps}";
         }
         return whereStatement;
     }
@@ -851,7 +872,7 @@ public class SparePartBeanALF_eur implements Serializable {
      * @param market to group by
      */
     private void mapMarketPotentials() {
-        String whereStatement = makeCypherWhereStatementType1();
+        String whereStatement = makeCypherWhereStatementType1b();
 //  Query Potentials by market
         String tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(m:MarketDB)-[:MEMBER_OF]->(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
                 + whereStatement
@@ -873,11 +894,11 @@ public class SparePartBeanALF_eur implements Serializable {
 //                Make key
             String key = marketName;
 
-//            Add results to Map and factor in AL Flow Parts effect
+//            Add results to Map and calculate AL Flow Parts potential as a share of total potential
             this.marketPotentialMap.put(key,
-                    new PotentialData(potSpareParts * 1.3,
-                            potMaintenanceHrs * 1.06,
-                            potMaintenance * 1.06));
+                    new PotentialData(potSpareParts * 0.3,
+                            potMaintenanceHrs * 0.06,
+                            potMaintenance * 0.06));
         }
 
     }
@@ -1191,11 +1212,10 @@ public class SparePartBeanALF_eur implements Serializable {
         if (this.clusters.length == 5) {
             //  Speed up query if all 5 clusters are selected
             tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)"
-                    + " WHERE a.name IN {assortmentGrpsBU}"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         } else {
             tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
-                    + " WHERE cl.name IN {Clusters} AND a.name IN {assortmentGrpsBU}"
+                    + " WHERE cl.name IN {Clusters}"
                     + " RETURN c.custGroup AS CustGrpName, SUM(r.spEurPotential)/1E6 AS SP_POT, SUM(r.mtHourPotential)/1E6 AS HRS_POT, SUM(r.mtEurPotential)/1E6 AS MT_POT";
         }
 
@@ -1214,11 +1234,11 @@ public class SparePartBeanALF_eur implements Serializable {
 //                Make key
             String key = custGroupName;
 
-//            Add results to Map and factor in AL Flow Parts effect
+//            Add results to Map and calculate AL Flow Parts potential as a share of total potential
             this.custGrpPotentialMap.put(key,
-                    new PotentialData(potSpareParts * 1.3,
-                            potMaintenanceHrs * 1.06,
-                            potMaintenance * 1.06));
+                    new PotentialData(potSpareParts * 0.3,
+                            potMaintenanceHrs * 0.06,
+                            potMaintenance * 0.06));
         }
 
     }
@@ -1509,7 +1529,7 @@ public class SparePartBeanALF_eur implements Serializable {
      */
     private void mapAssortmentGrpPotentials() {
 //  Query Potentials by assortment group
-        String whereStatement = makeCypherWhereStatementType1();
+        String whereStatement = makeCypherWhereStatementType1b();
 
         String tx = "MATCH (a:Assortment)-[r:POTENTIAL_AT]->(c:Customer)-[:LOCATED_IN]->(:CountryDB)-[:MEMBER_OF]-(:MarketGroup)-[:MEMBER_OF]->(cl:ClusterDB)"
                 + whereStatement
@@ -1546,7 +1566,7 @@ public class SparePartBeanALF_eur implements Serializable {
         Double totPotMaintenance = potCollection.stream().collect(Collectors.
                 summingDouble(PotentialData::getPotMaintenance));
 
-//            Calc AL Flow Parts potentials and add results to Map
+//            Add results to Map and calculate AL Flow Parts potential as a share of total potential
         this.assortmentPotentialMap.put("Al flow parts",
                 new PotentialData(totPotSpareParts * 0.3,
                         totPotMaintenanceHrs * 0.06,
