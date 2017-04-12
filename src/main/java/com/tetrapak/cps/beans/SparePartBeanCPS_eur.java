@@ -873,11 +873,11 @@ public class SparePartBeanCPS_eur implements Serializable {
 //                Make key
             String key = marketName;
 
-//            Add results to Map and factor in AL Flow Parts effect
+//            Add results to Map
             this.marketPotentialMap.put(key,
-                    new PotentialData(potSpareParts * 1.3,
-                            potMaintenanceHrs * 1.06,
-                            potMaintenance * 1.06));
+                    new PotentialData(potSpareParts,
+                            potMaintenanceHrs,
+                            potMaintenance));
         }
 
     }
@@ -1214,11 +1214,11 @@ public class SparePartBeanCPS_eur implements Serializable {
 //                Make key
             String key = custGroupName;
 
-//            Add results to Map and factor in AL Flow Parts effect
+//            Add results to Map
             this.custGrpPotentialMap.put(key,
-                    new PotentialData(potSpareParts * 1.3,
-                            potMaintenanceHrs * 1.06,
-                            potMaintenance * 1.06));
+                    new PotentialData(potSpareParts,
+                            potMaintenanceHrs,
+                            potMaintenance));
         }
 
     }
