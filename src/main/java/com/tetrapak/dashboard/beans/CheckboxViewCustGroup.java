@@ -51,6 +51,7 @@ public class CheckboxViewCustGroup implements Serializable {
         customerGroups.add("LACTALIS");
         customerGroups.add("NESTLE");
         customerGroups.add("PEPSICO");
+        customerGroups.add("UNILEVER");
 
     }
 
