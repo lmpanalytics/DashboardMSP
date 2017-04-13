@@ -272,6 +272,7 @@ public class RP_FreezerBean_eur implements Serializable {
             this.customerGroups[2] = "";
             this.customerGroups[3] = "";
             this.customerGroups[4] = "";
+            this.customerGroups[5] = "";
             sb.append("ALL CUSTOMER GROUPS");
         }
         String s = sb.toString();

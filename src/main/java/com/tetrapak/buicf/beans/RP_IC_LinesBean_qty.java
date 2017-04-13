@@ -258,6 +258,7 @@ public class RP_IC_LinesBean_qty implements Serializable {
             this.customerGroups[2] = "";
             this.customerGroups[3] = "";
             this.customerGroups[4] = "";
+            this.customerGroups[5] = "";
             sb.append("ALL CUSTOMER GROUPS");
         }
         String s = sb.toString();
