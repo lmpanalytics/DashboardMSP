@@ -313,7 +313,7 @@ public class SparePartBeanBULF_qty implements Serializable {
                 && (this.customerGroups[0].equals("")
                 || this.customerGroups[0].equals("ALL CUSTOMER GROUPS"))) {
 //                Use all clusters and all customer groups
-            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01) >= {date} AND a.name IN {assortmentGrpsBU}";
+            whereStatement = " WHERE (t.year + \"\" + t.month + \"\" + 01) >= {date} AND m.mktName = m.countryName AND a.name IN {assortmentGrpsBU}";
         } else if (this.customerGroups[0].equals("")
                 || this.customerGroups[0].equals("ALL CUSTOMER GROUPS")) {
 //            Use specific clusters but all customer groups
